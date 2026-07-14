@@ -155,5 +155,5 @@ wandb
 !.claude/docs/
 *tmp*
 
-# crawled official docs — managed as a separate repo (konghw-git/openrlhf-docs)
-docs/openrlhf.readthedocs.io/
+# crawled official docs — managed as a separate repo (konghw-git/learning-docs)
+docs/learning-docs/
