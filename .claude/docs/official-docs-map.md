@@ -1,6 +1,6 @@
 # Official Docs Map (crawled readthedocs)
 
-`docs/openrlhf.readthedocs.io/` is a full crawl of the official OpenRLHF documentation:
+`docs/openrlhf.readthedocs.io/` is a full crawl of the official OpenRLHF documentation. It is a **separate git repository** (`konghw-git/openrlhf-docs` on GitHub), gitignored by this repo — if the directory is missing locally, clone it there first. Its contents:
 
 - `en/latest/*.html` — original English pages
 - `zh/latest/*.html` — Chinese translation of the same pages (same filenames, HTML structure identical; translated by the repo owner with `translate_docs.py` + `polish_docs.py`, Gemini-based, run via `uv run` inside that directory)
