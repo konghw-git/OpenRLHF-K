@@ -155,5 +155,6 @@ wandb
 !.claude/docs/
 *tmp*
 
-# crawled official docs — managed as a separate repo (konghw-git/learning-docs)
-docs/learning-docs/
+# local snapshot of crawled official docs (openrlhf + vllm), copied from the
+# ~/Desktop/learning-docs archive repo (konghw-git/learning-docs) — too large for git
+docs/official-docs/
