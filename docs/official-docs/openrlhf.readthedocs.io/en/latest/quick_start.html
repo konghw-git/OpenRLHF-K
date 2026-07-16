@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Start &mdash; OpenRLHF 0.10.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js%3Fv=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js%3Fv=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js%3Fv=69c39844"></script>
+        <script src="_static/doctools.js%3Fv=888ff710"></script>
+        <script src="_static/sphinx_highlight.js%3Fv=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Architecture Foundation: Ray + vLLM Distribution" href="architecture.html" />
+    <link rel="prev" title="Welcome to OpenRLHF’s documentation!" href="index.html" /> 
+<script async type="text/javascript" src="../../_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="openrlhf" /><meta name="readthedocs-version-slug" content="latest" /><meta name="readthedocs-resolver-filename" content="/quick_start.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OpenRLHF
+          </a>
+              <div class="version">
+                0.10.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="quick_start.html#">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#a-note-on-the-cli">A note on the CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#first-run-rlvr-with-qwen3-4b">First run (RLVR with Qwen3-4B)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#prepare-datasets">Prepare datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#pretrained-models">Pretrained models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#typical-rlhf-workflow">Typical RLHF workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#where-to-next">Where to next</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture Foundation: Ray + vLLM Distribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_paradigm.html">Design Paradigm: Agent-Based Execution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Training Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent_training.html">RL Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="non_rl.html">Supervised &amp; Preference Training (SFT / RM / DPO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_options.html">Common CLI Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scaling &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hybrid_engine.html">Hybrid Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async_training.html">Async Training &amp; Partial Rollout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkpoint.html">Checkpointing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_parallelism.html">Sequence Parallelism (RingAttention)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi-node.html">Multi-node Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvidia_docker.html">NVIDIA Docker (Optional)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenRLHF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick Start</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quick_start.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="quick_start.html#quick-start" title="Permalink to this heading"></a></h1>
+<p>Run first, then understand, then optimize.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="quick_start.html#installation" id="id2">Installation</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#a-note-on-the-cli" id="id3">A note on the CLI</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#first-run-rlvr-with-qwen3-4b" id="id4">First run (RLVR with Qwen3-4B)</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#prepare-datasets" id="id5">Prepare datasets</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#pretrained-models" id="id6">Pretrained models</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#typical-rlhf-workflow" id="id7">Typical RLHF workflow</a></p></li>
+<li><p><a class="reference internal" href="quick_start.html#where-to-next" id="id8">Where to next</a></p></li>
+</ul>
+</nav>
+<section id="installation">
+<span id="id1"></span><h2><a class="toc-backref" href="quick_start.html#id2" role="doc-backlink">Installation</a><a class="headerlink" href="quick_start.html#installation" title="Permalink to this heading"></a></h2>
+<p>The recommended path is to install inside an NVIDIA PyTorch container:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--runtime<span class="o">=</span>nvidia<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>--shm-size<span class="o">=</span><span class="s2">&quot;10g&quot;</span><span class="w"> </span>--cap-add<span class="o">=</span>SYS_ADMIN<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span><span class="nv">$PWD</span>:/openrlhf<span class="w"> </span>nvcr.io/nvidia/pytorch:25.11-py3<span class="w"> </span>bash
+
+<span class="c1"># remove packages that conflict with vLLM / flash-attn in the base image</span>
+pip<span class="w"> </span>uninstall<span class="w"> </span>xgboost<span class="w"> </span>transformer_engine<span class="w"> </span>flash_attn<span class="w"> </span>pynvml<span class="w"> </span>opencv-python-headless<span class="w"> </span>-y
+
+<span class="c1"># pip install (pick one)</span>
+pip<span class="w"> </span>install<span class="w"> </span>openrlhf<span class="w">                    </span><span class="c1"># core only</span>
+pip<span class="w"> </span>install<span class="w"> </span>openrlhf<span class="o">[</span>vllm<span class="o">]</span><span class="w">              </span><span class="c1"># + vLLM 0.19.0 (recommended)</span>
+pip<span class="w"> </span>install<span class="w"> </span>openrlhf<span class="o">[</span>vllm_latest<span class="o">]</span><span class="w">       </span><span class="c1"># + vLLM &gt; 0.19.0</span>
+pip<span class="w"> </span>install<span class="w"> </span>openrlhf<span class="o">[</span>vllm,ring,liger<span class="o">]</span><span class="w">   </span><span class="c1"># + ring-flash-attention + Liger</span>
+
+<span class="c1"># or install from source</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenRLHF/OpenRLHF.git
+<span class="nb">cd</span><span class="w"> </span>OpenRLHF<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We recommend vLLM 0.19.0+ for best performance. For the Muon optimizer you additionally
+need <strong>DeepSpeed ≥ 0.18.2</strong>. See the <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/tree/main/dockerfile">Dockerfiles</a> and <a class="reference internal" href="nvidia_docker.html#nvidia-docker"><span class="std std-ref">NVIDIA Docker (Optional)</span></a>.</p>
+</div>
+</section>
+<section id="a-note-on-the-cli">
+<span id="hierarchical-cli-summary"></span><h2><a class="toc-backref" href="quick_start.html#id3" role="doc-backlink">A note on the CLI</a><a class="headerlink" href="quick_start.html#a-note-on-the-cli" title="Permalink to this heading"></a></h2>
+<p>OpenRLHF 0.10.2 uses a <strong>hierarchical CLI</strong> — every flag lives under a dotted section prefix.
+For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>--actor.model_name_or_path<span class="w"> </span>Qwen/Qwen3-4B-Thinking-2507<span class="w"> </span><span class="se">\</span>
+--reward.remote_url<span class="w"> </span>examples/python/math_reward_func.py<span class="w"> </span><span class="se">\</span>
+--data.prompt_dataset<span class="w"> </span>zhuzilin/dapo-math-17k<span class="w"> </span><span class="se">\</span>
+--ds.zero_stage<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+--vllm.num_engines<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+--rollout.batch_size<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+--train.colocate_all<span class="w"> </span><span class="se">\</span>
+--ckpt.output_dir<span class="w"> </span>./exp/Qwen3-4B-Thinking
+</pre></div>
+</div>
+<p>The section map and a full old-flag → new-flag migration table are in <a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a>
+(see <a class="reference internal" href="common_options.html#flag-migration"><span class="std std-ref">Flag migration (0.9.x / early 0.10 → 0.10.2)</span></a>). Flat flags from earlier releases (<code class="docutils literal notranslate"><span class="pre">--pretrain</span></code>, <code class="docutils literal notranslate"><span class="pre">--zero_stage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--vllm_num_engines</span></code>…) no longer parse.</p>
+</section>
+<section id="first-run-rlvr-with-qwen3-4b">
+<h2><a class="toc-backref" href="quick_start.html#id4" role="doc-backlink">First run (RLVR with Qwen3-4B)</a><a class="headerlink" href="quick_start.html#first-run-rlvr-with-qwen3-4b" title="Permalink to this heading"></a></h2>
+<p>This is the canonical RL example used throughout the docs — REINFORCE++-baseline on math reasoning
+with a Python reward function (no reward-model training required). Requires 4 GPUs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1) start ray on the head node</span>
+ray<span class="w"> </span>start<span class="w"> </span>--head<span class="w"> </span>--node-ip-address<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--num-gpus<span class="w"> </span><span class="m">4</span>
+
+<span class="c1"># 2) submit the training job</span>
+ray<span class="w"> </span>job<span class="w"> </span>submit<span class="w"> </span>--address<span class="o">=</span><span class="s2">&quot;http://127.0.0.1:8265&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--runtime-env-json<span class="o">=</span><span class="s1">&#39;{&quot;working_dir&quot;: &quot;/openrlhf&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.model_name_or_path<span class="w"> </span>Qwen/Qwen3-4B-Thinking-2507<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.remote_url<span class="w"> </span>examples/python/math_reward_func.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.prompt_dataset<span class="w"> </span>zhuzilin/dapo-math-17k<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.input_key<span class="w"> </span>prompt<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.label_key<span class="w"> </span>label<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.apply_chat_template<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.packing_samples<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ref.num_nodes<span class="w"> </span><span class="m">1</span><span class="w"> </span>--ref.num_gpus_per_node<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.num_nodes<span class="w"> </span><span class="m">1</span><span class="w"> </span>--actor.num_gpus_per_node<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.num_engines<span class="w"> </span><span class="m">2</span><span class="w"> </span>--vllm.tensor_parallel_size<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.colocate_all<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.gpu_memory_utilization<span class="w"> </span><span class="m">0</span>.7<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.enable_sleep<span class="w"> </span>--ds.enable_sleep<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.sync_backend<span class="w"> </span>nccl<span class="w"> </span>--vllm.enforce_eager<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.advantage.estimator<span class="w"> </span>reinforce_baseline<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.kl.use_loss<span class="w"> </span>--algo.kl.estimator<span class="w"> </span>k2<span class="w"> </span>--algo.kl.init_coef<span class="w"> </span>1e-5<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--rollout.batch_size<span class="w"> </span><span class="m">128</span><span class="w"> </span>--rollout.n_samples_per_prompt<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.batch_size<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.max_len<span class="w"> </span><span class="m">8192</span><span class="w"> </span>--rollout.max_new_tokens<span class="w"> </span><span class="m">4096</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.zero_stage<span class="w"> </span><span class="m">3</span><span class="w"> </span>--ds.param_dtype<span class="w"> </span>bf16<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.gradient_checkpointing_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.adam.lr<span class="w"> </span>5e-7<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ckpt.output_dir<span class="w"> </span>./exp/Qwen3-4B-Thinking
+</pre></div>
+</div>
+<p>For the full recipe (with off-policy correction, dynamic filtering, length budgets, ring attention,
+checkpointing) see <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>. To swap in your own dataset, RM, or multi-turn
+environment see <a class="reference internal" href="agent_training.html"><span class="doc">RL Training Guide</span></a>.</p>
+</section>
+<section id="prepare-datasets">
+<h2><a class="toc-backref" href="quick_start.html#id5" role="doc-backlink">Prepare datasets</a><a class="headerlink" href="quick_start.html#prepare-datasets" title="Permalink to this heading"></a></h2>
+<p>Key dataset flags (shared across trainers):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--data.input_key</span></code>: JSON key holding the input (text or chat messages).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--data.apply_chat_template</span></code>: use the tokenizer’s <a class="reference external" href="https://huggingface.co/docs/transformers/main/en/chat_templating">chat template</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--data.input_template</span></code>: custom template string (alternative to chat template).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--data.dataset_probs</span></code> <em>(SFT/RM/DPO)</em> / <code class="docutils literal notranslate"><span class="pre">--data.prompt_probs</span></code> <em>(PPO)</em>: mix multiple
+datasets (e.g., <code class="docutils literal notranslate"><span class="pre">0.1,0.4,0.5</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--eval.dataset</span></code>: evaluation dataset path.</p></li>
+</ul>
+<p>Chat-template example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;input_key&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;I&#39;m doing great. How can I help you today?&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;I&#39;d like to show off how chat templating works!&quot;</span><span class="p">},</span>
+<span class="p">]}]</span>
+
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">apply_chat_template</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;input_key&quot;</span><span class="p">],</span> <span class="n">tokenize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># &quot;&lt;s&gt;[INST] Hello, how are you? [/INST]I&#39;m doing great. ...&lt;/s&gt; [INST] ... [/INST]&quot;</span>
+</pre></div>
+</div>
+<p>JSON key conventions vary by dataset type — see <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/openrlhf/datasets/reward_dataset.py#L10">Reward</a>,
+<a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/openrlhf/datasets/sft_dataset.py#L9">SFT</a>,
+and <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/openrlhf/datasets/prompts_dataset.py#L6">Prompt</a>
+dataset modules.</p>
+</section>
+<section id="pretrained-models">
+<h2><a class="toc-backref" href="quick_start.html#id6" role="doc-backlink">Pretrained models</a><a class="headerlink" href="quick_start.html#pretrained-models" title="Permalink to this heading"></a></h2>
+<p>Checkpoints are HuggingFace-compatible. Point the trainer at them with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--actor.model_name_or_path</span></code> — actor / base model (PPO)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--reward.model_name_or_path</span></code> — reward model (PPO)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--critic.model_name_or_path</span></code> — critic model (PPO; auto-falls back to actor or first reward)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--model.model_name_or_path</span></code> — the single model trained in SFT / RM / DPO</p></li>
+</ul>
+<p>Pre-trained examples are on <a class="reference external" href="https://huggingface.co/OpenRLHF">HuggingFace OpenRLHF</a>.</p>
+</section>
+<section id="typical-rlhf-workflow">
+<h2><a class="toc-backref" href="quick_start.html#id7" role="doc-backlink">Typical RLHF workflow</a><a class="headerlink" href="quick_start.html#typical-rlhf-workflow" title="Permalink to this heading"></a></h2>
+<p>The full three-stage RLHF pipeline:</p>
+<ol class="arabic simple">
+<li><p><strong>SFT</strong> → <a class="reference internal" href="non_rl.html#train-sft"><span class="std std-ref">Supervised Fine-tuning (SFT)</span></a> in <a class="reference internal" href="non_rl.html"><span class="doc">Supervised &amp; Preference Training (SFT / RM / DPO)</span></a>.</p></li>
+<li><p><strong>Reward model</strong> → <a class="reference internal" href="non_rl.html#train-rm"><span class="std std-ref">Reward Model (RM) Training</span></a> in <a class="reference internal" href="non_rl.html"><span class="doc">Supervised &amp; Preference Training (SFT / RM / DPO)</span></a>.</p></li>
+<li><p><strong>RL training</strong> (Ray + vLLM) → <a class="reference internal" href="agent_training.html#rayppo"><span class="std std-ref">Quick Launch (Ray + vLLM)</span></a> in <a class="reference internal" href="agent_training.html"><span class="doc">RL Training Guide</span></a>.</p></li>
+</ol>
+<p>For RLVR / reasoning workloads you can skip steps 1–2 and go straight to step 3 with a custom
+Python reward function (see the <strong>First run</strong> above and <a class="reference internal" href="agent_training.html#single-turn-mode"><span class="std std-ref">Single-Turn Mode (default)</span></a>).</p>
+<p>Advanced modes (custom rewards, multi-turn environments, async, VLM) are all in
+<a class="reference internal" href="agent_training.html"><span class="doc">RL Training Guide</span></a>. More runnable scripts live under <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/tree/main/examples/scripts">examples/scripts</a>.</p>
+</section>
+<section id="where-to-next">
+<h2><a class="toc-backref" href="quick_start.html#id8" role="doc-backlink">Where to next</a><a class="headerlink" href="quick_start.html#where-to-next" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Mental model</strong> — <a class="reference internal" href="architecture.html"><span class="doc">Architecture Foundation: Ray + vLLM Distribution</span></a>, <a class="reference internal" href="agent_paradigm.html"><span class="doc">Design Paradigm: Agent-Based Execution</span></a>.</p></li>
+<li><p><strong>Upgrading from 0.9.x / early 0.10</strong> — <a class="reference internal" href="common_options.html#flag-migration"><span class="std std-ref">Flag migration (0.9.x / early 0.10 → 0.10.2)</span></a> in <a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a>.</p></li>
+<li><p><strong>Tuning / scaling</strong> — <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>, <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>, <a class="reference internal" href="performance.html"><span class="doc">Performance Tuning</span></a>,
+<a class="reference internal" href="multi-node.html"><span class="doc">Multi-node Training</span></a>.</p></li>
+<li><p><strong>Errors</strong> — <a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a>.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to OpenRLHF’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="architecture.html" class="btn btn-neutral float-right" title="Architecture Foundation: Ray + vLLM Distribution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, OpenRLHF.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

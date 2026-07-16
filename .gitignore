@@ -155,6 +155,9 @@ wandb
 !.claude/docs/
 *tmp*
 
-# local snapshot of crawled official docs (openrlhf + vllm), copied from the
-# ~/Desktop/learning-docs archive repo (konghw-git/learning-docs) — too large for git
-docs/official-docs/
+# snapshot of crawled official docs (openrlhf + vllm), copied from the
+# ~/Desktop/learning-docs archive repo (konghw-git/learning-docs).
+# EN side is tracked; ZH side and vllm's bulky auto-rendered parts stay local-only.
+docs/official-docs/*/zh/
+docs/official-docs/vllm.io/en/examples/
+docs/official-docs/vllm.io/en/contributing/

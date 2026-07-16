@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RL Training Guide &mdash; OpenRLHF 0.10.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js%3Fv=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js%3Fv=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js%3Fv=69c39844"></script>
+        <script src="_static/doctools.js%3Fv=888ff710"></script>
+        <script src="_static/sphinx_highlight.js%3Fv=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Supervised &amp; Preference Training (SFT / RM / DPO)" href="non_rl.html" />
+    <link rel="prev" title="Design Paradigm: Agent-Based Execution" href="agent_paradigm.html" /> 
+<script async type="text/javascript" src="../../_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="openrlhf" /><meta name="readthedocs-version-slug" content="latest" /><meta name="readthedocs-resolver-filename" content="/agent_training.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OpenRLHF
+          </a>
+              <div class="version">
+                0.10.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture Foundation: Ray + vLLM Distribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_paradigm.html">Design Paradigm: Agent-Based Execution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Training Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="agent_training.html#">RL Training Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#quick-launch-ray-vllm">Quick Launch (Ray + vLLM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#execution-modes">Execution Modes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#single-turn-mode-default">Single-Turn Mode (default)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#multi-turn-mode">Multi-Turn Mode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#rl-algorithms">RL Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#optimizer-adam-or-muon-per-entity">Optimizer: Adam or Muon (per entity)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#tuning">Tuning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#loss-clipping">Loss &amp; clipping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#advantage-gae">Advantage / GAE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#kl-control">KL control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#entropy">Entropy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#reward-shaping">Reward shaping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#off-policy-correction-tis-icepop-seq-mask-tis">Off-policy correction (TIS / ICEPOP / Seq-Mask-TIS)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#dynamic-sampling-dapo">Dynamic sampling (DAPO)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent_training.html#sampling-misc">Sampling &amp; misc</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#vision-language-model-vlm-rlhf">Vision-Language Model (VLM) RLHF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#logging-evaluation">Logging &amp; evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#reference-scripts">Reference scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="non_rl.html">Supervised &amp; Preference Training (SFT / RM / DPO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_options.html">Common CLI Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scaling &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hybrid_engine.html">Hybrid Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async_training.html">Async Training &amp; Partial Rollout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkpoint.html">Checkpointing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_parallelism.html">Sequence Parallelism (RingAttention)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi-node.html">Multi-node Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvidia_docker.html">NVIDIA Docker (Optional)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenRLHF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">RL Training Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/agent_training.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rl-training-guide">
+<h1>RL Training Guide<a class="headerlink" href="agent_training.html#rl-training-guide" title="Permalink to this heading"></a></h1>
+<p>This page is the complete reference for <strong>RL training</strong> in OpenRLHF. Every algorithm and execution
+mode runs through the same agent execution pipeline.</p>
+<p>For supervised methods (SFT, RM, DPO) see <a class="reference internal" href="non_rl.html"><span class="doc">Supervised &amp; Preference Training (SFT / RM / DPO)</span></a>. For the conceptual model see
+<a class="reference internal" href="agent_paradigm.html"><span class="doc">Design Paradigm: Agent-Based Execution</span></a>. For shared CLI flags see <a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a>. For sync vs. async pipelines
+see <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a> and <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All flags shown on this page use the <strong>0.10.2 hierarchical CLI</strong>. Entity config lives under
+<code class="docutils literal notranslate"><span class="pre">--actor.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--critic.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--ref.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--reward.*</span></code>; pipeline config under
+<code class="docutils literal notranslate"><span class="pre">--ds.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--vllm.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--rollout.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--data.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--train.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--eval.*</span></code> /
+<code class="docutils literal notranslate"><span class="pre">--ckpt.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--logger.*</span></code> / <code class="docutils literal notranslate"><span class="pre">--algo.*</span></code>. Old flat flags like <code class="docutils literal notranslate"><span class="pre">--pretrain</span></code> or
+<code class="docutils literal notranslate"><span class="pre">--remote_rm_url</span></code> no longer parse — see <a class="reference internal" href="common_options.html#flag-migration"><span class="std std-ref">Flag migration (0.9.x / early 0.10 → 0.10.2)</span></a>.</p>
+</div>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="agent_training.html#overview" id="id5">Overview</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#quick-launch-ray-vllm" id="id6">Quick Launch (Ray + vLLM)</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#execution-modes" id="id7">Execution Modes</a></p>
+<ul>
+<li><p><a class="reference internal" href="agent_training.html#single-turn-mode-default" id="id8">Single-Turn Mode (default)</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#multi-turn-mode" id="id9">Multi-Turn Mode</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="agent_training.html#rl-algorithms" id="id10">RL Algorithms</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#optimizer-adam-or-muon-per-entity" id="id11">Optimizer: Adam or Muon (per entity)</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#tuning" id="id12">Tuning</a></p>
+<ul>
+<li><p><a class="reference internal" href="agent_training.html#loss-clipping" id="id13">Loss &amp; clipping</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#advantage-gae" id="id14">Advantage / GAE</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#kl-control" id="id15">KL control</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#entropy" id="id16">Entropy</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#reward-shaping" id="id17">Reward shaping</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#off-policy-correction-tis-icepop-seq-mask-tis" id="id18">Off-policy correction (TIS / ICEPOP / Seq-Mask-TIS)</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#dynamic-sampling-dapo" id="id19">Dynamic sampling (DAPO)</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#sampling-misc" id="id20">Sampling &amp; misc</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="agent_training.html#vision-language-model-vlm-rlhf" id="id21">Vision-Language Model (VLM) RLHF</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#logging-evaluation" id="id22">Logging &amp; evaluation</a></p></li>
+<li><p><a class="reference internal" href="agent_training.html#reference-scripts" id="id23">Reference scripts</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="agent_training.html#id5" role="doc-backlink">Overview</a><a class="headerlink" href="agent_training.html#overview" title="Permalink to this heading"></a></h2>
+<p>Every RL run in OpenRLHF combines three orthogonal choices:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 35%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Options</p></th>
+<th class="head"><p>How to set</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Execution mode</strong></p></td>
+<td><p>Single-turn (default) | Multi-turn</p></td>
+<td><p>default / <code class="docutils literal notranslate"><span class="pre">--reward.remote_url</span></code> | <code class="docutils literal notranslate"><span class="pre">--train.agent_func_path</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>RL algorithm</strong></p></td>
+<td><p>PPO / REINFORCE++ / REINFORCE++-baseline / RLOO / GRPO / Dr. GRPO</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.estimator</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Pipeline</strong></p></td>
+<td><p>Sync (Hybrid Engine) | Async (with optional partial rollout)</p></td>
+<td><p><a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a> | <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<p>These axes are independent: any algorithm runs in any mode under any pipeline, because every
+rollout produces token-level trajectories that are consumed identically by the loss layer.</p>
+</section>
+<section id="quick-launch-ray-vllm">
+<span id="rayppo"></span><h2><a class="toc-backref" href="agent_training.html#id6" role="doc-backlink">Quick Launch (Ray + vLLM)</a><a class="headerlink" href="agent_training.html#quick-launch-ray-vllm" title="Permalink to this heading"></a></h2>
+<p>The default RL example throughout the docs is <strong>Qwen3-4B-Thinking trained with REINFORCE++-baseline
+on math (RLVR)</strong>. The full launch command is documented in <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>. Here is the
+minimal version with the essential flags only:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># launch the master node of ray in a container</span>
+ray<span class="w"> </span>start<span class="w"> </span>--head<span class="w"> </span>--node-ip-address<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--num-gpus<span class="w"> </span><span class="m">8</span>
+
+ray<span class="w"> </span>job<span class="w"> </span>submit<span class="w"> </span>--address<span class="o">=</span><span class="s2">&quot;http://127.0.0.1:8265&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--runtime-env-json<span class="o">=</span><span class="s1">&#39;{&quot;working_dir&quot;: &quot;/openrlhf&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.model_name_or_path<span class="w"> </span>Qwen/Qwen3-4B-Thinking-2507<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.remote_url<span class="w"> </span>examples/python/math_reward_func.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.prompt_dataset<span class="w"> </span>zhuzilin/dapo-math-17k<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.input_key<span class="w"> </span>prompt<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.label_key<span class="w"> </span>label<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.apply_chat_template<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.packing_samples<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span><span class="se">\</span>
+<span class="w">   </span>--ref.num_nodes<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ref.num_gpus_per_node<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.num_nodes<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.num_gpus_per_node<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.num_engines<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.tensor_parallel_size<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.colocate_all<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.gpu_memory_utilization<span class="w"> </span><span class="m">0</span>.7<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.enable_sleep<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.enable_sleep<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.sync_backend<span class="w"> </span>nccl<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.enforce_eager<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span><span class="se">\</span>
+<span class="w">   </span>--algo.advantage.estimator<span class="w"> </span>reinforce_baseline<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.kl.use_loss<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.kl.estimator<span class="w"> </span>k2<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.kl.init_coef<span class="w"> </span>1e-5<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.entropy_coef<span class="w"> </span><span class="m">0</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.advantage.is_correction_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.advantage.is_correction_type<span class="w"> </span>icepop<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span><span class="se">\</span>
+<span class="w">   </span>--rollout.batch_size<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--rollout.n_samples_per_prompt<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.batch_size<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.dynamic_filtering_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.dynamic_filtering_range<span class="w"> </span><span class="m">0</span>.0<span class="w"> </span><span class="m">1</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.dynamic_batch_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.max_len<span class="w"> </span><span class="m">74240</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--rollout.max_new_tokens<span class="w"> </span><span class="m">64000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span><span class="se">\</span>
+<span class="w">   </span>--ds.zero_stage<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.param_dtype<span class="w"> </span>bf16<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.gradient_checkpointing_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.adam.lr<span class="w"> </span>5e-7<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ckpt.output_dir<span class="w"> </span>./exp/Qwen3-4B-Thinking
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Hybrid Engine is used here; for the configuration deep-dive see <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>.</p></li>
+<li><p>Ray + vLLM does <strong>not</strong> currently support LoRA.</p></li>
+<li><p>Auto-deploy environment to Ray workers:
+<code class="docutils literal notranslate"><span class="pre">--runtime-env-json='{&quot;setup_commands&quot;:</span> <span class="pre">[&quot;pip</span> <span class="pre">install</span> <span class="pre">openrlhf[vllm]&quot;]}'</span></code>.</p></li>
+<li><p>GPU-index issues: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES=1</span></code> (NVIDIA)
+or <code class="docutils literal notranslate"><span class="pre">RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES=1</span></code> (AMD).</p></li>
+</ul>
+</div>
+</section>
+<section id="execution-modes">
+<h2><a class="toc-backref" href="agent_training.html#id7" role="doc-backlink">Execution Modes</a><a class="headerlink" href="agent_training.html#execution-modes" title="Permalink to this heading"></a></h2>
+<p>The execution mode determines <strong>how an experience is collected</strong>. Choose based on the structure of
+your task.</p>
+<section id="single-turn-mode-default">
+<span id="single-turn-mode"></span><h3><a class="toc-backref" href="agent_training.html#id8" role="doc-backlink">Single-Turn Mode (default)</a><a class="headerlink" href="agent_training.html#single-turn-mode-default" title="Permalink to this heading"></a></h3>
+<p>One prompt → one response → one reward. Covers the vast majority of RLHF use cases. The reward
+source is one of:</p>
+<ol class="arabic simple">
+<li><p>A <strong>trained reward model</strong> — set <code class="docutils literal notranslate"><span class="pre">--reward.model_name_or_path</span></code>.</p></li>
+<li><p>A <strong>remote HTTP RM server</strong> — set <code class="docutils literal notranslate"><span class="pre">--reward.remote_url</span> <span class="pre">http://host:5000/get_reward</span></code>.</p></li>
+<li><p>A <strong>local Python reward function</strong> — set <code class="docutils literal notranslate"><span class="pre">--reward.remote_url</span> <span class="pre">/path/to/reward_func.py</span></code>.
+This enables Reinforced Fine-Tuning (RFT) for code, math, formatting, multi-objective
+rewards, etc.</p></li>
+</ol>
+<p><strong>Remote reward-model server.</strong> Host a large RM behind an HTTP endpoint:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.serve_rm<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.model_name_or_path<span class="w"> </span>OpenRLHF/Llama-3-8b-rm-700k<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--port<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.param_dtype<span class="w"> </span>bf16<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.attn_implementation<span class="w"> </span>flash_attention_2<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.normalize_enable<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.max_len<span class="w"> </span><span class="m">8192</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--batch_size<span class="w"> </span><span class="m">16</span>
+
+<span class="c1"># then in the trainer:</span>
+python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.remote_url<span class="w"> </span>http://localhost:5000/get_reward<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>...
+</pre></div>
+</div>
+<p><strong>Custom reward function (RFT).</strong> Pass a Python file path to <code class="docutils literal notranslate"><span class="pre">--reward.remote_url</span></code>; OpenRLHF
+imports and calls it on the fly. Pass the ground-truth field via <code class="docutils literal notranslate"><span class="pre">--data.label_key</span> <span class="pre">answer</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># reward_func.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reward_func</span><span class="p">(</span><span class="n">queries</span><span class="p">,</span> <span class="n">prompts</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        queries: list[str] — full text (prompt + response) per sample</span>
+<span class="sd">        prompts: list[str] — original prompts</span>
+<span class="sd">        labels:  list[str] — ground-truth labels (from --data.label_key)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict with:</span>
+<span class="sd">            rewards:    Tensor — used in advantage calculation</span>
+<span class="sd">            scores:     Tensor — used by --algo.dynamic_filtering_enable (typically in [0, 1])</span>
+<span class="sd">            extra_logs: dict   — values logged to Wandb / TensorBoard</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">queries</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
+        <span class="n">reward</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">my_check</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;rewards&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+        <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+        <span class="s2">&quot;extra_logs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()},</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>End-to-end example: <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_ppo_with_reward_fn.sh">train_ppo_with_reward_fn.sh</a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Typical RFT use cases: code (run unit tests), math (verify final answer), JSON formatting
+(regex check), multi-objective rewards (combine signals).</p>
+</div>
+</section>
+<section id="multi-turn-mode">
+<span id="id1"></span><h3><a class="toc-backref" href="agent_training.html#id9" role="doc-backlink">Multi-Turn Mode</a><a class="headerlink" href="agent_training.html#multi-turn-mode" title="Permalink to this heading"></a></h3>
+<p>For multi-step interactions — reasoning chains, coding with feedback, game playing, tool use —
+implement a multi-turn agent and pass it via <code class="docutils literal notranslate"><span class="pre">--train.agent_func_path</span></code>. Each sample becomes an
+<em>episode</em>:</p>
+<ol class="arabic simple">
+<li><p><strong>Reset</strong> the environment with the initial prompt + label.</p></li>
+<li><p>The model generates an action.</p></li>
+<li><p>The environment returns feedback, an optional reward, and <code class="docutils literal notranslate"><span class="pre">done</span></code>.</p></li>
+<li><p>Repeat until <code class="docutils literal notranslate"><span class="pre">done=True</span></code>.</p></li>
+</ol>
+<p>OpenRLHF wraps everything in the same token-in-token-out trajectory consumed by the loss, so any
+RL algorithm just works.</p>
+<p><strong>Implementing an agent.</strong> Subclass <code class="docutils literal notranslate"><span class="pre">AgentInstanceBase</span></code> and (optionally) wrap it in
+<code class="docutils literal notranslate"><span class="pre">MultiTurnAgentExecutor</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># agent_func.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openrlhf.utils.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentInstanceBase</span><span class="p">,</span> <span class="n">MultiTurnAgentExecutor</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentInstance</span><span class="p">(</span><span class="n">AgentInstanceBase</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># states: {&quot;observation&quot;: &lt;prompt&gt;, &quot;label&quot;: &lt;ground truth&gt;, ...}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;observation&quot;</span><span class="p">:</span> <span class="n">states</span><span class="p">[</span><span class="s2">&quot;observation&quot;</span><span class="p">]}</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># states: observation_text / action_text / label / sampling_params / ...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_idx</span> <span class="o">&gt;=</span> <span class="mi">3</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">done</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="n">feedback</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Human: [CORRECT]</span><span class="se">\n</span><span class="s2">&lt;/s&gt;&quot;</span>
+            <span class="k">if</span> <span class="n">done</span>
+            <span class="k">else</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Human: [INCORRECT]</span><span class="se">\n</span><span class="s2">Please analyze and try again.</span><span class="se">\n</span><span class="s2">&lt;/s&gt;</span><span class="se">\n\n</span><span class="s2">Assistant: &quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;rewards&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>                 <span class="c1"># used for advantage</span>
+            <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>                  <span class="c1"># used for dynamic filtering</span>
+            <span class="s2">&quot;environment_feedback&quot;</span><span class="p">:</span> <span class="n">feedback</span><span class="p">,</span>  <span class="c1"># appended to next-turn context</span>
+            <span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+            <span class="s2">&quot;sampling_params&quot;</span><span class="p">:</span> <span class="n">states</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sampling_params&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;extra_logs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_idx</span><span class="p">},</span>
+        <span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentExecutor</span><span class="p">(</span><span class="n">MultiTurnAgentExecutor</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">AgentInstance</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Return-value contract:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reset(states)</span></code> → <code class="docutils literal notranslate"><span class="pre">{&quot;observation&quot;:</span> <span class="pre">str}</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step(states)</span></code> → dict containing <code class="docutils literal notranslate"><span class="pre">rewards</span></code> (Tensor), <code class="docutils literal notranslate"><span class="pre">scores</span></code> (Tensor),
+<code class="docutils literal notranslate"><span class="pre">environment_feedback</span></code> (str), <code class="docutils literal notranslate"><span class="pre">done</span></code> (bool). Optional: <code class="docutils literal notranslate"><span class="pre">sampling_params</span></code>
+(per-step vLLM params), <code class="docutils literal notranslate"><span class="pre">environment_images</span></code> (for VLM agents),
+<code class="docutils literal notranslate"><span class="pre">extra_logs</span></code> (metric dict).</p></li>
+</ul>
+<p>For complete custom token-level control, subclass <code class="docutils literal notranslate"><span class="pre">AgentExecutorBase</span></code> directly and implement
+<code class="docutils literal notranslate"><span class="pre">execute()</span></code> — but stick to the <strong>token-in-token-out principle</strong> so sampling and training stay
+aligned.</p>
+<p><strong>Launching:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.model_name_or_path<span class="w"> </span>Qwen/Qwen3-4B-Thinking-2507<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.agent_func_path<span class="w"> </span>/path/to/agent_func.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>...
+</pre></div>
+</div>
+<p>For higher throughput add <code class="docutils literal notranslate"><span class="pre">--train.async_enable</span></code> (and optionally
+<code class="docutils literal notranslate"><span class="pre">--train.partial_rollout_enable</span></code>); see <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>.</p>
+<p><strong>OpenAI-compatible Agent Server.</strong> When your agent needs an OpenAI-style chat API (e.g., to plug
+into existing tool-use frameworks), <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/python/agent_func_openai_server_executor.py">examples/python/agent_func_openai_server_executor.py</a>
+wraps the local vLLM as a <code class="docutils literal notranslate"><span class="pre">/v1/chat/completions</span></code> server while still collecting token-level traces
+for RL training:</p>
+<ul class="simple">
+<li><p>Standard endpoints: <code class="docutils literal notranslate"><span class="pre">/v1/chat/completions</span></code>, <code class="docutils literal notranslate"><span class="pre">/v1/models</span></code>, <code class="docutils literal notranslate"><span class="pre">/tokenize</span></code>.</p></li>
+<li><p>Per-session token IDs and logprobs are captured automatically.</p></li>
+<li><p>Delta-tokenization reuses prefix tokens across multi-turn calls.</p></li>
+<li><p>Override <code class="docutils literal notranslate"><span class="pre">run_agent()</span></code> to plug in your own multi-turn workflow.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.agent_func_path<span class="w"> </span>examples/python/agent_func_openai_server_executor.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>...
+</pre></div>
+</div>
+</section>
+</section>
+<section id="rl-algorithms">
+<h2><a class="toc-backref" href="agent_training.html#id10" role="doc-backlink">RL Algorithms</a><a class="headerlink" href="agent_training.html#rl-algorithms" title="Permalink to this heading"></a></h2>
+<p>The algorithm determines <strong>how the policy is updated</strong> from the collected trajectories. Choose with
+<code class="docutils literal notranslate"><span class="pre">--algo.advantage.estimator</span></code>. Algorithms differ in whether they use a critic, how they baseline
+the reward, and how they normalize advantages. <strong>All algorithms work with every execution mode and
+pipeline.</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 28%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.estimator</span></code></p></th>
+<th class="head"><p>Key idea</p></th>
+<th class="head"><p>Best for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>PPO</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gae</span></code> <em>(default)</em></p></td>
+<td><p>GAE with full critic; clipped surrogate objective</p></td>
+<td><p>General RLHF, stable training</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>REINFORCE++</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reinforce</span></code></p></td>
+<td><p>Critic-free; PPO clip, KL penalty, reward normalization</p></td>
+<td><p>Lower memory than PPO</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>REINFORCE++-baseline</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reinforce_baseline</span></code></p></td>
+<td><p>Mean reward as baseline (no critic, no per-prompt std)</p></td>
+<td><p><strong>RLVR / reasoning</strong> — robust to reward scale</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>RLOO</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rloo</span></code></p></td>
+<td><p>Leave-one-out baseline + PPO clip + per-token KL</p></td>
+<td><p>Multi-sample-per-prompt training</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GRPO</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">group_norm</span></code></p></td>
+<td><p>Per-group mean/std normalization + KL loss term</p></td>
+<td><p>Batch-based reasoning training</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Dr. GRPO</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dr_grpo</span></code></p></td>
+<td><p>GRPO without local <code class="docutils literal notranslate"><span class="pre">/std</span></code> normalization</p></td>
+<td><p>When per-group std normalization hurts</p></td>
+</tr>
+</tbody>
+</table>
+<p>Algorithm-specific requirements:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rloo</span></code> / <code class="docutils literal notranslate"><span class="pre">reinforce_baseline</span></code> / <code class="docutils literal notranslate"><span class="pre">group_norm</span></code> require <code class="docutils literal notranslate"><span class="pre">--rollout.n_samples_per_prompt</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group_norm</span></code> (GRPO) typically pairs with <code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span></code> and <code class="docutils literal notranslate"><span class="pre">--algo.kl.estimator</span> <span class="pre">k3</span></code>.</p></li>
+</ul>
+</section>
+<section id="optimizer-adam-or-muon-per-entity">
+<h2><a class="toc-backref" href="agent_training.html#id11" role="doc-backlink">Optimizer: Adam or Muon (per entity)</a><a class="headerlink" href="agent_training.html#optimizer-adam-or-muon-per-entity" title="Permalink to this heading"></a></h2>
+<p>PPO has two independently-optimized models (actor and critic). 0.10.2 lets you pick the
+optimizer per entity:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.optim</span> <span class="pre">{adam,</span> <span class="pre">muon}</span></code></p></td>
+<td><p>Actor optimizer (default <code class="docutils literal notranslate"><span class="pre">adam</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--critic.optim</span> <span class="pre">{adam,</span> <span class="pre">muon}</span></code></p></td>
+<td><p>Critic optimizer (default <code class="docutils literal notranslate"><span class="pre">adam</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.muon.lr</span></code> / <code class="docutils literal notranslate"><span class="pre">--actor.muon.momentum</span></code></p></td>
+<td><p>Muon 2-D-weight group settings for the actor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.adam.lr</span></code></p></td>
+<td><p>Adam LR when <code class="docutils literal notranslate"><span class="pre">--actor.optim</span> <span class="pre">adam</span></code>; also the LR for Muon’s aux-Adam subgroup when
+<code class="docutils literal notranslate"><span class="pre">--actor.optim</span> <span class="pre">muon</span></code> (embeddings / LM head / 1-D params).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.adam.betas</span></code> / <code class="docutils literal notranslate"><span class="pre">--actor.adam.eps</span></code> / <code class="docutils literal notranslate"><span class="pre">--actor.adam.weight_decay</span></code></p></td>
+<td><p>AdamW hyperparameters for the actor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.lr_scheduler</span></code> / <code class="docutils literal notranslate"><span class="pre">--actor.lr_warmup_ratio</span></code> / <code class="docutils literal notranslate"><span class="pre">--actor.min_lr_ratio</span></code> /
+<code class="docutils literal notranslate"><span class="pre">--actor.max_norm</span></code></p></td>
+<td><p>Per-entity scheduler + gradient clip. Replace <code class="docutils literal notranslate"><span class="pre">actor</span></code> with <code class="docutils literal notranslate"><span class="pre">critic</span></code> for the critic
+side; they are fully independent.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Typical “actor-Muon, critic-Adam” combo (one-line in 0.10.2):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>--actor.optim<span class="w"> </span>muon<span class="w"> </span><span class="se">\</span>
+--actor.muon.lr<span class="w"> </span><span class="m">0</span>.02<span class="w"> </span>--actor.muon.momentum<span class="w"> </span><span class="m">0</span>.95<span class="w"> </span><span class="se">\</span>
+--actor.adam.lr<span class="w"> </span>5e-7<span class="w"> </span><span class="se">\</span>
+--critic.optim<span class="w"> </span>adam<span class="w"> </span><span class="se">\</span>
+--critic.adam.lr<span class="w"> </span>9e-6
+</pre></div>
+</div>
+<p>Muon requires DeepSpeed ≥ 0.18.2 and is <strong>incompatible</strong> with <code class="docutils literal notranslate"><span class="pre">--ds.adam_offload</span></code>. See the
+detailed caveats in <a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a> (<code class="docutils literal notranslate"><span class="pre">ns_steps</span></code> / Nesterov placeholders, weight-decay
+semantics).</p>
+</section>
+<section id="tuning">
+<h2><a class="toc-backref" href="agent_training.html#id12" role="doc-backlink">Tuning</a><a class="headerlink" href="agent_training.html#tuning" title="Permalink to this heading"></a></h2>
+<p>The flags below are tuning knobs around the chosen algorithm. Most users will only touch the KL
+control and length-penalty knobs in practice.</p>
+<section id="loss-clipping">
+<h3><a class="toc-backref" href="agent_training.html#id13" role="doc-backlink">Loss &amp; clipping</a><a class="headerlink" href="agent_training.html#loss-clipping" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.eps_clip</span></code></p></td>
+<td><p>PPO clip range (default <code class="docutils literal notranslate"><span class="pre">0.2</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.eps_clip_low_high</span> <span class="pre">&lt;low&gt;</span> <span class="pre">&lt;high&gt;</span></code></p></td>
+<td><p>Asymmetric clip bounds; overrides <code class="docutils literal notranslate"><span class="pre">--actor.eps_clip</span></code> when set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.dual_clip</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>Dual-clip PPO upper bound (typical <code class="docutils literal notranslate"><span class="pre">c=3</span></code>); prevents oversized policy updates on
+negative advantages.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--critic.value_clip</span></code></p></td>
+<td><p>Critic value clip (default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.policy_loss_type</span> <span class="pre">{ppo,</span> <span class="pre">gspo}</span></code></p></td>
+<td><p>Switch between standard PPO and GSPO-style loss aggregation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="advantage-gae">
+<h3><a class="toc-backref" href="agent_training.html#id14" role="doc-backlink">Advantage / GAE</a><a class="headerlink" href="agent_training.html#advantage-gae" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.gamma</span></code></p></td>
+<td><p>Discount factor (default <code class="docutils literal notranslate"><span class="pre">1.0</span></code> — treats trajectory as one episode, no discounting).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.lambd</span></code></p></td>
+<td><p>GAE λ (default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>); lower λ trades bias for variance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.no_std_norm</span></code></p></td>
+<td><p>Keep mean centering but disable dividing by advantage std.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="kl-control">
+<h3><a class="toc-backref" href="agent_training.html#id15" role="doc-backlink">KL control</a><a class="headerlink" href="agent_training.html#kl-control" title="Permalink to this heading"></a></h3>
+<p>KL divergence between the current policy and the reference policy can be applied either as a
+<strong>penalty on the reward</strong> or as a <strong>separate loss term</strong>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.kl.init_coef</span></code></p></td>
+<td><p>Initial KL coefficient (default <code class="docutils literal notranslate"><span class="pre">0.01</span></code>). Set <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the reference model entirely.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.kl.target</span></code> / <code class="docutils literal notranslate"><span class="pre">--algo.kl.horizon</span></code></p></td>
+<td><p>Adaptive KL controller — when <code class="docutils literal notranslate"><span class="pre">--algo.kl.target</span></code> is set, the coefficient adapts toward
+this target over <code class="docutils literal notranslate"><span class="pre">--algo.kl.horizon</span></code> steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span></code></p></td>
+<td><p>Add KL as a separate loss term (GRPO-style) rather than a reward penalty.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.kl.estimator</span> <span class="pre">{k1,</span> <span class="pre">k2,</span> <span class="pre">k3}</span></code></p></td>
+<td><p>KL estimator: <code class="docutils literal notranslate"><span class="pre">k1</span></code> for standard PPO penalty, <code class="docutils literal notranslate"><span class="pre">k2</span></code> ≈ <code class="docutils literal notranslate"><span class="pre">k1</span></code> when used as loss, <code class="docutils literal notranslate"><span class="pre">k3</span></code>
+for GRPO loss.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Recommended pairings (the trainer warns if you mix them differently):</p>
+<ul class="simple">
+<li><p><strong>KL as reward penalty</strong> (no <code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span></code>): <code class="docutils literal notranslate"><span class="pre">--algo.kl.estimator</span> <span class="pre">k1</span></code> is the only
+sensible choice. Typical: <code class="docutils literal notranslate"><span class="pre">--algo.kl.init_coef</span> <span class="pre">0.01</span> <span class="pre">--algo.kl.estimator</span> <span class="pre">k1</span></code> for standard PPO
+or REINFORCE++.</p></li>
+<li><p><strong>KL as a loss term</strong> (<code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span></code>): use <code class="docutils literal notranslate"><span class="pre">--algo.kl.estimator</span> <span class="pre">k2</span></code> or <code class="docutils literal notranslate"><span class="pre">k3</span></code> (k1 is
+not a valid loss). Typical: GRPO uses <code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span> <span class="pre">--algo.kl.estimator</span> <span class="pre">k3</span></code>; the
+default RLVR recipe in <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a> uses
+<code class="docutils literal notranslate"><span class="pre">--algo.kl.use_loss</span> <span class="pre">--algo.kl.estimator</span> <span class="pre">k2</span> <span class="pre">--algo.kl.init_coef</span> <span class="pre">1e-5</span></code> with
+REINFORCE++-baseline.</p></li>
+</ul>
+</section>
+<section id="entropy">
+<h3><a class="toc-backref" href="agent_training.html#id16" role="doc-backlink">Entropy</a><a class="headerlink" href="agent_training.html#entropy" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--actor.entropy_coef</span></code>: entropy regularization coefficient. <code class="docutils literal notranslate"><span class="pre">None</span></code> disables it; <code class="docutils literal notranslate"><span class="pre">0</span></code> only
+logs entropy without applying it as a loss.</p></li>
+</ul>
+</section>
+<section id="reward-shaping">
+<h3><a class="toc-backref" href="agent_training.html#id17" role="doc-backlink">Reward shaping</a><a class="headerlink" href="agent_training.html#reward-shaping" title="Permalink to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--reward.normalize_enable</span></code></p></td>
+<td><p>Online running mean/std normalization of raw rewards.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--reward.clip_range</span> <span class="pre">&lt;low&gt;</span> <span class="pre">&lt;high&gt;</span></code></p></td>
+<td><p>Clamp raw rewards before advantage computation (default <code class="docutils literal notranslate"><span class="pre">-10</span> <span class="pre">10</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--reward.overlong_buffer_len</span> <span class="pre">&lt;L&gt;</span></code></p></td>
+<td><p>DAPO-style soft length limit: penalize responses whose length exceeds
+<code class="docutils literal notranslate"><span class="pre">max_new_tokens</span> <span class="pre">-</span> <span class="pre">L</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--reward.overlong_penalty_factor</span></code></p></td>
+<td><p>Multiplicative magnitude of the overlong penalty (default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--reward.stop_properly_penalty_coef</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>ProRL-style truncation penalty for samples with <code class="docutils literal notranslate"><span class="pre">finish_reason='length'</span></code>.
+<code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code> scales the reward by <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">∈</span> <span class="pre">[0,</span> <span class="pre">1]</span></code>; <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> overrides the reward
+(e.g., <code class="docutils literal notranslate"><span class="pre">-0.5</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="off-policy-correction-tis-icepop-seq-mask-tis">
+<h3><a class="toc-backref" href="agent_training.html#id18" role="doc-backlink">Off-policy correction (TIS / ICEPOP / Seq-Mask-TIS)</a><a class="headerlink" href="agent_training.html#off-policy-correction-tis-icepop-seq-mask-tis" title="Permalink to this heading"></a></h3>
+<p>Because vLLM uses different kernels (and sometimes a different precision) than the trainer, the
+same token sequence can produce slightly different log-probs in rollout vs. training. OpenRLHF can
+apply <strong>importance-sampling correction</strong> to compensate.</p>
+<p>Enable with <code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_enable</span></code> and pick a strategy:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 35%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Strategy</p></th>
+<th class="head"><p>Flag</p></th>
+<th class="head"><p>Behavior</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>TIS</strong> <em>(default)</em></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_type</span> <span class="pre">tis</span></code></p></td>
+<td><p>Token-level <strong>clamp</strong> of the IS ratio into <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>ICEPOP</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_type</span> <span class="pre">icepop</span></code></p></td>
+<td><p>Token-level <strong>filter</strong> — zero out coefficients outside <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> (no clamp).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Seq-Mask-TIS</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_type</span> <span class="pre">seq-mask-tis</span></code></p></td>
+<td><p>Sequence-level geometric-mean masking.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Thresholds: <code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_threshold</span> <span class="pre">&lt;low&gt;</span> <span class="pre">&lt;high&gt;</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.5</span> <span class="pre">5.0</span></code>).
+Background: <a class="reference external" href="https://fengyao.notion.site/off-policy-rl">off-policy RL training</a>.</p>
+<p>ICEPOP is equivalent to a hard mask:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ICEPOP: zero-out coefficients outside the interval</span>
+<span class="n">vllm_is</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">old_log_probs</span> <span class="o">-</span> <span class="n">rollout_log_probs</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">vllm_is</span> <span class="o">&gt;=</span> <span class="n">low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">vllm_is</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">)</span>
+<span class="n">vllm_is</span> <span class="o">=</span> <span class="n">vllm_is</span> <span class="o">*</span> <span class="n">mask</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Async + partial rollout pairs naturally with ICEPOP because in-flight samples mix old and new
+weights. See <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>.</p>
+</div>
+</section>
+<section id="dynamic-sampling-dapo">
+<h3><a class="toc-backref" href="agent_training.html#id19" role="doc-backlink">Dynamic sampling (DAPO)</a><a class="headerlink" href="agent_training.html#dynamic-sampling-dapo" title="Permalink to this heading"></a></h3>
+<p>For reasoning tasks, generate <strong>multiple completions per prompt</strong> and train only on a subset:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--rollout.n_samples_per_prompt</span></code></p></td>
+<td><p>Completions per prompt (must be &gt; 1 for filtering / RLOO / GRPO / REINFORCE++-baseline).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.dynamic_filtering_enable</span></code></p></td>
+<td><p>Enable DAPO-style filtering by <code class="docutils literal notranslate"><span class="pre">scores</span></code> returned from the reward / agent function.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--algo.dynamic_filtering_range</span> <span class="pre">&lt;low&gt;</span> <span class="pre">&lt;high&gt;</span></code></p></td>
+<td><p>Reward range to keep, e.g., <code class="docutils literal notranslate"><span class="pre">0.0</span> <span class="pre">1.0</span></code>. Samples outside the range are dropped.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--rollout.vllm_generate_batch_size</span></code></p></td>
+<td><p>vLLM generation batch size; can exceed <code class="docutils literal notranslate"><span class="pre">--rollout.batch_size</span></code> for oversampling.
+Requires <code class="docutils literal notranslate"><span class="pre">--train.async_enable</span></code> when greater than <code class="docutils literal notranslate"><span class="pre">--rollout.batch_size</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--train.dynamic_batch_enable</span></code></p></td>
+<td><p>Form micro-batches by token budget instead of count — much better packing for
+variable-length sequences. Pair with <code class="docutils literal notranslate"><span class="pre">--train.max_tokens_per_gpu</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--rollout.max_tokens_per_gpu</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Sizing rule of thumb: <code class="docutils literal notranslate"><span class="pre">train.batch_size</span> <span class="pre">=</span> <span class="pre">rollout.batch_size</span> <span class="pre">*</span> <span class="pre">rollout.n_samples_per_prompt</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">--algo.dynamic_filtering_enable</span></code> the effective batch may shrink if many samples are
+filtered out — keep oversample headroom via <code class="docutils literal notranslate"><span class="pre">--rollout.vllm_generate_batch_size</span></code> (async only).</p>
+<p>End-to-end DAPO recipe: <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_dapo_ray_hybrid_engine.sh">train_dapo_ray_hybrid_engine.sh</a>.</p>
+</section>
+<section id="sampling-misc">
+<h3><a class="toc-backref" href="agent_training.html#id20" role="doc-backlink">Sampling &amp; misc</a><a class="headerlink" href="agent_training.html#sampling-misc" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--rollout.top_p</span></code> / <code class="docutils literal notranslate"><span class="pre">--rollout.temperature</span></code>: vLLM sampling parameters during rollouts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--critic.freezing_steps</span></code>: keep the actor frozen for the first <em>N</em> updates while the critic
+warms up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--critic.save_value_network</span></code>: also save the critic checkpoint (PPO only).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--train.full_determinism_enable</span></code>: bit-reproducible behavior (slower; vLLM v1 + fixed seed
+paths).</p></li>
+</ul>
+</section>
+</section>
+<section id="vision-language-model-vlm-rlhf">
+<h2><a class="toc-backref" href="agent_training.html#id21" role="doc-backlink">Vision-Language Model (VLM) RLHF</a><a class="headerlink" href="agent_training.html#vision-language-model-vlm-rlhf" title="Permalink to this heading"></a></h2>
+<p>Since OpenRLHF 0.10, VLMs (e.g., <strong>Qwen3.5</strong>) can be trained end-to-end with image inputs. The
+framework auto-detects VLMs via the <code class="docutils literal notranslate"><span class="pre">vision_config</span></code> field in the HuggingFace config, loads them
+with <code class="docutils literal notranslate"><span class="pre">AutoModelForImageTextToText</span></code>, uses <code class="docutils literal notranslate"><span class="pre">AutoProcessor</span></code> for correct image-token insertion, and
+forwards images to vLLM for multimodal generation.</p>
+<p>Why this matters: previous VLM RLHF setups required custom data loaders and bespoke inference
+paths. OpenRLHF reuses the <strong>same agent execution pipeline</strong>, the <strong>same RL algorithms</strong>, and the
+<strong>same Hybrid Engine</strong> for VLMs as for text-only models — you only add a few flags.</p>
+<p>VLM-specific flags:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--data.image_key</span></code></p></td>
+<td><p>Dataset JSON key holding the image paths/URLs (default <code class="docutils literal notranslate"><span class="pre">images</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--data.max_images_per_prompt</span></code></p></td>
+<td><p>Max images per prompt for vLLM (<code class="docutils literal notranslate"><span class="pre">0</span></code> = text-only; default <code class="docutils literal notranslate"><span class="pre">0</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--actor.freeze_visual_encoder</span></code></p></td>
+<td><p>Freeze the vision encoder; only language-model weights are trained and synced to vLLM
+(saves memory and weight-sync time).</p></td>
+</tr>
+</tbody>
+</table>
+<p>Dataset format (JSONL):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="nt">&quot;role&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;image&quot;</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Find x.&quot;</span><span class="p">}</span>
+<span class="w">        </span><span class="p">]}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/path/to/image.png&quot;</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>End-to-end example — see <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_vlm_math_hybrid_engine.sh">train_vlm_math_hybrid_engine.sh</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>openrlhf.cli.train_ppo_ray<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.model_name_or_path<span class="w"> </span>Qwen/Qwen3.5-2B<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--reward.remote_url<span class="w"> </span>examples/python/math_reward_func.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.prompt_dataset<span class="w"> </span>hiyouga/geometry3k<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.input_key<span class="w"> </span>prompt<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.label_key<span class="w"> </span>label<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.image_key<span class="w"> </span>images<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.max_images_per_prompt<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--actor.freeze_visual_encoder<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.max_len<span class="w"> </span><span class="m">4096</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--rollout.max_new_tokens<span class="w"> </span><span class="m">2048</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--algo.advantage.estimator<span class="w"> </span>reinforce_baseline<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--train.colocate_all<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--vllm.gpu_memory_utilization<span class="w"> </span><span class="m">0</span>.7<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--data.apply_chat_template<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.attn_implementation<span class="w"> </span>eager<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--ds.param_dtype<span class="w"> </span>bf16<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>...
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><strong>Tested</strong>: Qwen3.5 (hybrid linear + full attention).</p></li>
+<li><p><strong>Auto-detected, not yet tested</strong>: VLMs with a <code class="docutils literal notranslate"><span class="pre">ForConditionalGeneration</span></code> architecture
+(Gemma4, LLaVA, InternVL, …).</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">--ds.attn_implementation</span> <span class="pre">eager</span></code> for models with linear attention layers — flash
+attention may not support packed sequences there.</p></li>
+<li><p>VLM training does <strong>not</strong> support <code class="docutils literal notranslate"><span class="pre">--ds.packing_samples</span></code> (packing collapses the batch
+dimension, breaking image-token alignment) or the PPO critic (use a critic-free
+<code class="docutils literal notranslate"><span class="pre">--algo.advantage.estimator</span></code> like <code class="docutils literal notranslate"><span class="pre">reinforce_baseline</span></code> / <code class="docutils literal notranslate"><span class="pre">rloo</span></code> / <code class="docutils literal notranslate"><span class="pre">group_norm</span></code>).</p></li>
+<li><p>Multi-turn VLM RLHF is supported; see <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/python/vlm_multiturn_agent.py">vlm_multiturn_agent.py</a>.</p></li>
+</ul>
+</div>
+</section>
+<section id="logging-evaluation">
+<h2><a class="toc-backref" href="agent_training.html#id22" role="doc-backlink">Logging &amp; evaluation</a><a class="headerlink" href="agent_training.html#logging-evaluation" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--logger.wandb.key</span> <span class="pre">{token}</span></code> / <code class="docutils literal notranslate"><span class="pre">--logger.wandb.project</span></code> / <code class="docutils literal notranslate"><span class="pre">--logger.wandb.group</span></code> /
+<code class="docutils literal notranslate"><span class="pre">--logger.wandb.run_name</span></code>: Wandb logging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--logger.tensorboard_dir</span> <span class="pre">{logdir}</span></code>: TensorBoard logging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--logger.logging_steps</span></code>: log every <em>N</em> training steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--eval.steps</span></code> / <code class="docutils literal notranslate"><span class="pre">--eval.dataset</span></code>: periodic evaluation on a held-out dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--train.num_episodes</span></code>: total RL episodes to run (one episode = one full rollout pass through
+<code class="docutils literal notranslate"><span class="pre">rollout.batch_size</span></code> prompts).</p></li>
+</ul>
+<p>Training metrics include policy loss, KL, entropy, reward / advantage statistics, generation
+length, grad norm, and per-phase wall-clock time. See <a class="reference internal" href="checkpoint.html"><span class="doc">Checkpointing</span></a> for save/resume mechanics
+and <a class="reference internal" href="performance.html"><span class="doc">Performance Tuning</span></a> for tuning.</p>
+</section>
+<section id="reference-scripts">
+<h2><a class="toc-backref" href="agent_training.html#id23" role="doc-backlink">Reference scripts</a><a class="headerlink" href="agent_training.html#reference-scripts" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>REINFORCE++-baseline + Hybrid Engine — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_reinforce_baseline_hybrid_engine.sh">train_reinforce_baseline_hybrid_engine.sh</a></p></li>
+<li><p>Async agent RLHF + Partial Rollout — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_reinforce_baseline_ray_agent_async.sh">train_reinforce_baseline_ray_agent_async.sh</a></p></li>
+<li><p>DAPO with dynamic filtering — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_dapo_ray_hybrid_engine.sh">train_dapo_ray_hybrid_engine.sh</a></p></li>
+<li><p>ProRL V2 (1.5B reasoning) — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_prorlv2_math_hybrid_engine.sh">train_prorlv2_math_hybrid_engine.sh</a></p></li>
+<li><p>Custom Python reward (RFT) — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_ppo_with_reward_fn.sh">train_ppo_with_reward_fn.sh</a></p></li>
+<li><p>VLM math RLHF — <a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF/blob/main/examples/scripts/train_vlm_math_hybrid_engine.sh">train_vlm_math_hybrid_engine.sh</a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="agent_paradigm.html" class="btn btn-neutral float-left" title="Design Paradigm: Agent-Based Execution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="non_rl.html" class="btn btn-neutral float-right" title="Supervised &amp; Preference Training (SFT / RM / DPO)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, OpenRLHF.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

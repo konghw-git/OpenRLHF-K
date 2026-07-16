@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture Foundation: Ray + vLLM Distribution &mdash; OpenRLHF 0.10.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js%3Fv=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js%3Fv=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js%3Fv=69c39844"></script>
+        <script src="_static/doctools.js%3Fv=888ff710"></script>
+        <script src="_static/sphinx_highlight.js%3Fv=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Design Paradigm: Agent-Based Execution" href="agent_paradigm.html" />
+    <link rel="prev" title="Quick Start" href="quick_start.html" /> 
+<script async type="text/javascript" src="../../_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="openrlhf" /><meta name="readthedocs-version-slug" content="latest" /><meta name="readthedocs-resolver-filename" content="/architecture.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OpenRLHF
+          </a>
+              <div class="version">
+                0.10.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="architecture.html#">Architecture Foundation: Ray + vLLM Distribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#why-this-matters">Why this matters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#core-infrastructure-components">Core infrastructure components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#ray-distributed-scheduler-and-controller">Ray — Distributed scheduler and controller</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#vllm-high-performance-inference-engine">vLLM — High-performance inference engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#deepspeed-memory-efficient-training">DeepSpeed — Memory-efficient training</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#transformers-model-interface">Transformers — Model interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#nccl-cuda-ipc-high-speed-communication">NCCL / CUDA IPC — High-speed communication</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#execution-time-design-principles">Execution-time design principles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#hybrid-engine-sleep-mode-time-sharing">Hybrid Engine (sleep-mode time-sharing)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture.html#async-partial-rollout-concurrent-pipeline">Async + Partial Rollout (concurrent pipeline)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#key-benefits">Key benefits</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent_paradigm.html">Design Paradigm: Agent-Based Execution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Training Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent_training.html">RL Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="non_rl.html">Supervised &amp; Preference Training (SFT / RM / DPO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_options.html">Common CLI Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scaling &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hybrid_engine.html">Hybrid Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async_training.html">Async Training &amp; Partial Rollout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkpoint.html">Checkpointing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_parallelism.html">Sequence Parallelism (RingAttention)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi-node.html">Multi-node Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvidia_docker.html">NVIDIA Docker (Optional)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OpenRLHF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Architecture Foundation: Ray + vLLM Distribution</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/architecture.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="architecture-foundation-ray-vllm-distribution">
+<h1>Architecture Foundation: Ray + vLLM Distribution<a class="headerlink" href="architecture.html#architecture-foundation-ray-vllm-distribution" title="Permalink to this heading"></a></h1>
+<p>OpenRLHF is built on a <strong>Ray + vLLM distributed architecture</strong>, orchestrating multiple components across GPUs efficiently. The framework cleanly separates concerns: Ray handles distributed scheduling, vLLM handles high-throughput generation, and DeepSpeed handles memory-efficient training, all working with native HuggingFace models.</p>
+<a class="reference internal image-reference" href="_images/openrlhf-arch.png"><img alt="OpenRLHF Architecture (Ray + vLLM)" class="align-center" src="_images/openrlhf-arch.png" style="width: 700px;" /></a>
+<section id="why-this-matters">
+<h2>Why this matters<a class="headerlink" href="architecture.html#why-this-matters" title="Permalink to this heading"></a></h2>
+<p>RLHF training spends roughly <strong>80% of wall-clock time on sample generation</strong>. A naive setup would dedicate separate GPUs to generation and training, leaving each idle for most of the time. OpenRLHF avoids this in two ways:</p>
+<ul class="simple">
+<li><p><strong>Distributed mode</strong>: Actor / Reward / Reference / Critic models and vLLM engines are placed on different GPUs and pipelined. This scales to <strong>70B+ parameter</strong> models.</p></li>
+<li><p><strong>Hybrid Engine mode</strong> (recommended for most workloads): all models and vLLM engines colocate on the <strong>same</strong> GPUs and use sleep mode to free memory between phases (see <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>).</p></li>
+</ul>
+</section>
+<section id="core-infrastructure-components">
+<h2>Core infrastructure components<a class="headerlink" href="architecture.html#core-infrastructure-components" title="Permalink to this heading"></a></h2>
+<section id="ray-distributed-scheduler-and-controller">
+<h3>Ray — Distributed scheduler and controller<a class="headerlink" href="architecture.html#ray-distributed-scheduler-and-controller" title="Permalink to this heading"></a></h3>
+<p>OpenRLHF uses <a class="reference external" href="https://github.com/ray-project/ray">Ray</a> for distributed scheduling. It separates the Actor, Reward, Reference, and Critic models across different GPUs (or colocates them via Hybrid Engine), enabling scalable training for models up to <strong>70B+ parameters</strong>. Ray placement groups make it easy to specify per-model GPU resources, and Ray jobs let you submit a training run from any node in the cluster.</p>
+</section>
+<section id="vllm-high-performance-inference-engine">
+<h3>vLLM — High-performance inference engine<a class="headerlink" href="architecture.html#vllm-high-performance-inference-engine" title="Permalink to this heading"></a></h3>
+<p><a class="reference external" href="https://github.com/vllm-project/vllm">vLLM</a> provides high-throughput, memory-efficient generation through PagedAttention, continuous batching, prefix caching, and CUDA graphs. OpenRLHF integrates vLLM with <strong>Auto Tensor Parallelism (AutoTP)</strong> and <strong>Pipeline Parallelism (PP)</strong>, so a single rollout can be sharded across multiple GPUs without changing the training loop.</p>
+<p>Weight sync between the trainer and vLLM uses NCCL (<code class="docutils literal notranslate"><span class="pre">--vllm.sync_backend</span> <span class="pre">nccl</span></code>) for low-latency updates after each training step.</p>
+</section>
+<section id="deepspeed-memory-efficient-training">
+<h3>DeepSpeed — Memory-efficient training<a class="headerlink" href="architecture.html#deepspeed-memory-efficient-training" title="Permalink to this heading"></a></h3>
+<p>Training uses <a class="reference external" href="https://github.com/deepspeedai/DeepSpeed">DeepSpeed</a> ZeRO-3 to shard optimizer state, gradients, and parameters across GPUs. Optional features:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/deepcompile/README.md">deepcompile</a> — graph compilation (<code class="docutils literal notranslate"><span class="pre">--ds.deepcompile</span></code>).</p></li>
+<li><p><a class="reference external" href="https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/huggingface-tp/README.md">AutoTP</a> — DeepSpeed tensor parallelism (<code class="docutils literal notranslate"><span class="pre">--ds.tensor_parallel_size</span></code>).</p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2310.01889">RingAttention</a> for long contexts (<code class="docutils literal notranslate"><span class="pre">--ds.ring_attn_size</span></code>; see <a class="reference internal" href="sequence_parallelism.html"><span class="doc">Sequence Parallelism (RingAttention)</span></a>).</p></li>
+<li><p>Optimizer choice — Adam (default) or Muon via <code class="docutils literal notranslate"><span class="pre">--optim</span> <span class="pre">muon</span></code> (single-model trainers) /
+<code class="docutils literal notranslate"><span class="pre">--actor.optim</span> <span class="pre">muon</span></code> (PPO). Requires DeepSpeed ≥ 0.18.2 and is incompatible with
+<code class="docutils literal notranslate"><span class="pre">--ds.adam_offload</span></code>.</p></li>
+</ul>
+<p>The result: large-model training works directly from HuggingFace checkpoints — no model conversion, no custom training framework.</p>
+</section>
+<section id="transformers-model-interface">
+<h3>Transformers — Model interface<a class="headerlink" href="architecture.html#transformers-model-interface" title="Permalink to this heading"></a></h3>
+<p>Native integration with HuggingFace <a class="reference external" href="https://github.com/huggingface/transformers">Transformers</a> for model loading, state management, and fine-tuning. VLMs (Vision-Language Models) are auto-detected via the <code class="docutils literal notranslate"><span class="pre">vision_config</span></code> field and loaded with <code class="docutils literal notranslate"><span class="pre">AutoModelForImageTextToText</span></code> (see <a class="reference internal" href="agent_training.html"><span class="doc">RL Training Guide</span></a>).</p>
+</section>
+<section id="nccl-cuda-ipc-high-speed-communication">
+<h3>NCCL / CUDA IPC — High-speed communication<a class="headerlink" href="architecture.html#nccl-cuda-ipc-high-speed-communication" title="Permalink to this heading"></a></h3>
+<p>Inter-GPU communication uses NCCL for collective ops and CUDA IPC for intra-node weight transfer. This keeps the cost of weight sync, gradient reduce, and KV-cache movement low even at 70B scale.</p>
+</section>
+</section>
+<section id="execution-time-design-principles">
+<h2>Execution-time design principles<a class="headerlink" href="architecture.html#execution-time-design-principles" title="Permalink to this heading"></a></h2>
+<p>On top of the static component layout above, OpenRLHF schedules <strong>when</strong> each component runs in
+order to maximize GPU utilization. Two complementary mechanisms are built in — both are first-class
+features and configurable per run:</p>
+<section id="hybrid-engine-sleep-mode-time-sharing">
+<h3>Hybrid Engine (sleep-mode time-sharing)<a class="headerlink" href="architecture.html#hybrid-engine-sleep-mode-time-sharing" title="Permalink to this heading"></a></h3>
+<p>Without sharing, vLLM idles during training and DeepSpeed idles during generation — wasting roughly
+half the GPU clock. The Hybrid Engine solves this by colocating Actor / Critic / Reward / Reference
+<strong>and</strong> vLLM on the same GPUs and time-slicing them via sleep mode:</p>
+<ul class="simple">
+<li><p>During the <strong>generation</strong> phase, vLLM is awake and DeepSpeed engines are asleep.</p></li>
+<li><p>After weight sync (NCCL), vLLM goes to sleep and DeepSpeed wakes for <strong>training</strong>.</p></li>
+<li><p>Both sides know how to release memory between phases, so they can fit on one GPU set even at
+large model sizes.</p></li>
+</ul>
+<p>Trigger flags: <code class="docutils literal notranslate"><span class="pre">--train.colocate_all</span> <span class="pre">--vllm.enable_sleep</span> <span class="pre">--ds.enable_sleep</span></code>. This is the
+recommended default on any cluster where memory permits. See <a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a> for the full
+configuration and tuning notes.</p>
+</section>
+<section id="async-partial-rollout-concurrent-pipeline">
+<h3>Async + Partial Rollout (concurrent pipeline)<a class="headerlink" href="architecture.html#async-partial-rollout-concurrent-pipeline" title="Permalink to this heading"></a></h3>
+<p>Async mode runs rollout and training <strong>concurrently</strong> instead of alternating:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--train.async_enable</span></code> overlaps the two phases through a bounded queue
+(<code class="docutils literal notranslate"><span class="pre">--train.async_queue_size</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--train.partial_rollout_enable</span></code> goes further — vLLM never fully stops; on weight sync it
+<strong>pauses</strong> the in-flight requests, swaps weights, and <strong>resumes</strong>. Generation overlaps with
+weight broadcast at the cost of slight off-policy noise (in-flight samples mix old and new
+weights).</p></li>
+</ul>
+<p>Async pipelines deliver the highest throughput and pair naturally with off-policy correction
+(<code class="docutils literal notranslate"><span class="pre">--algo.advantage.is_correction_enable</span> <span class="pre">--algo.advantage.is_correction_type</span> <span class="pre">icepop</span></code>). They are
+mutually exclusive with vLLM sleep mode, but can still colocate the DeepSpeed models. See
+<a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>.</p>
+</section>
+</section>
+<section id="key-benefits">
+<h2>Key benefits<a class="headerlink" href="architecture.html#key-benefits" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Scalability</strong> — train models up to 70B+ parameters efficiently.</p></li>
+<li><p><strong>Efficiency</strong> — vLLM-accelerated generation eliminates the dominant RLHF bottleneck.</p></li>
+<li><p><strong>Flexibility</strong> — Hybrid Engine shares GPUs to avoid resource idling on small clusters;
+distributed mode scales out for large models; async + partial rollout maximizes overlap when
+throughput is critical.</p></li>
+<li><p><strong>Compatibility</strong> — native HuggingFace model integration; no custom checkpoint format.</p></li>
+<li><p><strong>Production-ready</strong> — NCCL-backed weight sync, full checkpoint / resume, best-checkpoint
+tracking, EMA, multi-node SLURM, comprehensive logging.</p></li>
+</ul>
+<p>See <a class="reference internal" href="agent_paradigm.html"><span class="doc">Design Paradigm: Agent-Based Execution</span></a> for how these pieces tie together into the unified training pipeline.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="agent_paradigm.html" class="btn btn-neutral float-right" title="Design Paradigm: Agent-Based Execution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, OpenRLHF.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

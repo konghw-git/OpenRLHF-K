@@ -40,5 +40,5 @@ Runnable reference configs live in `examples/scripts/*.sh` (e.g. `train_ppo_ray_
 ## Repo-specific caveats
 
 - Most code paths require multi-GPU + CUDA (DeepSpeed/vLLM/Ray); only the pure-logic parts (losses, config, dataset packing, `tests/`) run on this Mac. Don't try to "verify" training changes locally by launching training.
-- `docs/official-docs/` is a gitignored local snapshot of the crawled OpenRLHF + vLLM official docs (EN + ZH) — see the docs map before answering "how does feature X work" questions; prefer citing those pages over guessing. The master archive (more sites, crawl/translation tooling) is a separate repo at `~/Desktop/learning-docs`; restore the snapshot from there if missing.
+- `docs/official-docs/` is a snapshot of the crawled OpenRLHF + vLLM official docs — see the docs map before answering "how does feature X work" questions; prefer citing those pages over guessing. EN side is tracked in git; ZH side and vllm's `en/{examples,contributing}` are gitignored, restorable from the master archive repo at `~/Desktop/learning-docs` (more sites + crawl/translation tooling).
 - Never commit to `main`; it must stay identical to `upstream/main`. Work on `feat-learn` (see git-workflow doc).

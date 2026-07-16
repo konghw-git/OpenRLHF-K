@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to OpenRLHF’s documentation! &mdash; OpenRLHF 0.10.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js%3Fv=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js%3Fv=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js%3Fv=69c39844"></script>
+        <script src="_static/doctools.js%3Fv=888ff710"></script>
+        <script src="_static/sphinx_highlight.js%3Fv=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quick Start" href="quick_start.html" /> 
+<script async type="text/javascript" src="../../_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="openrlhf" /><meta name="readthedocs-version-slug" content="latest" /><meta name="readthedocs-resolver-filename" content="/" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html#" class="icon icon-home">
+            OpenRLHF
+          </a>
+              <div class="version">
+                0.10.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture Foundation: Ray + vLLM Distribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_paradigm.html">Design Paradigm: Agent-Based Execution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Training Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent_training.html">RL Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="non_rl.html">Supervised &amp; Preference Training (SFT / RM / DPO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common_options.html">Common CLI Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Scaling &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hybrid_engine.html">Hybrid Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="async_training.html">Async Training &amp; Partial Rollout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkpoint.html">Checkpointing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_parallelism.html">Sequence Parallelism (RingAttention)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi-node.html">Multi-node Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nvidia_docker.html">NVIDIA Docker (Optional)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html#">OpenRLHF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to OpenRLHF’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-openrlhf-s-documentation">
+<h1>Welcome to OpenRLHF’s documentation!<a class="headerlink" href="index.html#welcome-to-openrlhf-s-documentation" title="Permalink to this heading"></a></h1>
+<p>OpenRLHF is <strong>the first</strong> high-performance, production-ready open-source RLHF framework that combines a <strong>Ray + vLLM distributed architecture</strong> with a <strong>unified agent-based design paradigm</strong> for scalable and extensible reinforcement learning from human feedback.</p>
+<a class="reference internal image-reference" href="_images/openrlhf-arch.png"><img alt="OpenRLHF Architecture" class="align-center" src="_images/openrlhf-arch.png" style="width: 700px;" /></a>
+<section id="highlights">
+<h2>Highlights<a class="headerlink" href="index.html#highlights" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Ray + vLLM distributed architecture</strong> — scales to 70B+ models. vLLM-accelerated generation
+eliminates the dominant RLHF bottleneck; DeepSpeed ZeRO-3 trains directly from HuggingFace
+checkpoints with no model conversion.</p></li>
+<li><p><strong>Unified agent-based paradigm</strong> — token-in-token-out pipeline that decouples <em>execution mode</em>
+(single-turn / multi-turn) from <em>RL algorithm</em>. Any algorithm pairs with any mode through a
+single shared loss layer.</p></li>
+<li><p><strong>State-of-the-art RL algorithms</strong> — PPO, REINFORCE++, REINFORCE++-baseline, GRPO, Dr. GRPO,
+RLOO; switchable with one flag.</p></li>
+<li><p><strong>Hybrid Engine</strong> — colocate Actor / Critic / Reward / Reference / vLLM on the <strong>same</strong> GPUs
+with sleep-mode memory sharing. Highest utilization on small clusters; simplest deployment.</p></li>
+<li><p><strong>Async training &amp; Partial Rollout</strong> — overlap rollout with training, and overlap weight sync
+with generation via vLLM pause / resume. Highest throughput when convergence is validated.</p></li>
+<li><p><strong>Single-turn rewards &amp; multi-turn agents</strong> — HTTP remote RM, custom Python reward functions
+(Reinforced Fine-Tuning), full multi-turn environments, or wrap vLLM as an OpenAI-compatible
+chat server.</p></li>
+<li><p><strong>Vision-Language Model RLHF</strong> <em>(0.10)</em> — train VLMs (e.g., Qwen3.5) end-to-end with image
+inputs through the same agent pipeline.</p></li>
+<li><p><strong>Muon optimizer</strong> <em>(new in 0.10.2)</em> — DeepSpeed-native <code class="docutils literal notranslate"><span class="pre">MuonWithAuxAdam</span></code> for SFT / RM / DPO /
+PPO. Per-entity selection in PPO (<code class="docutils literal notranslate"><span class="pre">--actor.optim</span> <span class="pre">muon</span></code> with Adam critic is a one-liner).
+Requires DeepSpeed ≥ 0.18.2.</p></li>
+<li><p><strong>Hierarchical CLI</strong> <em>(new in 0.10.2)</em> — every flag lives under a named section
+(<code class="docutils literal notranslate"><span class="pre">--ds.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--vllm.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--rollout.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--data.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--train.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--eval.*</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--ckpt.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--logger.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--algo.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--actor.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--critic.*</span></code>, <code class="docutils literal notranslate"><span class="pre">--ref.*</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--reward.*</span></code>). Hierarchy mirrors ownership and is self-documenting at <code class="docutils literal notranslate"><span class="pre">--help</span></code>.</p></li>
+<li><p><strong>Off-policy correction</strong> — TIS / ICEPOP / Seq-Mask-TIS handle vLLM ↔ training log-prob
+mismatches.</p></li>
+<li><p><strong>Production essentials</strong> — resumable checkpoints, best-checkpoint tracking, EMA, Wandb /
+TensorBoard logging, SLURM multi-node, LoRA / QLoRA for SFT / RM / DPO.</p></li>
+</ul>
+</section>
+<section id="start-here">
+<h2>Start here<a class="headerlink" href="index.html#start-here" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>New users</strong></p></td>
+<td><p><a class="reference internal" href="quick_start.html"><span class="doc">Quick Start</span></a> — install + first training run.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Mental model</strong></p></td>
+<td><p><a class="reference internal" href="architecture.html"><span class="doc">Architecture Foundation: Ray + vLLM Distribution</span></a> (components) and <a class="reference internal" href="agent_paradigm.html"><span class="doc">Design Paradigm: Agent-Based Execution</span></a> (design).</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Pick a recipe</strong></p></td>
+<td><p><a class="reference internal" href="agent_training.html"><span class="doc">RL Training Guide</span></a> (RL training) or <a class="reference internal" href="non_rl.html"><span class="doc">Supervised &amp; Preference Training (SFT / RM / DPO)</span></a> (SFT / RM / DPO).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Look up a flag</strong></p></td>
+<td><p><a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a> (shared) or the trainer-specific page above.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Upgrading from 0.9.x / early 0.10</strong></p></td>
+<td><p><a class="reference internal" href="common_options.html#flag-migration"><span class="std std-ref">Flag migration (0.9.x / early 0.10 → 0.10.2)</span></a> in <a class="reference internal" href="common_options.html"><span class="doc">Common CLI Options</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Scale or tune</strong></p></td>
+<td><p><a class="reference internal" href="hybrid_engine.html"><span class="doc">Hybrid Engine</span></a>, <a class="reference internal" href="async_training.html"><span class="doc">Async Training &amp; Partial Rollout</span></a>, <a class="reference internal" href="performance.html"><span class="doc">Performance Tuning</span></a>, <a class="reference internal" href="multi-node.html"><span class="doc">Multi-node Training</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Something broke</strong></p></td>
+<td><p><a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="resources">
+<h2>Resources<a class="headerlink" href="index.html#resources" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/OpenRLHF/OpenRLHF">GitHub Repository</a></p></li>
+<li><p><a class="reference external" href="https://www.researchgate.net/publication/393414548_OpenRLHF_An_Easy-to-use_Scalable_and_High-performance_RLHF_Framework">Technical Report</a></p></li>
+<li><p><a class="reference external" href="https://docs.google.com/presentation/d/1JRhB1d7csofx0PIZBmfyBdMluxNd5JLPpUHrrvVhGnk/edit?usp=sharing">Slides</a></p></li>
+<li><p><a class="reference external" href="https://blog.vllm.ai/2025/04/23/openrlhf-vllm.html">vLLM blog: Accelerating RLHF with vLLM</a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This project is under active development.</p>
+</div>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="index.html#contents" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#a-note-on-the-cli">A note on the CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#first-run-rlvr-with-qwen3-4b">First run (RLVR with Qwen3-4B)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#prepare-datasets">Prepare datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#pretrained-models">Pretrained models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#typical-rlhf-workflow">Typical RLHF workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#where-to-next">Where to next</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture Foundation: Ray + vLLM Distribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#why-this-matters">Why this matters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#core-infrastructure-components">Core infrastructure components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#execution-time-design-principles">Execution-time design principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#key-benefits">Key benefits</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent_paradigm.html">Design Paradigm: Agent-Based Execution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#why-agent-based">Why agent-based?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#agent-architecture">Agent architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#core-design-principles">Core design principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#execution-modes-orthogonal-to-algorithms">Execution modes (orthogonal to algorithms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#pipelines-sync-vs-async">Pipelines (sync vs. async)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#worked-combinations">Worked combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#mental-model-in-one-sentence">Mental model in one sentence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_paradigm.html#how-to-use">How to use</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Training Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent_training.html">RL Training Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#quick-launch-ray-vllm">Quick Launch (Ray + vLLM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#execution-modes">Execution Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#rl-algorithms">RL Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#optimizer-adam-or-muon-per-entity">Optimizer: Adam or Muon (per entity)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#tuning">Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#vision-language-model-vlm-rlhf">Vision-Language Model (VLM) RLHF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#logging-evaluation">Logging &amp; evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent_training.html#reference-scripts">Reference scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="non_rl.html">Supervised &amp; Preference Training (SFT / RM / DPO)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="non_rl.html#supervised-fine-tuning-sft">Supervised Fine-tuning (SFT)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="non_rl.html#reward-model-rm-training">Reward Model (RM) Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="non_rl.html#direct-preference-optimization-dpo">Direct Preference Optimization (DPO)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="non_rl.html#optimizer-adam-or-muon">Optimizer: Adam or Muon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="non_rl.html#lora-qlora">LoRA / QLoRA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="common_options.html">Common CLI Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#section-map">Section map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#deepspeed">DeepSpeed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#vllm">vLLM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#rollout-generation">Rollout / generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#data">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#evaluation">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#checkpointing">Checkpointing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#model-entity-flags">Model / entity flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#optimizer-adam-or-muon">Optimizer: Adam or Muon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#learning-rate-scheduler-gradient-clip">Learning-rate scheduler &amp; gradient clip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#lora-qlora">LoRA / QLoRA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#long-context-checkpointing-dedicated-pages">Long context &amp; checkpointing (dedicated pages)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common_options.html#flag-migration-0-9-x-early-0-10-0-10-2">Flag migration (0.9.x / early 0.10 → 0.10.2)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Scaling &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hybrid_engine.html">Hybrid Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#how-sleep-mode-works">How sleep mode works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#launch-recipe-qwen3-4b-rlvr-math">Launch recipe (Qwen3-4B RLVR — math)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#key-flags">Key flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#memory-rule-of-thumb">Memory rule of thumb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#relationship-to-async-training">Relationship to async training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hybrid_engine.html#when-not-to-use-hybrid-engine">When <strong>not</strong> to use Hybrid Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="async_training.html">Async Training &amp; Partial Rollout</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="async_training.html#how-it-works">How it works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_training.html#flags">Flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_training.html#launch-recipe-async-partial-rollout">Launch recipe (async + partial rollout)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_training.html#tuning-guide">Tuning guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async_training.html#when-not-to-use-async">When <strong>not</strong> to use async</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance Tuning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="performance.html#choosing-a-deployment-mode">Choosing a deployment mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance.html#speed-knobs">Speed knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance.html#memory-management">Memory management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance.html#batch-size-tuning">Batch size tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance.html#long-context-8k-tokens">Long context (&gt;8K tokens)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="checkpoint.html">Checkpointing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="checkpoint.html#core-flags">Core flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="checkpoint.html#ppo-only-flags">PPO-only flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="checkpoint.html#deepspeed-universal-conversion">DeepSpeed → Universal conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="checkpoint.html#example-sft">Example: SFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="checkpoint.html#example-rl-ray-vllm">Example: RL (Ray + vLLM)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sequence_parallelism.html">Sequence Parallelism (RingAttention)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sequence_parallelism.html#when-to-use">When to use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequence_parallelism.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequence_parallelism.html#flags">Flags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequence_parallelism.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="multi-node.html">Multi-node Training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="multi-node.html#how-to-launch-ray-ppo-on-slurm">How to launch Ray PPO on Slurm?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multi-node.html#how-to-launch-sft-rm-dpo-training-on-slurm">How to launch SFT/RM/DPO training on Slurm?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multi-node.html#how-to-specify-a-particular-node-for-a-model-in-ray-ppo">How to specify a particular node for a model in Ray PPO?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvidia_docker.html">NVIDIA Docker (Optional)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvidia_docker.html#one-click-installation-script-of-nvidia-docker">One-Click Installation Script of Nvidia-Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#argparse-unrecognized-arguments-after-upgrade">“argparse: unrecognized arguments” after upgrade</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#gpu-device-index-deepspeed-init-errors">GPU device index / DeepSpeed init errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-oom">Out-of-memory (OOM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#muon-deepspeed-compatibility">Muon + DeepSpeed compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#vllm-hangs-nccl-issues">vLLM hangs / NCCL issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#ray-runtime-environment-problems">Ray runtime environment problems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#debug-with-py-spy-in-container">Debug with py-spy (in-container)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quick_start.html" class="btn btn-neutral float-right" title="Quick Start" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, OpenRLHF.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

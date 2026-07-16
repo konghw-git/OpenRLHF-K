@@ -1,6 +1,6 @@
 # Official Docs Map (local snapshot in docs/official-docs/)
 
-`docs/official-docs/` is a **gitignored local snapshot** of the crawled OpenRLHF and vLLM official docs (EN original + generated ZH translation). The master archive is a separate repo at `~/Desktop/learning-docs` (`konghw-git/learning-docs` on GitHub) — it holds more sites plus the crawl/translation tooling. If the snapshot is missing, copy the two site directories back from the archive (the archive's `vllm.io/en/api/`, 1.1G of auto-generated API reference, is deliberately excluded here).
+`docs/official-docs/` is a snapshot of the crawled OpenRLHF and vLLM official docs (EN original + generated ZH translation). The **EN side is tracked in git**; gitignored and local-only are the ZH side and vllm's bulky `en/examples/`, `en/contributing/` (plus `en/api/`, 1.1G, which never left the archive). The master archive is a separate repo at `~/Desktop/learning-docs` (`konghw-git/learning-docs` on GitHub) — it holds more sites plus the crawl/translation tooling; restore any missing local-only parts from there.
 
 **Use these as the authoritative reference** when answering questions about features, options, or setup — prefer citing a page over reasoning from memory. Pages are static HTML; readable text sits in the main content div. Sphinx sites also keep plain-text sources under `_sources/*.rst.txt` — often easier to read than HTML.
 
