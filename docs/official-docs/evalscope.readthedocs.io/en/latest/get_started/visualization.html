@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html :class="{ 'dark' : darkMode === true }" data-content_root="../" lang="en" x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches), activeSection: ''}">
+<head>
+<script>
+    (function () {
+      // Set initial color scheme
+      if ((localStorage.getItem("_x_darkMode") === "true") || (window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+
+      // Watch for media preference changes
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+        localStorage.setItem("_x_darkMode", event.matches);
+        document.documentElement.classList.toggle("dark", event.matches);
+      });
+    })();
+  </script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="utf-8"/>
+<meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
+<meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Visualization | EvalScope</title>
+<meta content="Visualization | EvalScope" property="og:title"/>
+<meta content="Visualization | EvalScope" name="twitter:title"/>
+<link href="../_static/pygments.css%3Fv=5c66da85.css" rel="stylesheet" type="text/css"/>
+<link href="https://evalscope.readthedocs.io/en/latest/_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
+<link href="../_static/theme.css%3Fv=d6d7c91b.css" rel="stylesheet" type="text/css"/>
+<link href="../_static/sphinx-design.min.css%3Fv=95c83b7e.css" rel="stylesheet" type="text/css"/>
+<link href="../_static/awesome-sphinx-design.css%3Fv=a81faafa.css" rel="stylesheet" type="text/css"/>
+<link href="../_static/evalscope_icon.svg" rel="icon"/>
+<link href="../search.html" rel="search" title="Search"/>
+<link href="../genindex.html" rel="index" title="Index"/>
+<link href="parameters.html" rel="next" title="Parameters"/>
+<link href="basic_usage.html" rel="prev" title="Quick Start"/>
+<script async type="text/javascript" src="../../../_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="evalscope-en" /><meta name="readthedocs-version-slug" content="latest" /><meta name="readthedocs-resolver-filename" content="/get_started/visualization.html" /><meta name="readthedocs-http-status" content="200" /></head>
+<body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
+<div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="visualization.html#content">
+      Skip to content
+    </a><header class="sticky top-0 z-40 w-full border-b shadow-xs border-border bg-background/90 backdrop-blur"><div class="container flex items-center h-14">
+<div class="hidden mr-4 md:flex">
+<a class="flex items-center mr-6" href="../index.html">
+<img alt="Logo" class="mr-2 hidden dark:block" height="24" src="../_static/evalscope_icon_dark.png" width="24"/>
+<img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/evalscope_icon.png" width="24"/><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">EvalScope</span>
+</a><nav class="flex items-center gap-6 text-sm font-medium">
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../index.html">Docs</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../blog/index.html">Blogs</a>
+</nav></div><button @click="showSidebar = true" class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden" type="button">
+<svg aria-hidden="true" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M152.587 825.087q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440Zm0-203.587q-19.152 0-32.326-13.174T107.087 576q0-19.152 13.174-32.326t32.326-13.174h320q19.152 0 32.326 13.174T518.087 576q0 19.152-13.174 32.326T472.587 621.5h-320Zm0-203.587q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440ZM708.913 576l112.174 112.174q12.674 12.674 12.674 31.826t-12.674 31.826Q808.413 764.5 789.261 764.5t-31.826-12.674l-144-144Q600 594.391 600 576t13.435-31.826l144-144q12.674-12.674 31.826-12.674t31.826 12.674q12.674 12.674 12.674 31.826t-12.674 31.826L708.913 576Z"></path>
+</svg>
+<span class="sr-only">Toggle navigation menu</span>
+</button>
+<div class="flex items-center justify-between flex-1 gap-2 sm:gap-4 md:justify-end">
+<div class="flex-1 w-full md:w-auto md:flex-none"><form @keydown.k.window.meta="$refs.search.focus()" action="../search.html" class="relative flex items-center group" id="searchbox" method="get">
+<input aria-label="Search the docs" class="inline-flex items-center font-medium transition-colors bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background border border-input hover:bg-accent focus:bg-accent hover:text-accent-foreground focus:text-accent-foreground hover:placeholder-accent-foreground py-2 px-4 relative h-9 w-full justify-start rounded-[0.5rem] text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64" id="search-input" name="q" placeholder="Search ..." type="search" x-ref="search"/>
+<kbd class="pointer-events-none absolute right-1.5 top-2 hidden h-5 select-none text-muted-foreground items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex group-hover:bg-accent group-hover:text-accent-foreground">
+<span class="text-xs">⌘</span>
+    K
+  </kbd>
+</form>
+</div>
+<nav class="flex items-center gap-1">
+<a href="https://evalscope.readthedocs.io/zh-cn/latest/index.html" rel="noopener nofollow" title="Visit language">
+<div class="inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9">
+<svg fill="currentColor" height="25px" style="margin-top:-2px;display:inline" viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M4 0H6V2H10V4H8.86807C8.57073 5.66996 7.78574 7.17117 6.6656 8.35112C7.46567 8.73941 8.35737 8.96842 9.29948 8.99697L10.2735 6H12.7265L15.9765 16H13.8735L13.2235 14H9.77647L9.12647 16H7.0235L8.66176 10.9592C7.32639 10.8285 6.08165 10.3888 4.99999 9.71246C3.69496 10.5284 2.15255 11 0.5 11H0V9H0.5C1.5161 9 2.47775 8.76685 3.33437 8.35112C2.68381 7.66582 2.14629 6.87215 1.75171 6H4.02179C4.30023 6.43491 4.62904 6.83446 4.99999 7.19044C5.88743 6.33881 6.53369 5.23777 6.82607 4H0V2H4V0ZM12.5735 12L11.5 8.69688L10.4265 12H12.5735Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</a>
+<a href="https://github.com/modelscope/evalscope" rel="noopener nofollow" title="Visit github">
+<div class="inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9">
+<svg fill="currentColor" height="26px" style="margin-top:-2px;display:inline" viewbox="0 0 45 44" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M22.477.927C10.485.927.76 10.65.76 22.647c0 9.596 6.223 17.736 14.853 20.608 1.087.2 1.483-.47 1.483-1.047 0-.516-.019-1.881-.03-3.693-6.04 1.312-7.315-2.912-7.315-2.912-.988-2.51-2.412-3.178-2.412-3.178-1.972-1.346.149-1.32.149-1.32 2.18.154 3.327 2.24 3.327 2.24 1.937 3.318 5.084 2.36 6.321 1.803.197-1.403.759-2.36 1.379-2.903-4.823-.548-9.894-2.412-9.894-10.734 0-2.37.847-4.31 2.236-5.828-.224-.55-.969-2.759.214-5.748 0 0 1.822-.584 5.972 2.226 1.732-.482 3.59-.722 5.437-.732 1.845.01 3.703.25 5.437.732 4.147-2.81 5.967-2.226 5.967-2.226 1.185 2.99.44 5.198.217 5.748 1.392 1.517 2.232 3.457 2.232 5.828 0 8.344-5.078 10.18-9.916 10.717.779.67 1.474 1.996 1.474 4.021 0 2.904-.027 5.247-.027 5.96 0 .58.392 1.256 1.493 1.044C37.981 40.375 44.2 32.24 44.2 22.647c0-11.996-9.726-21.72-21.722-21.72" fill="currentColor" fill-rule="evenodd"></path></svg>
+</div>
+</a>
+<button @click="darkMode = !darkMode" class="relative inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9" title="Toggle color scheme" type="button">
+<svg class="absolute transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" fill="currentColor" height="16" viewbox="0 96 960 960" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 685q45.456 0 77.228-31.772Q589 621.456 589 576q0-45.456-31.772-77.228Q525.456 467 480 467q-45.456 0-77.228 31.772Q371 530.544 371 576q0 45.456 31.772 77.228Q434.544 685 480 685Zm0 91q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM80 621.5q-19.152 0-32.326-13.174T34.5 576q0-19.152 13.174-32.326T80 530.5h80q19.152 0 32.326 13.174T205.5 576q0 19.152-13.174 32.326T160 621.5H80Zm720 0q-19.152 0-32.326-13.174T754.5 576q0-19.152 13.174-32.326T800 530.5h80q19.152 0 32.326 13.174T925.5 576q0 19.152-13.174 32.326T880 621.5h-80Zm-320-320q-19.152 0-32.326-13.174T434.5 256v-80q0-19.152 13.174-32.326T480 130.5q19.152 0 32.326 13.174T525.5 176v80q0 19.152-13.174 32.326T480 301.5Zm0 720q-19.152 0-32.326-13.17Q434.5 995.152 434.5 976v-80q0-19.152 13.174-32.326T480 850.5q19.152 0 32.326 13.174T525.5 896v80q0 19.152-13.174 32.33-13.174 13.17-32.326 13.17ZM222.174 382.065l-43-42Q165.5 327.391 166 308.239t13.174-33.065q13.435-13.674 32.587-13.674t32.065 13.674l42.239 43q12.674 13.435 12.555 31.706-.12 18.272-12.555 31.946-12.674 13.674-31.445 13.413-18.772-.261-32.446-13.174Zm494 494.761-42.239-43q-12.674-13.435-12.674-32.087t12.674-31.565Q686.609 756.5 705.38 757q18.772.5 32.446 13.174l43 41.761Q794.5 824.609 794 843.761t-13.174 33.065Q767.391 890.5 748.239 890.5t-32.065-13.674Zm-42-494.761Q660.5 369.391 661 350.62q.5-18.772 13.174-32.446l41.761-43Q728.609 261.5 747.761 262t33.065 13.174q13.674 13.435 13.674 32.587t-13.674 32.065l-43 42.239q-13.435 12.674-31.706 12.555-18.272-.12-31.946-12.555Zm-495 494.761Q165.5 863.391 165.5 844.239t13.674-32.065l43-42.239q13.435-12.674 32.087-12.674t31.565 12.674Q299.5 782.609 299 801.38q-.5 18.772-13.174 32.446l-41.761 43Q231.391 890.5 212.239 890t-33.065-13.174ZM480 576Z"></path>
+</svg>
+<svg class="absolute transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" fill="currentColor" height="16" viewbox="0 96 960 960" width="16" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 936q-151 0-255.5-104.5T120 576q0-138 90-239.5T440 218q25-3 39 18t-1 44q-17 26-25.5 55t-8.5 61q0 90 63 153t153 63q31 0 61.5-9t54.5-25q21-14 43-1.5t19 39.5q-14 138-117.5 229T480 936Zm0-80q88 0 158-48.5T740 681q-20 5-40 8t-40 3q-123 0-209.5-86.5T364 396q0-20 3-40t8-40q-78 32-126.5 102T200 576q0 116 82 198t198 82Zm-10-270Z"></path>
+</svg>
+</button>
+</nav>
+</div>
+</div>
+</header>
+<div class="flex-1"><div class="container md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10"><aside :aria-hidden="!showSidebar" :class="{ 'translate-x-0': showSidebar }" class="fixed inset-y-0 left-0 md:top-14 z-50 md:z-30 bg-background md:bg-transparent transition-all duration-100 -translate-x-full md:translate-x-0 ml-0 p-6 md:p-0 md:-ml-2 md:h-[calc(100vh-3.5rem)] w-5/6 md:w-full overflow-y-auto border-r border-border md:sticky" id="left-sidebar">
+<a class="justify-start text-sm md:!hidden bg-background" href="../index.html">
+<img alt="Logo" class="mr-2 hidden dark:block" height="16" src="../_static/evalscope_icon_dark.png" width="16"/>
+<img alt="Logo" class="mr-2 dark:hidden" height="16" src="../_static/evalscope_icon.png" width="16"/><span class="font-bold text-clip whitespace-nowrap">EvalScope</span>
+</a>
+<div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
+<div class="overflow-y-auto h-full w-full relative pr-6"><nav class="flex md:hidden flex-col font-medium mt-4">
+<a href="../index.html">Docs</a>
+<a href="../blog/index.html">Blogs</a>
+</nav><nav class="table w-full min-w-full my-6 lg:my-8">
+<p class="caption" role="heading"><span class="caption-text">🚀 Quick Start</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="visualization.html#">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/index.html">Supported Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/llm.html">LLM Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/aa_lcr.html">AA-LCR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/acebench.html">ACEBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/agieval.html">AGIEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/aime24.html">AIME-2024</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/aime25.html">AIME-2025</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/aime26.html">AIME-2026</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/alpaca_eval.html">AlpacaEval2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/amc.html">AMC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/anat_em.html">AnatEM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arc.html">ARC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arc_agi_2.html">ARC-AGI-2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arena_hard.html">ArenaHard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arxivmath.html">ArXiv-Math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arxivrollbench.html">ArxivRollBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/arxivrollbench_full.html">ArxivRollBench-Full</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bbh.html">BBH</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bc2gm.html">BC2GM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bc4chemd.html">BC4CHEMD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bc5cdr.html">BC5CDR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bigcodebench.html">BigCodeBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bigcodebench_hard.html">BigCodeBench-Hard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/biomix_qa.html">BioMixQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/broad_twitter_corpus.html">BroadTwitterCorpus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ceval.html">C-Eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/chinese_simpleqa.html">Chinese-SimpleQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cl_bench.html">CL-bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cmath.html">CMATH</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cmmlu.html">C-MMLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/coin_flip.html">CoinFlip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/commonsense_qa.html">CommonsenseQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/competition_math.html">Competition-MATH</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/conll2003.html">CoNLL2003</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/conllpp.html">CoNLL++</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/copious.html">Copious</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cross_ner.html">CrossNER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/data_collection.html">Data-Collection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/docmath.html">DocMath</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/drivel_binary.html">DrivelologyBinaryClassification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/drivel_multilabel.html">DrivelologyMultilabelClassification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/drivel_selection.html">DrivelologyNarrativeSelection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/drivel_writing.html">DrivelologyNarrativeWriting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/drop.html">DROP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/eq_bench.html">EQ-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/fin_ner.html">FinNER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/frames.html">FRAMES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_arena.html">GeneralArena</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_mcq.html">General-MCQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_qa.html">General-QA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/genia_ner.html">GeniaNER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gpqa_diamond.html">GPQA-Diamond</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gsm8k.html">GSM8K</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/halueval.html">HaluEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/harvey_ner.html">HarveyNER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/health_bench.html">HealthBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hellaswag.html">HellaSwag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hle.html">Humanity’s-Last-Exam</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hmmt25.html">HMMT25</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hmmt26.html">HMMT26</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/humaneval.html">HumanEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/humaneval_plus.html">HumanEvalPlus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ifbench.html">IFBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ifeval.html">IFEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/imo_answerbench.html">IMO-AnswerBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/iquiz.html">IQuiz</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/jnlpba.html">JNLPBA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/jnlpba_rare.html">JNLPBA-Rare</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/kina.html">KINA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/live_code_bench.html">Live-Code-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/locomo.html">LoCoMo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/logi_qa.html">LogiQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/longbench_v2.html">LongBench-v2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/longmemeval.html">LongMemEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/maritime_bench.html">MaritimeBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/math_500.html">MATH-500</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/math_qa.html">MathQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mbpp.html">MBPP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mbpp_plus.html">MBPP-Plus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/med_mcqa.html">Med-MCQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mgsm.html">MGSM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/minerva_math.html">Minerva-Math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mit_movie_trivia.html">MIT-Movie-Trivia</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mit_restaurant.html">MIT-Restaurant</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmlu.html">MMLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmlu_pro.html">MMLU-Pro</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmlu_redux.html">MMLU-Redux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmmlu.html">MMMLU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mri_mcqa.html">MRI-MCQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/multi_if.html">Multi-IF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/multi_nerd.html">MultiNERD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/multiple_humaneval.html">MultiPL-E HumanEval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/multiple_mbpp.html">MultiPL-E MBPP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/music_trivia.html">MusicTrivia</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/musr.html">MuSR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ncbi.html">NCBI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/needle_haystack.html">Needle-in-a-Haystack</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ontonotes5.html">OntoNotes5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/openai_mrcr.html">OpenAI MRCR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/perspective_gap_prompt_writing.html">PerspectiveGap Prompt Writing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/perspective_gap_role_assignment.html">PerspectiveGap Role Assignment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/piqa.html">PIQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/poly_math.html">PolyMath</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/process_bench.html">ProcessBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/pubmedqa.html">PubMedQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/qasc.html">QASC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/race.html">RACE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/refcoco.html">RefCOCO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/scicode.html">SciCode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/sciq.html">SciQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/seed_tts_eval.html">Seed-TTS-Eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/simple_qa.html">SimpleQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/siqa.html">SIQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/super_gpqa.html">SuperGPQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_lite.html">SWE-bench_Lite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_verified.html">SWE-bench_Verified</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_verified_mini.html">SWE-bench_Verified_mini</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tool_bench.html">ToolBench-Static</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/trivia_qa.html">TriviaQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/truthful_qa.html">TruthfulQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tweebank_ner.html">TweeBankNER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tweet_ner_7.html">TweetNER7</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/winogrande.html">Winogrande</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/wmt24pp.html">WMT2024++</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/wnut2017.html">WNUT2017</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/zebralogicbench.html">ZebraLogicBench</a></li>
+</ul>
+</li>
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/vlm.html">VLM Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/a_okvqa.html">A-OKVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ai2d.html">AI2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/air_bench_chat.html">AIR-Bench-Chat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/air_bench_foundation.html">AIR-Bench-Foundation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/baby_vision.html">BabyVision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/blink.html">BLINK</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cc_bench.html">CCBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/chartqa.html">ChartQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/charxiv.html">CharXiv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cmmmu.html">CMMMU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/cmmu.html">CMMU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/common_voice_15.html">CommonVoice15</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/docvqa.html">DocVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/emb_spatial_bench.html">EmbSpatial-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/erqa.html">ERQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/fleurs.html">FLEURS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_vmcq.html">General-VMCQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_vqa.html">General-VQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gsm8k_v.html">GSM8K-V</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hallusion_bench.html">HallusionBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/infovqa.html">InfoVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/librispeech.html">LibriSpeech</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/maritime_ocr_bench.html">Maritime-OCR-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/math_verse.html">MathVerse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/math_vision.html">MathVision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/math_vista.html">MathVista</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/measure_bench.html">MeasureBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mia_bench.html">MIA-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/micro_vqa.html">MicroVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mm_bench.html">MMBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mm_star.html">MMStar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmau.html">MMAU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmmu.html">MMMU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mmmu_pro.html">MMMU-PRO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/msr_vtt.html">MSR-VTT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/msvd.html">MSVD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mvbench.html">MVBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ocr_bench.html">OCRBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/ocr_bench_v2.html">OCRBench-v2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/olympiad_bench.html">OlympiadBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/omni_bench.html">OmniBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/omni_doc_bench.html">OmniDocBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/pope.html">POPE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/real_world_qa.html">RealWorldQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/science_qa.html">ScienceQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/seed_bench_2_plus.html">SEED-Bench-2-Plus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/simple_vqa.html">SimpleVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tir_bench.html">TIR-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/torgo.html">TORGO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tvbench.html">TVBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/videomme_v2.html">Video-MME-v2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/visulogic.html">VisuLogic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/vqav2.html">VQAv2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/vstar_bench.html">V*Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/wenet_speech.html">WenetSpeech</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/world_vqa.html">WorldVQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/zerobench.html">ZeroBench</a></li>
+</ul>
+</li>
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/agent.html">AGENT Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bfcl_v3.html">BFCL-v3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/bfcl_v4.html">BFCL-v4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/browsecomp.html">BrowseComp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/claw_eval.html">Claw-Eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/deep_swe.html">DeepSWE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gaia.html">GAIA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gdpval.html">GDPval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_fc.html">General-FunctionCalling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/k2_verifier.html">K2-Vendor-Verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/kimi_verifier.html">Kimi-Vendor-Verifier (Param Compliance)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/mcp_atlas.html">MCP-Atlas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/minimax_verifier.html">MiniMax-Vendor-Verifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/officeqa.html">OfficeQA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/researchrubrics.html">ResearchRubrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/skillsbench.html">SkillsBench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_lite_agentic.html">SWE-bench_Lite_Agentic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_multilingual_agentic.html">SWE-bench_Multilingual_Agentic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_pro.html">SWE-bench_Pro</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_verified_agentic.html">SWE-bench_Verified_Agentic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/swe_bench_verified_mini_agentic.html">SWE-bench_Verified_Mini_Agentic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tau2_bench.html">τ²-bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tau3_bench.html">τ³-bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tau_bench.html">τ-bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/terminal_bench_v2.html">Terminal-Bench-2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/terminal_bench_v2_1.html">Terminal-Bench-2.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/toolathlon.html">Toolathlon Official Service Wrapper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/wide_search.html">WideSearch</a></li>
+</ul>
+</li>
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/aigc.html">AIGC Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/evalmuse.html">EvalMuse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/gedit.html">GEdit-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/genai_bench.html">GenAI-Bench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/general_t2i.html">General-T2I</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/hpdv2.html">HPD-v2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../benchmarks/tifa160.html">TIFA-160</a></li>
+</ul>
+</li>
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="supported_dataset/other/index.html">Other Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="supported_dataset/other/opencompass.html">OpenCompass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="supported_dataset/other/vlmevalkit.html">VLMEvalKit Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="supported_dataset/other/mteb.html">MTEB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="supported_dataset/other/clip.html">CLIP-Benchmark</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">❓ FAQ</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🔧 Tutorials</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../user_guides/backend/index.html">Evaluation Backends<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/backend/opencompass_backend.html">OpenCompass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/backend/vlmevalkit_backend.html">VLMEvalKit</a></li>
+<li class="toctree-l2" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../user_guides/backend/rageval_backend/index.html">RAGEval<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l3"><a class="reference internal" href="../user_guides/backend/rageval_backend/mteb.html">MTEB Text Embedding Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guides/backend/rageval_backend/clip_benchmark.html">CLIP Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user_guides/backend/rageval_backend/ragas.html">RAGAS RAG Evaluation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../user_guides/stress_test/index.html">Model Inference Stress Testing<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/quick_start.html">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/parameters.html">Parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/examples.html">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/multi_turn.html">Multi-turn Conversation Benchmark</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/sla_auto_tune.html">SLA Auto-Tuning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/speed_benchmark.html">Speed Benchmark Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/vs_vllm_bench.html">vLLM Bench vs Evalscope Perf Load Testing Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/stress_test/custom.html">Custom Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../user_guides/aigc/index.html">AIGC Evaluation<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/aigc/t2i.html">Text-to-Image Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/aigc/image_edit.html">Image Editing Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guides/arena.html">Arena Mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guides/sandbox.html">Sandbox Environment Usage</a></li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../user_guides/agent/index.html">Agent Evaluation<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/agent/native.html">Native AgentLoop Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user_guides/agent/bridge.html">External Agent Bridge Mode</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guides/service.html">EvalScope Service Deployment</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🛠️ Advanced Tutorials</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../advanced_guides/collection/index.html">Building an Evaluation Index<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/collection/schema.html">Defining Your Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/collection/sample.html">Sampling Your Index Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/collection/evaluate.html">Unified Evaluation with Your Index</a></li>
+</ul>
+</li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../advanced_guides/custom_dataset/index.html">Custom Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/custom_dataset/llm.html">Large Language Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/custom_dataset/vlm.html">Multimodal Large Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/custom_dataset/embedding.html">Custom Text Retrieval Evaluation Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_guides/custom_dataset/clip.html">CLIP Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_guides/custom_model.html">Custom Model Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_guides/add_benchmark.html">👍 Contribute Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_guides/sandbox.html">Sandbox Execution</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧰 Extended Benchmarks</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../third_party/index.html">Extended Benchmarks<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../third_party/terminal_bench.html">Terminal-Bench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/skillsbench.html">SkillsBench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/toolathlon.html">Toolathlon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/gaia.html">GAIA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/wide_search.html">WideSearch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/swe_bench.html">SWE-bench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/swe_bench_pro.html">SWE-bench_Pro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/tau_bench.html">τ-bench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/tau2_bench.html">τ²-bench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/tau3_bench.html">τ³-bench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/bfcl_v3.html">BFCL-v3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/bfcl_v4.html">BFCL-v4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/needle_haystack.html">Needle in a Haystack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/toolbench.html">ToolBench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../third_party/longwriter.html">LongBench-Write</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">📖 Best Practices</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../best_practice/index.html">Best Practices<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/general_fc.html">Evaluating in the Wild: How Agentic Is Your AI Model Really?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/index_collection.html">Benchmark Smarter: Tailor Your Model Evaluation Suite with EvalScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/qwen3_omni.html">Best Practices for Evaluating the Qwen3-Omni Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/qwen3_vl.html">Evaluating the Qwen3-VL Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/qwen3_next.html">Evaluating the Qwen3-Next Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/gpt_oss.html">GPT-OSS Model Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/qwen3_coder.html">Evaluating Qwen3-Coder+Instruct Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/t2i_eval.html">Evaluating Text-to-Image Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/qwen3.html">Evaluating the Qwen3 Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/eval_qwq.html">Evaluating the QwQ Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/iquiz.html">How Smart is Your AI? Full Assessment of IQ and EQ!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/think_eval.html">Evaluating the Thinking Efficiency of Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/deepseek_r1_distill.html">Evaluating the Inference Capability of R1 Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/llm_full_stack.html">Full-Chain LLM Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../best_practice/swift_integration.html">ms-swift Integration</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧪 Benchmark Results</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../experiments/benchmark/index.html">Benchmarking<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../experiments/benchmark/mmlu.html">MMLU</a></li>
+</ul>
+</li>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../experiments/speed_benchmark/index.html">Speed Benchmarking<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../experiments/speed_benchmark/QwQ-32B-Preview.html">QwQ-32B-Preview</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🌟 Blog</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../blog/index.html">Welcome to the EvalScope Blogs!<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../blog/RAG/RAG_Evaluation.html">RAG Evaluation Survey: Framework, Metrics, and Methods</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+<button @click="showSidebar = false" class="absolute md:hidden right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100" type="button">
+<svg class="h-4 w-4" fill="currentColor" height="24" stroke="none" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 632 284 828q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536 576l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480 632Z"></path>
+</svg>
+</button>
+</aside>
+<main class="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_300px]">
+<div class="w-full min-w-0 mx-auto">
+<nav aria-label="breadcrumbs" class="flex items-center mb-4 space-x-1 text-sm text-muted-foreground">
+<a class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground" href="../index.html">
+<span class="hidden md:inline">EvalScope</span>
+<svg aria-label="Home" class="md:hidden" fill="currentColor" height="18" stroke="none" viewbox="0 96 960 960" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
+</svg>
+</a>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Visualization</span>
+</nav>
+<div id="content" role="main">
+<section class="tex2jax_ignore mathjax_ignore" id="visualization">
+<h1>Visualization<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#visualization"><span>#</span></a></h1>
+<p>EvalScope provides a web-based visualization tool that supports in-depth analysis and comparison of evaluation results for single or multiple models, compatible with mixed dataset evaluation display, and supports online evaluation task submission and monitoring.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This visualization tool is specifically designed for displaying model <strong>evaluation</strong> results and is not suitable for model <strong>stress test</strong> results. For visualizing stress test reports, please refer to the <a class="reference internal" href="../user_guides/stress_test/quick_start.html#visualizing-test-results"><span class="std std-ref">Stress Test Result Visualization Guide</span></a>.</p>
+</div>
+<section id="installation-and-startup">
+<h2>Installation and Startup<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#installation-and-startup" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#installation-and-startup'"><span>#</span></a></h2>
+<section id="install-dependencies">
+<h3>1. Install Dependencies<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#install-dependencies" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#install-dependencies'"><span>#</span></a></h3>
+<p>Install the required dependencies for visualization:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'evalscope[service]'</span><span class="w"> </span>-U
+</span></code></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The visualization feature requires evaluation reports generated by <code class="docutils literal notranslate"><span class="pre">evalscope&gt;=0.10.0</span></code>. If your version is too old, please upgrade first and re-run the evaluation.</p>
+</div>
+</section>
+<section id="start-service">
+<h3>2. Start Service<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#start-service" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#start-service'"><span>#</span></a></h3>
+<p>Run the following command to start the visualization web service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">evalscope<span class="w"> </span>service
+</span></code></pre></div>
+</div>
+<p>After the service starts, open the Dashboard URL printed on startup (default: <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:9000</span></code>) in your browser to access it.</p>
+<p>Supported command line parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--host</span></code>: Server listening address, default is <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--port</span></code>: Server port, default is <code class="docutils literal notranslate"><span class="pre">9000</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--outputs</span></code>: Specify the root directory where evaluation reports are located, default is <code class="docutils literal notranslate"><span class="pre">./outputs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--debug</span></code>: Enable debug mode.</p></li>
+</ul>
+</section>
+<section id="interface-settings">
+<h3>3. Interface Settings<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#interface-settings" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#interface-settings'"><span>#</span></a></h3>
+<p>The top navigation bar of the web interface provides the following quick actions:</p>
+<ul class="simple">
+<li><p><strong>Language Switch</strong>: Click the language button to switch between Chinese and English interface languages.</p></li>
+<li><p><strong>Theme Switch</strong>: Click the sun/moon icon to switch between light mode and dark mode.</p></li>
+</ul>
+</section>
+</section>
+<section id="quick-experience">
+<h2>Quick Experience<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#quick-experience" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#quick-experience'"><span>#</span></a></h2>
+<p>We provide an evaluation sample containing multiple models and datasets to help you quickly experience the visualization features:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">git<span class="w"> </span>clone<span class="w"> </span>https://github.com/modelscope/evalscope
+</span><span id="line-2">evalscope<span class="w"> </span>service<span class="w"> </span>--outputs<span class="w"> </span>examples/viz
+</span></code></pre></div>
+</div>
+<p>This sample contains evaluation results of qwen-plus and qwen3-max models on GSM8K, GPQA, IFEval, iQuiz and other datasets.</p>
+</section>
+<section id="feature-introduction">
+<h2>Feature Introduction<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#feature-introduction" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#feature-introduction'"><span>#</span></a></h2>
+<section id="dashboard">
+<h3>Dashboard<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#dashboard" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#dashboard'"><span>#</span></a></h3>
+<p>The dashboard is the homepage of the visualization tool, providing a macro overview of evaluation results.</p>
+<p><img alt="Dashboard overview" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/dashboard_overview.png"/></p>
+<p><strong>Directory Scan</strong>: Enter the root directory where evaluation reports are located in the path bar at the top of the page, and click the scan button to automatically discover all evaluation reports in that directory.</p>
+<p><strong>KPI Cards</strong>: After scanning, four key metric cards are displayed:</p>
+<ul class="simple">
+<li><p><strong>Total Evaluations</strong>: The number of discovered evaluation reports. Click to switch to timeline view.</p></li>
+<li><p><strong>Models Evaluated</strong>: The number of different models involved. Click to switch to group by model view.</p></li>
+<li><p><strong>Datasets</strong>: The number of different datasets involved. Click to switch to group by dataset view.</p></li>
+<li><p><strong>Latest Evaluation</strong>: The timestamp of the most recent evaluation. Click to jump to that report details.</p></li>
+</ul>
+<p><strong>Evaluation List</strong>: Supports three view mode switches:</p>
+<ul class="simple">
+<li><p><strong>Timeline View</strong>: Displays each evaluation record in chronological order, with each card showing model name, overall score, timestamp, and dataset score tags.</p></li>
+<li><p><strong>Group by Model</strong>: Folds evaluation records by model name, displaying the best score and evaluation count for each group.</p></li>
+<li><p><strong>Group by Dataset</strong>: Folds evaluation records by dataset name, displaying the best score and evaluation count for each group.</p></li>
+</ul>
+<p>Additionally, the list area provides a search box (search by model name or dataset name) and sorting options (sort by time, score, or model name).</p>
+</section>
+<section id="evaluation-report-list">
+<h3>Evaluation Report List<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#evaluation-report-list" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#evaluation-report-list'"><span>#</span></a></h3>
+<p>The report list page provides more refined report management and filtering capabilities, supporting multi-select reports for comparative analysis.</p>
+<p><img alt="Report list overview" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/reports_page.png"/></p>
+<p><strong>Filter Conditions</strong>: The following filter dimensions are provided:</p>
+<ul class="simple">
+<li><p><strong>Keyword Search</strong>: Fuzzy search by report name.</p></li>
+<li><p><strong>Model Filter</strong>: Multi-select dropdown to filter by model name.</p></li>
+<li><p><strong>Dataset Filter</strong>: Multi-select dropdown to filter by dataset name.</p></li>
+<li><p><strong>Score Range</strong>: Set minimum and maximum score intervals.</p></li>
+<li><p><strong>Sort By</strong>: Sort by time, score, model name, or dataset name, with ascending/descending toggle.</p></li>
+</ul>
+<p><strong>Multi-select and Compare</strong>: Each report card has a checkbox on the left. After selecting, you can perform the following actions:</p>
+<ul class="simple">
+<li><p><strong>Compare</strong>: After selecting 2-3 reports, click the compare button to enter the multi-model comparison page.</p></li>
+<li><p><strong>View HTML Report</strong>: After selecting 1 report, you can open the HTML version of the report in a new browser tab.</p></li>
+</ul>
+<p><strong>Pagination</strong>: The report list supports paginated browsing, displaying 20 records per page.</p>
+</section>
+<section id="single-model-evaluation-details">
+<h3>Single Model Evaluation Details<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#single-model-evaluation-details" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#single-model-evaluation-details'"><span>#</span></a></h3>
+<p>Click any evaluation report to enter the details page and view a single model’s detailed performance on each dataset. The details page consists of a report header, dataset navigation, and three functional tabs.</p>
+<section id="overview-tab">
+<h4>Overview Tab<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#overview-tab"><span>#</span></a></h4>
+<p>The report header displays the model name, associated dataset list (clickable to switch), overall score and total sample count, and provides quick buttons to view the HTML report and return to the list.</p>
+<p>The overview tab provides a summary of the model’s overall performance on each dataset:</p>
+<p><img alt="Overview tab" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/report_overview_tab.png"/></p>
+<ul class="simple">
+<li><p><strong>Statistics Overview</strong>: Displays average score, best/worst dataset and their scores, and total sample count using ring progress charts and number cards.</p></li>
+<li><p><strong>Dataset Score Table</strong>: A sortable table listing each dataset’s name, score (with progress bar and value), and sample count. Click the dataset name to jump to the dataset’s details tab.</p></li>
+<li><p><strong>Radar Chart</strong>: Intuitively displays the model’s capability dimension distribution across datasets using a radar chart.</p></li>
+<li><p><strong>Task Configuration</strong>: A collapsible area that displays the evaluation task configuration information using a JSON viewer.</p></li>
+</ul>
+</section>
+<section id="details-tab">
+<h4>Details Tab<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#details-tab"><span>#</span></a></h4>
+<p>The details tab provides an in-depth view of the selected dataset’s subset scores and analysis results:</p>
+<p><img alt="Details tab" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/report_details_tab.png"/></p>
+<ul class="simple">
+<li><p><strong>Overall Score</strong>: Displays the dataset’s overall score using a large number and ring progress chart.</p></li>
+<li><p><strong>Subset Score Table</strong>: A sortable table listing each subset’s name, metric (if applicable), score, and sample count. Click the subset name to jump directly to the sample browsing for that subset in the predictions tab.</p></li>
+<li><p><strong>AI Analysis</strong>: An intelligent analysis report rendered in Markdown format, interpreting the model’s performance on this dataset.</p></li>
+<li><p><strong>Performance Metrics</strong>: When the evaluation includes performance data, displays latency distribution (with percentile table), TTFT (Time to First Token), TPOT (Time per Output Token), and token usage statistics.</p></li>
+</ul>
+</section>
+<section id="predictions-tab">
+<h4>Predictions Tab<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#predictions-tab"><span>#</span></a></h4>
+<p>The predictions tab allows browsing each sample’s detailed prediction results one by one, and is the most fine-grained analysis tool:</p>
+<p><img alt="Predictions tab" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/report_predictions_tab.png"/></p>
+<p><strong>Filter and Navigation</strong>:</p>
+<ul class="simple">
+<li><p><strong>Subset Selector</strong>: Dropdown to select the subset of the current dataset.</p></li>
+<li><p><strong>Score Threshold</strong>: Set the pass/fail score threshold, default 0.99.</p></li>
+<li><p><strong>Pass Status Filter</strong>: All / Pass / Fail buttons for quick sample filtering, each button displaying the corresponding count.</p></li>
+<li><p><strong>Sample Search</strong>: Supports precise search and jump by sample index number (Index) and message ID (Message ID).</p></li>
+<li><p><strong>Sample Pagination</strong>: Left/right arrow buttons or keyboard arrow keys to browse one by one, displaying current page number and total pages.</p></li>
+</ul>
+<p><strong>Conversation View</strong>: Each sample is displayed in chat bubble format, supporting the following content types:</p>
+<ul class="simple">
+<li><p><strong>System Prompt</strong>: A collapsible top banner displaying the System Prompt content.</p></li>
+<li><p><strong>User Message</strong>: Blue bubble, supporting text, images (click to enlarge), audio and other rich media content. Round labels are displayed for multi-turn conversations.</p></li>
+<li><p><strong>Assistant Reply</strong>: Green bubble, supporting text, reasoning process (collapsible), tool calls (collapsible), and performance metrics. Round labels are displayed for multi-turn conversations.</p></li>
+<li><p><strong>Tool Result</strong>: A collapsible tool return result area.</p></li>
+<li><p><strong>Message ID</strong>: Each message displays a copyable message ID tag in the upper right corner.</p></li>
+<li><p><strong>Content Copy</strong>: Each message provides a one-click copy button.</p></li>
+</ul>
+<p><strong>Evaluation Result Panel</strong>: Below the conversation view, evaluation judgment details are displayed:</p>
+<ul class="simple">
+<li><p><strong>Extracted Answer</strong>: The predicted answer extracted from the model output (displayed when different from the generated content).</p></li>
+<li><p><strong>Gold Answer</strong>: The expected correct answer.</p></li>
+<li><p><strong>Score</strong>: Numerical score and pass/fail indicator.</p></li>
+<li><p><strong>Scoring Details</strong>: A collapsible JSON view showing the complete information of the score calculation.</p></li>
+<li><p><strong>Metadata</strong>: A collapsible JSON view showing the sample’s additional metadata.</p></li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>When <a class="reference internal" href="../user_guides/agent/index.html"><span class="std std-doc">Agent Evaluation</span></a> is enabled, the predictions view automatically detects the sample’s <code class="docutils literal notranslate"><span class="pre">agent_trace</span></code> and renders an Agent Trace view grouped by <code class="docutils literal notranslate"><span class="pre">step</span></code> (with tool calls, environment commands, nudges, errors, etc.). See <a class="reference internal" href="../user_guides/agent/index.html#trace-visualization"><span class="std std-ref">Agent Evaluation → Trace Visualization</span></a> for the full description and a screenshot.</p>
+</div>
+</section>
+<section id="dataset-navigation">
+<h4>Dataset Navigation<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#dataset-navigation"><span>#</span></a></h4>
+<p>In the details and predictions tabs, a dataset navigation sidebar is provided on the left (horizontal scroll bar at the top on mobile), allowing quick switching of the currently viewed dataset.</p>
+</section>
+</section>
+<section id="multi-model-comparison">
+<h3>Multi-Model Comparison<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#multi-model-comparison" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#multi-model-comparison'"><span>#</span></a></h3>
+<p>After selecting 2-3 reports on the report list page, click the “Compare” button to enter the multi-model comparison page. The comparison page supports side-by-side comparison analysis of up to 3 models.</p>
+<section id="score-comparison">
+<h4>Score Comparison<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#score-comparison"><span>#</span></a></h4>
+<p><img alt="Score comparison tab" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/compare_score_tab.png"/></p>
+<ul class="simple">
+<li><p><strong>Radar Chart</strong>: Intuitively displays each model’s capability dimension comparison across different datasets using a polygon radar chart.</p></li>
+<li><p><strong>Score Comparison Table</strong>: A table with datasets as rows and models as columns, each cell displaying the score percentage with color coding, and the highest score highlighted. The bottom of the table calculates the average score for each model.</p></li>
+</ul>
+</section>
+<section id="prediction-comparison">
+<h4>Prediction Comparison<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#prediction-comparison"><span>#</span></a></h4>
+<p><img alt="Prediction comparison tab" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/compare_prediction_tab.png"/></p>
+<ul class="simple">
+<li><p><strong>Dataset and Subset Selection</strong>: Select common datasets and subsets for sample-by-sample comparison.</p></li>
+<li><p><strong>Score Threshold</strong>: Set the pass/fail threshold.</p></li>
+<li><p><strong>Filter by Model</strong>: Each model independently sets an Any / Pass / Fail three-state filter, supporting quick presets like All Pass, All Fail, etc.</p></li>
+<li><p><strong>Pass Rate Tag</strong>: Each model displays the pass rate percentage under the current filter conditions.</p></li>
+<li><p><strong>Side-by-Side Conversation View</strong>: Displays prediction results for each model on the same question in a multi-column layout side by side, with each column identified by a different color and the model name and score displayed at the top. Supports keyboard arrow key pagination.</p></li>
+<li><p><strong>Statistics Bar</strong>: Displays the number of filtered samples and total samples, and provides pagination controls.</p></li>
+</ul>
+</section>
+<section id="model-management">
+<h4>Model Management<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#model-management"><span>#</span></a></h4>
+<p>The model management area at the top of the comparison page supports the following actions:</p>
+<ul class="simple">
+<li><p><strong>View Selected Models</strong>: Displays the models currently participating in the comparison as tags.</p></li>
+<li><p><strong>Remove Model</strong>: Click the remove button on the tag to remove a model (at least 2 must be kept).</p></li>
+<li><p><strong>Add Model</strong>: Click the add button and enter a report name to add a new model (up to 3).</p></li>
+</ul>
+</section>
+</section>
+<section id="benchmark-browser">
+<h3>Benchmark Browser<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#benchmark-browser" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#benchmark-browser'"><span>#</span></a></h3>
+<p>The benchmark page provides browsing and search functionality for all evaluation datasets supported by EvalScope.</p>
+<p><img alt="Benchmarks page" src="https://sail-moe.oss-cn-hangzhou.aliyuncs.com/yunlin/images/evalscope/dashboard/benchmarks_page.png"/></p>
+<ul class="simple">
+<li><p><strong>Category Tabs</strong>: Switch between All / Text / Multimodal tabs to view text or multimodal datasets.</p></li>
+<li><p><strong>Keyword Search</strong>: Search datasets by name or description.</p></li>
+<li><p><strong>Tag Filter</strong>: Click tag buttons to filter datasets by capability dimension (e.g., math, reasoning, code, etc.).</p></li>
+<li><p><strong>Dataset Cards</strong>: Each card displays the dataset name, identifier, description summary, sample count, subset count, few-shot count, tags, and metrics.</p></li>
+<li><p><strong>Details Modal</strong>: Click a card to open a modal window displaying the dataset’s complete Markdown description, paper links, and other detailed information.</p></li>
+</ul>
+</section>
+<section id="online-evaluation-and-stress-test">
+<h3>Online Evaluation and Stress Test<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#online-evaluation-and-stress-test" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#online-evaluation-and-stress-test'"><span>#</span></a></h3>
+<p>The web interface supports directly submitting evaluation and stress test tasks without command-line operations.</p>
+<section id="evaluation-task">
+<h4>Evaluation Task<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#evaluation-task"><span>#</span></a></h4>
+<p>The evaluation task page provides a configuration form and task monitoring panel:</p>
+<ul class="simple">
+<li><p><strong>Configuration Form</strong>: Fill in the model, dataset, generation parameters, and other evaluation configurations, then submit the task.</p></li>
+<li><p><strong>Task Monitoring</strong>: Displays the task progress bar and running logs in real time. After the task is completed, you can directly view the evaluation report.</p></li>
+</ul>
+</section>
+<section id="stress-test-task">
+<h4>Stress Test Task<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="visualization.html#stress-test-task"><span>#</span></a></h4>
+<p>The stress test task page provides a configuration form and task monitoring panel:</p>
+<ul class="simple">
+<li><p><strong>Configuration Form</strong>: Fill in the model connection information and stress test parameters, then submit the task.</p></li>
+<li><p><strong>Task Monitoring</strong>: Displays the stress test progress and logs in real time. After the task is completed, you can directly view the stress test report.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For detailed configuration instructions on online evaluation and stress test features, please refer to <a class="reference internal" href="basic_usage.html"><span class="std std-doc">Evaluation Quick Start</span></a> and <a class="reference internal" href="../user_guides/stress_test/quick_start.html"><span class="std std-doc">Stress Test Quick Start</span></a>.</p>
+</div>
+</section>
+</section>
+</section>
+</section>
+</div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
+<div class="mr-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="basic_usage.html">
+<svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+        Quick Start
+      </a>
+</div>
+<div class="ml-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="parameters.html">
+        Parameters
+        <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</a>
+</div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#installation-and-startup'" class="reference internal" href="visualization.html#installation-and-startup">Installation and Startup</a><ul>
+<li><a :data-current="activeSection === '#install-dependencies'" class="reference internal" href="visualization.html#install-dependencies">1. Install Dependencies</a></li>
+<li><a :data-current="activeSection === '#start-service'" class="reference internal" href="visualization.html#start-service">2. Start Service</a></li>
+<li><a :data-current="activeSection === '#interface-settings'" class="reference internal" href="visualization.html#interface-settings">3. Interface Settings</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#quick-experience'" class="reference internal" href="visualization.html#quick-experience">Quick Experience</a></li>
+<li><a :data-current="activeSection === '#feature-introduction'" class="reference internal" href="visualization.html#feature-introduction">Feature Introduction</a><ul>
+<li><a :data-current="activeSection === '#dashboard'" class="reference internal" href="visualization.html#dashboard">Dashboard</a></li>
+<li><a :data-current="activeSection === '#evaluation-report-list'" class="reference internal" href="visualization.html#evaluation-report-list">Evaluation Report List</a></li>
+<li><a :data-current="activeSection === '#single-model-evaluation-details'" class="reference internal" href="visualization.html#single-model-evaluation-details">Single Model Evaluation Details</a><ul>
+<li><a :data-current="activeSection === '#overview-tab'" class="reference internal" href="visualization.html#overview-tab">Overview Tab</a></li>
+<li><a :data-current="activeSection === '#details-tab'" class="reference internal" href="visualization.html#details-tab">Details Tab</a></li>
+<li><a :data-current="activeSection === '#predictions-tab'" class="reference internal" href="visualization.html#predictions-tab">Predictions Tab</a></li>
+<li><a :data-current="activeSection === '#dataset-navigation'" class="reference internal" href="visualization.html#dataset-navigation">Dataset Navigation</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#multi-model-comparison'" class="reference internal" href="visualization.html#multi-model-comparison">Multi-Model Comparison</a><ul>
+<li><a :data-current="activeSection === '#score-comparison'" class="reference internal" href="visualization.html#score-comparison">Score Comparison</a></li>
+<li><a :data-current="activeSection === '#prediction-comparison'" class="reference internal" href="visualization.html#prediction-comparison">Prediction Comparison</a></li>
+<li><a :data-current="activeSection === '#model-management'" class="reference internal" href="visualization.html#model-management">Model Management</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#benchmark-browser'" class="reference internal" href="visualization.html#benchmark-browser">Benchmark Browser</a></li>
+<li><a :data-current="activeSection === '#online-evaluation-and-stress-test'" class="reference internal" href="visualization.html#online-evaluation-and-stress-test">Online Evaluation and Stress Test</a><ul>
+<li><a :data-current="activeSection === '#evaluation-task'" class="reference internal" href="visualization.html#evaluation-task">Evaluation Task</a></li>
+<li><a :data-current="activeSection === '#stress-test-task'" class="reference internal" href="visualization.html#stress-test-task">Stress Test Task</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</main>
+</div>
+</div><footer class="py-6 border-t border-border md:py-0">
+<div class="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+<div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+<p class="text-sm leading-loose text-center text-muted-foreground md:text-left">© 2022-2024, Alibaba ModelScope Built with <a class="font-medium underline underline-offset-4" href="https://www.sphinx-doc.org" rel="noreferrer">Sphinx 9.1.0</a></p>
+</div>
+</div>
+</footer>
+</div><button :class="{'opacity-0 invisible' : !showScrollTop}" @click="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 p-2 z-10 rounded-sm bg-gray-700 text-xs text-white transition-all duration-1000 hover:bg-gray-950 focus:bg-gray-950" id="scrolltop" x-cloak="">
+<svg aria-hidden="true" class="inline fill-current mb-[2px]" height="14" viewbox="0 96 960 960" width="14" xmlns="http://www.w3.org/2000/svg">
+<path d="M450 896V370L202 618l-42-42 320-320 320 320-42 42-248-248v526h-60Z"></path>
+</svg>
+  Back to top
+</button>
+<script src="../_static/documentation_options.js%3Fv=730b1430"></script>
+<script src="../_static/doctools.js%3Fv=fd6eb6e6"></script>
+<script src="../_static/sphinx_highlight.js%3Fv=6ffebe34"></script>
+<script defer="defer" src="../_static/theme.js%3Fv=5db23cf8"></script>
+<script src="../_static/design-tabs.js%3Fv=f930bc37"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "EvalScope",
+  "description": "魔搭社区（ModelScope）出品的大模型评测框架（基准评测、压测、RAG/多模态评测）",
+  "src": "en/latest",
+  "dst": "zh/latest",
+  "source_url": "https://evalscope.readthedocs.io/zh-cn/latest/",
+  "note": "官方自带中文：zh/latest 是官方 zh-cn/latest 语言版本的直接镜像（本地目录名 zh-cn 改为 zh 以统一仓库惯例；跨语言链接均为指向线上站点的绝对 URL，重命名不影响本地浏览），不走翻译流水线。en/zh 两侧由官方分别维护，页面集合有极小差异（en 多 advanced_guides/sandbox.html，zh 多 2 篇 blog）。"
+}
