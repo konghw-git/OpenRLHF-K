@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenRLHF 七天精通指南</title>
+<title>OpenRLHF 七天吃透指南（案例驱动版）</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -250,25 +250,25 @@ footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line);
 <body>
 <div class="layout">
 
-<!-- ══════════ 侧栏 ══════════ -->
 <nav class="sidebar">
   <div class="side-title">
-    <div class="t1">OpenRLHF 七天精通指南</div>
-    <div class="t2">分布式 RLHF · 训练细节 · 调参技巧</div>
+    <div class="t1">OpenRLHF 七天吃透指南</div>
+    <div class="t2">案例驱动 · 一条数据的十二站旅程</div>
   </div>
   <div class="side-nav" id="sideNav">
-    <a href="#ch0"><span class="day-num">总览</span>一张图看懂整个系统</a>
+    <a href="#intro"><span class="day-num">序章</span>贯穿全书的主线案例</a>
     <div class="side-sep">七天课程</div>
-    <a href="#day1"><span class="day-num">D1</span>全局架构与启动流程<input type="checkbox" data-day="d1" onclick="event.stopPropagation()"></a>
-    <a href="#day2"><span class="day-num">D2</span>采样与轨迹生成<input type="checkbox" data-day="d2" onclick="event.stopPropagation()"></a>
-    <a href="#day3"><span class="day-num">D3</span>Reward 与 Advantage<input type="checkbox" data-day="d3" onclick="event.stopPropagation()"></a>
-    <a href="#day4"><span class="day-num">D4</span>Loss 与训练步<input type="checkbox" data-day="d4" onclick="event.stopPropagation()"></a>
-    <a href="#day5"><span class="day-num">D5</span>分布式基础设施<input type="checkbox" data-day="d5" onclick="event.stopPropagation()"></a>
-    <a href="#day6"><span class="day-num">D6</span>调参艺术<input type="checkbox" data-day="d6" onclick="event.stopPropagation()"></a>
-    <a href="#day7"><span class="day-num">D7</span>收官与综合实战<input type="checkbox" data-day="d7" onclick="event.stopPropagation()"></a>
+    <a href="#day1"><span class="day-num">D1</span>全局架构与启动流程<input type="checkbox" data-day="day1" onclick="event.stopPropagation()"></a>
+    <a href="#day2"><span class="day-num">D2</span>采样：S₁ 的诞生<input type="checkbox" data-day="day2" onclick="event.stopPropagation()"></a>
+    <a href="#day3"><span class="day-num">D3</span>Reward 与六种 Advantage<input type="checkbox" data-day="day3" onclick="event.stopPropagation()"></a>
+    <a href="#day4"><span class="day-num">D4</span>Loss、聚合与训练步<input type="checkbox" data-day="day4" onclick="event.stopPropagation()"></a>
+    <a href="#day5"><span class="day-num">D5</span>分布式基础设施<input type="checkbox" data-day="day5" onclick="event.stopPropagation()"></a>
+    <a href="#day6"><span class="day-num">D6</span>调参艺术<input type="checkbox" data-day="day6" onclick="event.stopPropagation()"></a>
+    <a href="#day7"><span class="day-num">D7</span>非 RL、Agent 与实战<input type="checkbox" data-day="day7" onclick="event.stopPropagation()"></a>
     <div class="side-sep">附录</div>
     <a href="#appA"><span class="day-num">附A</span>一页公式速查</a>
-    <a href="#appB"><span class="day-num">附B</span>学习习惯建议</a>
+    <a href="#appB"><span class="day-num">附B</span>S₁ 数字总表</a>
+    <a href="#appC"><span class="day-num">附C</span>学习习惯建议</a>
   </div>
   <div class="progress-wrap">
     <div class="progress-bar"><div id="progFill"></div></div>
@@ -276,659 +276,1144 @@ footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line);
   </div>
 </nav>
 
-<!-- ══════════ 主体 ══════════ -->
 <main>
 
 <div class="hero">
-  <h1>OpenRLHF <span class="accent">七天精通</span>指南</h1>
-  <p class="sub">面向有 ML/LLM 基础、想吃透分布式 RLHF 训练全部细节与调参技巧的工程师。方法论：<strong>以一条数据的生命周期为主线读代码</strong> —— 一个 prompt 如何变成 rollout、变成 experience、变成梯度、再变成 vLLM 里的新权重。架构和算法都挂在这条主线上，而不是按目录顺序啃文件。</p>
+  <h1>OpenRLHF <span class="accent">七天吃透</span>指南<br><span style="font-size:.55em;color:var(--ink-soft);font-weight:600">案例驱动版 · 跟着样本 S₁ 走完全流程</span></h1>
+  <p class="sub">面向有 ML/LLM 基础、想吃透分布式 RLHF 训练全部细节与调参技巧的工程师。方法论：<strong>费曼学习法 × 一条真实数据的生命周期</strong> —— 固定一个官方标准实验（Qwen3-4B 数学 RLVR），跟踪一道数学题从 prompt 变成 rollout、变成 experience、变成梯度、再变成 vLLM 里新权重的每一步，每一步都手算出具体数字。</p>
   <div class="chips">
     <span class="chip">📚 官方文档镜像 <b>docs/official-docs/…/{en,zh}/latest/</b></span>
     <span class="chip">🧭 仓库导航 <b>.claude/docs/architecture.md</b></span>
     <span class="chip">✅ flag 组合事实标准 <b>examples/scripts/*.sh</b></span>
+    <span class="chip">🧮 主线案例 <b>S₁：36 的因数和 = 91</b></span>
   </div>
 </div>
 
-<!-- ─────────── 第 0 章 ─────────── -->
-<section class="day" id="ch0">
-  <div class="day-head"><span class="day-badge alt">第 0 章</span><h2>一张图看懂整个系统（开始前必读）</h2></div>
+<div class="card reading">
+  <div class="card-title">配套资料与阅读约定</div>
+<div class="callout key"><p>面向：有 ML/LLM 基础、想吃透分布式 RLHF 训练全部细节与调参技巧的工程师。
+方法论：<strong>费曼学习法 × 一条真实数据的生命周期</strong>。每一天你都跟着同一条数学题样本在系统里走几站，走到哪读到哪，最后能不看笔记把整条链路讲给别人听。每天末尾的"费曼自测"就是检验——答不上来就回去重读那一站的源码。</p></div>
+<p>配套资料（本仓库内，均可离线阅读）：</p>
+<ul>
+<li>官方文档镜像（中英双语）：<code>docs/official-docs/openrlhf.readthedocs.io/{en,zh}/latest/</code>，纯文本源码在 <code>_sources/*.rst.txt</code>（比 HTML 好读，本指南按此引用）</li>
+<li>仓库自带导航：<code>.claude/docs/architecture.md</code>、<code>.claude/docs/official-docs-map.md</code></li>
+<li>可运行参考配置：<code>examples/scripts/*.sh</code>（<strong>flag 组合的事实标准</strong>）</li>
+</ul>
+<p><strong>三角验证习惯</strong>：文档说语义、源码定真相、examples 脚本给实证组合。本指南所有行号都对着当前仓库源码核对过，但代码会演化——读的时候保持"行号是路标不是真理"的心态。</p>
+<hr />
+</div>
 
-  <p>一次 RL 训练迭代（sync 模式）的完整数据流：</p>
-
-  <div class="flow">
-    <div class="flow-node">
-      <div class="fn-title">Prompts DataLoader <span class="fn-file">rollout.batch_size 个 prompt</span></div>
-    </div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node hi">
-      <div class="fn-title">SamplesGenerator → vLLM Engines <span class="fn-file">samples_generator.py</span></div>
-      <div class="fn-desc">每个 prompt 生成 <code>n_samples_per_prompt</code> 条。<strong>Token-in-token-out</strong>：只传 token id + logprob，从不回到文本。可选动态过滤：整组 reward 全对/全错的 prompt 丢弃重采。</div>
-    </div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node hi">
-      <div class="fn-title">RemoteExperienceMaker <span class="fn-file">experience_maker.py</span></div>
-      <div class="fn-branches">
-        <div class="fn-branch"><b>Reference Actor</b><br>算 log&nbsp;π<sub>ref</sub> → KL</div>
-        <div class="fn-branch"><b>Reward</b><br>RM actor / remote URL / reward_func.py</div>
-        <div class="fn-branch"><b>Critic Actor</b><br>算 V(s)，仅 GAE 需要</div>
-      </div>
-      <div class="fn-desc" style="margin-top:10px">→ length penalty（DAPO overlong / ProRL 截断惩罚）→ reward baseline 减法（rloo / grpo / reinforce_baseline… 在这里发生）→ <code>compute_advantages_and_returns</code>（6 种 estimator）</div>
-    </div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node">
-      <div class="fn-title">ReplayBuffer <span class="fn-file">replay_buffer.py</span></div>
-      <div class="fn-desc">序列长度均衡（Karmarkar–Karp）/ dynamic batch 按 token 预算装箱</div>
-    </div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node hi">
-      <div class="fn-title">PolicyModelActor.ppo_train <span class="fn-file">ppo_actor.py + models/loss.py</span></div>
-      <div class="fn-desc">PolicyLoss（PPO clip / dual-clip / GSPO）+ 可选 KL loss + 可选 entropy；Critic 同步更新 ValueLoss（仅 GAE）</div>
-    </div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node">
-      <div class="fn-title">broadcast_to_vllm <span class="fn-file">NCCL 或 CUDA IPC</span></div>
-      <div class="fn-desc">vLLM 拿到新权重，进入下一轮</div>
-    </div>
-  </div>
-
-  <h3>五类组件，谁可以省掉</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>角色</th><th>文件</th><th>何时可以省掉</th></tr>
-    <tr><td><strong>PolicyModelActor</strong>（被训练的 actor）</td><td><span class="filepath">trainer/ray/ppo_actor.py</span></td><td>永远需要</td></tr>
-    <tr><td><strong>CriticModelActor</strong></td><td><span class="filepath">trainer/ray/ppo_critic.py</span></td><td><code>advantage.estimator != gae</code> 时自动不创建</td></tr>
-    <tr><td><strong>ReferenceModelActor</strong></td><td><span class="filepath">trainer/ray/launcher.py</span></td><td><code>algo.kl.init_coef = 0</code> 时不创建</td></tr>
-    <tr><td><strong>RewardModelActor</strong></td><td><span class="filepath">trainer/ray/launcher.py</span></td><td>用 remote RM URL 或 reward_func.py 时不部署</td></tr>
-    <tr><td><strong>vLLM engines</strong></td><td><span class="filepath">trainer/ray/vllm_engine.py</span></td><td>负责全部生成（训练 80% 时间在这）</td></tr>
-  </table></div>
-
-  <div class="callout key">
-    <div class="co-title">⚑ 读代码前的两个关键约定</div>
-    <ol>
-      <li>CLI flag 是点分层级的（<code>--algo.kl.init_coef</code>），<span class="filepath">openrlhf/utils/config.py</span> 的 <code>hierarchize()</code> 把它们变成嵌套命名空间 <code>args.algo.kl.init_coef</code>。<strong>grep 时搜嵌套名</strong>（如 <code>kl.init_coef</code>），别搜 CLI 拼写。</li>
-      <li>全部 flag 的权威语义在文档 <code>common_options.rst.txt</code>；全部默认值在 <span class="filepath">cli/train_ppo_ray.py</span> 的 argparse 定义里。</li>
-    </ol>
-  </div>
+<section class="day" id="intro">
+  <div class="day-head"><span class="day-badge alt">序章</span><h2>贯穿全书的主线案例</h2></div>
+<p>费曼说"凡我不能创造的，我就不理解"。对一个训练框架来说，"创造"的最小形式是：<strong>给定一条具体输入，手算出它在每个环节的具体输出</strong>。所以我们先固定一个真实实验和一条具体数据，后面七天全部围绕它展开。</p>
+<h3>实验配置：官方文档的默认 RL 示例</h3>
+<p>这是官方文档 <code>hybrid_engine.rst.txt</code> 给出的标准 launch recipe——<strong>Qwen3-4B-Thinking 在数学数据集上做 RLVR</strong>（Reinforcement Learning with Verifiable Rewards），奖励来自一个 Python 验证函数而非 reward model。仓库里最接近的脚本是 <code>examples/scripts/train_reinforce_baseline_hybrid_engine.sh</code> 与 <code>train_prorlv2_math_hybrid_engine.sh</code>。</p>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>取值</th>
+<th>对应 flag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>被训模型</td>
+<td>Qwen3-4B-Thinking-2507</td>
+<td><code>--actor.model_name_or_path</code></td>
+</tr>
+<tr>
+<td>数据集</td>
+<td>dapo-math-17k（约 17k 条 <code>{prompt, label}</code>）</td>
+<td><code>--data.prompt_dataset</code>，<code>--data.input_key prompt --data.label_key label</code></td>
+</tr>
+<tr>
+<td>奖励</td>
+<td><code>examples/python/math_reward_func.py</code>（验证 <code>\boxed{}</code> 答案，对=1 错=0）</td>
+<td><code>--reward.remote_url &lt;py文件&gt;</code></td>
+</tr>
+<tr>
+<td>硬件</td>
+<td>1 节点 × 4 GPU，全员共卡</td>
+<td><code>--actor.num_gpus_per_node 4 --ref.num_gpus_per_node 4 --train.colocate_all</code></td>
+</tr>
+<tr>
+<td>vLLM</td>
+<td>2 个 engine × TP=2，睡眠模式</td>
+<td><code>--vllm.num_engines 2 --vllm.tensor_parallel_size 2 --vllm.enable_sleep</code></td>
+</tr>
+<tr>
+<td>算法</td>
+<td>REINFORCE++-baseline（critic-free）</td>
+<td><code>--algo.advantage.estimator reinforce_baseline</code></td>
+</tr>
+<tr>
+<td>KL</td>
+<td>作为 loss 项，k2 估计器，系数 1e-5</td>
+<td><code>--algo.kl.use_loss --algo.kl.estimator k2 --algo.kl.init_coef 1e-5</code></td>
+</tr>
+<tr>
+<td>采样规模</td>
+<td>128 prompt/轮 × 每题 8 条 = 1024 条序列</td>
+<td><code>--rollout.batch_size 128 --rollout.n_samples_per_prompt 8</code></td>
+</tr>
+<tr>
+<td>训练批</td>
+<td>1024（= 一轮 rollout 恰好一次参数更新）</td>
+<td><code>--train.batch_size 1024</code></td>
+</tr>
+<tr>
+<td>动态过滤</td>
+<td>组平均 reward ∉ (0,1) 的 prompt 整组丢弃</td>
+<td><code>--algo.dynamic_filtering_enable --algo.dynamic_filtering_range 0 1</code></td>
+</tr>
+<tr>
+<td>off-policy 校正</td>
+<td>ICEPOP，阈值 [0.5, 5.0]</td>
+<td><code>--algo.advantage.is_correction_enable --algo.advantage.is_correction_type icepop</code></td>
+</tr>
+<tr>
+<td>序列长度</td>
+<td>max_len 74240 / max_new_tokens 64000（长 CoT）</td>
+<td><code>--data.max_len --rollout.max_new_tokens</code></td>
+</tr>
+<tr>
+<td>并行</td>
+<td>ZeRO-3 + bf16 + ring attention 2 + 动态 batch</td>
+<td><code>--ds.zero_stage 3 --ds.ring_attn_size 2 --train.dynamic_batch_enable</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>几个立刻能推出来的派生量（Day 1 会解释每一个）：</p>
+<ul>
+<li>actor world_size = 4；ring_attn_size=2、tp=1 ⇒ <strong>DP 组数 = 4/2/1 = 2</strong>，<code>duplicate_actors = 2</code></li>
+<li>一轮 rollout 产出 128×8 = 1024 条序列 = 恰好 1 个 <code>train.batch_size</code> ⇒ <strong>每轮 rollout 只做 1 次 optimizer step</strong></li>
+<li><code>colocate_all</code> 断言：actor 卡数 4 == vllm 2×2 ✓（<code>train_ppo_ray.py:56-64</code>）</li>
+<li>estimator ≠ gae ⇒ critic 不创建（<code>train_ppo_ray.py:600-601</code>）；reward 走 py 文件 ⇒ RewardModelActor 不部署</li>
+</ul>
+<h3>主线数据：样本 S₁</h3>
+<p>从 dapo-math-17k 里取一条（题目为教学而选的简短示例，字段格式与真实数据一致）：</p>
+<pre><code class="language-json">{
+  &quot;prompt&quot;: &quot;Find the sum of all positive divisors of 36. Please reason step by step, and put your final answer within \\boxed{}.&quot;,
+  &quot;label&quot;: &quot;91&quot;
+}
+</code></pre>
+<p>（36 的正因数：1+2+3+4+6+9+12+18+36 = 91。）</p>
+<p>约定几个贯穿全书的记号（token 数为教学假设值，标 ≈ 的都是示意）：</p>
+<ul>
+<li><strong>P</strong> = 这条 prompt；套完 chat template 后记 prompt 长度 <strong>L_p = 48 token</strong></li>
+<li>该 prompt 采样 8 条回答，记 <strong>S₁…S₈</strong>；奖励向量 <strong>r = [1, 1, 0, 0, 0, 0, 0, 0]</strong>（2 对 6 错，组均值 0.25）</li>
+<li>重点跟踪 <strong>S₁</strong>（答对的那条）：回答 <strong>L_a = 210 token</strong>，以 <code>...\boxed{91}&lt;|im_end|&gt;</code> 结尾，<code>finish_reason="stop"</code>（未截断）</li>
+<li>完整序列长度 <strong>T = 48 + 210 = 258</strong></li>
+</ul>
+<h3>S₁ 的十二站旅程（全书地图）</h3>
+<pre><code>┌── Day 2 ──────────────────────────────────────────────────────────┐
+│ ① PromptDataset：套 chat template，P 变成带 &lt;|im_start|&gt; 的字符串    │
+│ ② SamplesGenerator：最小堆负载均衡，把 P 派给 2 个 vLLM engine 之一  │
+│ ③ SingleTurnAgentExecutor：tokenize → vLLM 生成 210 token           │
+│    → decode 全文 → math_reward_func 判卷 → reward = 1.0            │
+│ ④ 组装 Experience：sequences(1,258) / action_mask(1,257)（右移1位） │
+│    动态过滤：组均值 0.25 ∈ (0,1) ⇒ 保留（全对/全错的组被丢弃重采）    │
+├── Day 3 ──────────────────────────────────────────────────────────┤
+│ ⑤ RemoteExperienceMaker：actor/ref 前向 → 三种 log_probs 齐了       │
+│ ⑥ reward 流水线：长度惩罚 → 组内减 baseline（1→0.75）→ clip →       │
+│    散播到 EOS → 逐 token return=0.75 → 全局归一化（≈1.50，示意）     │
+├── Day 4 ──────────────────────────────────────────────────────────┤
+│ ⑦ balance_experiences + ReplayBuffer：按长度均衡切给 2 个 DP rank    │
+│ ⑧ 动态 batch：Karmarkar-Karp 按 16192 token/GPU 预算装箱            │
+│ ⑨ training_step：PolicyLoss（ratio≡1 首步）+ k2 KL loss + icepop    │
+│ ⑩ 梯度累积 → 唯一一次 optimizer step，权重 θ₀ → θ₁                  │
+├── Day 5 ──────────────────────────────────────────────────────────┤
+│ ⑪ broadcast_to_vllm：本配置命中 CUDA IPC 零拷贝路径                 │
+│ ⑫ vLLM 拿到 θ₁ → 下一轮采样；周期性 eval（pass@k）与 checkpoint     │
+└───────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>读代码前的两个关键约定</h3>
+<ol>
+<li><strong>CLI flag 是点分层级的</strong>（<code>--algo.kl.init_coef</code>），<code>openrlhf/utils/config.py</code> 的 <code>hierarchize()</code>（全文 26 行）把平铺 argparse 命名空间按 <code>.</code> 重组为嵌套 SimpleNamespace：<code>args.algo.kl.init_coef</code>。<strong>grep 时搜嵌套名</strong>（如 <code>rg "kl\.init_coef"</code>），别搜 CLI 拼写。全部 flag 的权威语义在文档 <code>common_options.rst.txt</code>；全部默认值在 <code>cli/train_ppo_ray.py:198-587</code> 的 argparse 定义里。</li>
+<li><strong>argparse 之后还有一段"参数改写区"</strong>（<code>train_ppo_ray.py:594-717</code>）：<code>agent_func_path</code> 会把 <code>reward.remote_url</code> 改成 <code>"agent"</code>；非 gae 直接抹掉 critic 路径；<code>ring_attn_size&gt;1</code> 强制打开 <code>packing_samples</code>；<code>n_samples_per_prompt=1</code> 配组内 baseline 类 estimator 会直接 assert 掉（否则 advantage 全 0，训练变成静默空转）。<strong>很多"为什么我设了 X 没生效"的答案都在这一段。</strong></li>
+</ol>
+<hr />
 </section>
 
-<!-- ─────────── Day 1 ─────────── -->
 <section class="day" id="day1">
-  <div class="day-head"><span class="day-badge">DAY 1</span><h2>全局架构与启动流程</h2></div>
-  <div class="goal"><b>目标</b>：能白板画出 Ray actor 拓扑；理解 colocation 三种模式的 GPU 布局；跑通测试。</div>
-
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单（按顺序）</div>
-    <ol>
-      <li>文档 <code>index.rst.txt</code> + <code>architecture.rst.txt</code>（20 分钟，建立官方视角）</li>
-      <li><span class="filepath">openrlhf/utils/config.py</span>（很短，先懂参数系统）</li>
-      <li><span class="filepath">openrlhf/cli/train_ppo_ray.py</span> 通读：
-        <ul>
-          <li><code>:40-64</code> placement group 构建与 colocate 约束</li>
-          <li><code>:84-141</code> 四类 actor + vLLM 的 GPU 分配（PG 下每 actor 只申请 0.2 GPU 以实现共卡）</li>
-          <li><code>:170-188</code> 初始化顺序（critic 必须等 actor，因为 scheduler 依赖 max_steps）</li>
-          <li>文件末尾的 argparse 全量 flag（当字典翻，不用背）</li>
-        </ul>
-      </li>
-      <li><span class="filepath">openrlhf/trainer/ray/launcher.py:202-373</span>：<code>RayActorGroup</code> 如何拉起 world_size 个 actor、<code>async_run_method_batch</code> 如何把 batch round-robin 切给各 rank（ring/TP 组内的 rank 拿同一份数据，<code>duplicate_actors = ring_attn_size × tp_size</code>）</li>
-    </ol>
-  </div>
-
-  <h3>三种部署形态（性能文档的第一决策点）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>模式</th><th>flag</th><th>GPU 布局</th><th>适用</th></tr>
-    <tr><td><strong>Hybrid Engine</strong>（推荐起步）</td><td><code>--train.colocate_all --vllm.enable_sleep --ds.enable_sleep</code></td><td>所有角色 + vLLM 时分复用同一组卡</td><td>单机 4-8 卡、1.5B–13B</td></tr>
-    <tr><td><strong>部分共卡</strong></td><td><code>--train.colocate_actor_ref</code> + <code>--train.colocate_critic_reward</code></td><td>actor/ref 一组、critic/reward 一组、vLLM 独立</td><td>多机中等模型</td></tr>
-    <tr><td><strong>全分离</strong>（Distributed）</td><td>不加 colocate</td><td>每角色独占 GPU 组</td><td>70B+ 或异构硬件</td></tr>
-  </table></div>
-
-  <div class="callout warn">
-    <div class="co-title">⚠ 约束记牢</div>
-    <p><code>colocate_all</code>（非 async）要求 <strong>actor 卡数 == vllm.num_engines × vllm.tensor_parallel_size</strong>（<span class="filepath">train_ppo_ray.py:57-64</span>）；<code>vllm.enable_sleep</code> 与 <code>train.async_enable</code> <strong>互斥</strong>。</p>
-  </div>
-
-  <div class="exercise">
-    <div class="card-title">🛠 动手</div>
-    <ul>
-      <li><code>pytest tests/</code> 在 Mac 上能直接跑（纯逻辑测试），确认环境 OK。</li>
-      <li>打开 <span class="filepath">examples/scripts/train_ppo_ray_hybrid_engine.sh</span>，逐行对照今天读过的 flag，画出它的 GPU 分配图（8 卡：actor/ref/critic/reward 各 0.2 卡共享 + 4 个 TP=2 的 vLLM engine，全部落在同 8 张卡上）。</li>
-    </ul>
-  </div>
-
-  <div class="quiz">
-    <div class="card-title">✎ 自测</div>
-    <ol>
-      <li>为什么 PG 模式下每个 actor 只申请 0.2 GPU？
-        <details><summary>参考答案</summary><div class="ans">让 actor / ref / critic / reward / vLLM 五方共享同一张物理卡，靠 sleep / offload 时分复用；Ray 的资源额度只是调度记账，不是硬隔离。</div></details></li>
-      <li><code>algo.kl.init_coef=0</code> 时系统少了哪个 actor？为什么可以少？
-        <details><summary>参考答案</summary><div class="ans">ReferenceModelActor。KL 系数为 0 意味着不需要 log&nbsp;π<sub>ref</sub>，冻结参考模型没有任何用途，直接不创建以省显存（<span class="filepath">train_ppo_ray.py:93-103</span>）。</div></details></li>
-      <li>GRPO 训练时哪两个 actor 不存在？
-        <details><summary>参考答案</summary><div class="ans">Critic（group_norm 是 critic-free 算法）；以及若用 reward_func / remote RM，RewardModelActor 也不部署。若再把 KL 系数设 0，连 Reference 也可以省。</div></details></li>
-    </ol>
-  </div>
+  <div class="day-head"><span class="day-badge">D1</span><h2>全局架构与启动流程</h2></div>
+<div class="goal"><b>目标</b>：能白板画出本案例的 Ray actor 拓扑与 4 张 GPU 的分时复用布局；理解 placement group 与三种 colocation 模式；跑通本地测试。</div>
+<h3>阅读清单（按顺序）</h3>
+<ol>
+<li>文档 <code>index.rst.txt</code> + <code>architecture.rst.txt</code>（20 分钟，建立官方视角：Ray 编排 + vLLM 生成 + DeepSpeed 训练三位一体）</li>
+<li><code>openrlhf/utils/config.py</code>（26 行，先懂参数系统）</li>
+<li><code>openrlhf/cli/train_ppo_ray.py</code> 的 <code>train()</code>（:19-195）逐行通读——这就是整个系统的"main 函数"</li>
+<li><code>openrlhf/trainer/ray/launcher.py</code>（:202-373 <code>RayActorGroup</code>；:17-101 <code>BaseDistributedActor</code>/<code>BaseModelActor</code>）</li>
+<li><code>openrlhf/trainer/ray/vllm_engine.py</code> 的 <code>create_vllm_engines</code>（:209-311）</li>
+</ol>
+<h3>案例推演：这条命令跑起来的前 60 秒</h3>
+<p>对照 <code>train()</code> 源码，本案例的启动时序是：</p>
+<ol>
+<li><strong><code>ray.init</code></strong>（:21-32）：设置 <code>NCCL_DEBUG=WARN</code>、零拷贝 tensor 等运行时环境变量。</li>
+<li><strong>建 placement group</strong>（:41-50）：<code>colocate_all</code> ⇒ 为 actor 建 4 个 <code>{GPU:1, CPU:1}</code> bundle 的 PG（策略 PACK）。<code>kl.init_coef=1e-5 &gt; 0</code> ⇒ 断言 ref 与 actor 的卡数配置一致。</li>
+<li><strong>创建 vLLM engines</strong>（:52-82 → <code>vllm_engine.py:209-311</code>）：2 个 <code>RolloutRayActor</code>，TP=2 ⇒ <code>distributed_executor_backend="ray"</code>，每个 engine 通过 <code>VLLM_RAY_BUNDLE_INDICES</code> 钉在 PG 的指定 bundle 上。<strong>engine 内部持有 executor</strong>：本案例 <code>remote_rm_url</code> 是 py 文件 ⇒ <code>SingleTurnAgentExecutor</code>（Day 2 主角）。<code>is_correction_enable</code> ⇒ <code>logprobs_mode="processed_logprobs"</code>（要求 vLLM &gt; 0.10.0），生成时返回逐 token logprob。</li>
+<li><strong>创建 4 个 <code>RayActorGroup</code></strong>（:84-142）：
+   - PolicyModelActor 组：4 个 actor，PG 下每个只申请 <strong>0.2 GPU</strong>（:89）——这是共卡的实现手法：actor/ref/vLLM 三方在同一张物理卡上各占 0.2 的"记账额度"，实际显存靠 sleep/offload 分时腾挪；
+   - ReferenceModelActor 组：同上（<code>kl.init_coef&gt;0</code> 才建）；
+   - CriticModelActor：<strong>本案例不存在</strong>（estimator=reinforce_baseline）；
+   - RewardModelActor：<strong>本案例不存在</strong>（reward 是 py 函数，在 vLLM engine 侧算）。</li>
+<li><strong>选 trainer</strong>（:144-148）：<code>async_enable</code> 未开 ⇒ <code>ppo_trainer.PPOTrainer</code>（一个 CPU 上的 Ray actor，"single controller"）。</li>
+<li><strong>初始化顺序</strong>（:170-185）：先 actor/ref/reward 并行 <code>init_model_from_pretrained</code>，<strong>critic 必须最后</strong>——它的 lr scheduler 需要 <code>max_steps</code>，而 <code>max_steps</code> 由 trainer 里的 dataset 长度算出（<code>ppo_trainer.py:72-79</code>：<code>len(dataset) × n_samples // train_bs × episodes × epochs</code>，本案例 ≈ 17000×8/1024 ≈ 132 步/episode）。</li>
+<li><strong><code>ppo_trainer.fit.remote()</code></strong>（:188）进入训练主循环（Day 2 起逐站拆）。</li>
+</ol>
+<p>最终 GPU 布局（把它画在白板上，这是 Day 1 的验收标准）：</p>
+<pre><code>GPU0        GPU1        GPU2        GPU3
+─────────── ─────────── ─────────── ───────────
+actor r0    actor r1    actor r2    actor r3      ← DeepSpeed ZeRO-3, 各占0.2
+ref   r0    ref   r1    ref   r2    ref   r3      ← 各占0.2
+vLLM eng0-w0 eng0-w1    eng1-w0     eng1-w1       ← 2 engine × TP2, 各占0.2
+─────────── ─────────── ─────────── ───────────
+ring attention 分组: (r0,r1)=sp组0, (r2,r3)=sp组1 ⇒ DP=2
+同一时刻只有一方真正&quot;醒着&quot;占大头显存（Day 5 讲 sleep/wake 时序）
+</code></pre>
+<h3>RayActorGroup：控制面的核心抽象</h3>
+<p><code>launcher.py:202-373</code>。一组同类 GPU actor 的封装，三件事必须吃透：</p>
+<ul>
+<li><strong>拉起 world_size 个 rank</strong>（:240-290）：rank0 先起，把自己的 IP:port 通过 <code>get_master_addr_port</code> 告诉其余 rank；每个 actor 是 <code>@ray.remote(num_gpus=1)</code> 类，自己在 <code>BaseDistributedActor.__init__</code> 里设 <code>MASTER_ADDR/RANK/WORLD_SIZE</code> 环境变量，再由 DeepspeedStrategy 建 torch.distributed 进程组。</li>
+<li><strong><code>async_run_method(method_name, ...)</code></strong>：同一调用广播到全部 rank，返回 ref 列表（用于 <code>fit</code>、<code>offload_states</code> 这类全员动作）。</li>
+<li><strong><code>async_run_method_batch(...)</code></strong>（:319-373）：把一个 batch 切成 <code>effective_actors = world_size // duplicate_actors</code> 份，<strong>同一 ring/TP 组内的 rank 拿同一份数据</strong>（<code>duplicate_actors = ring_attn_size × tensor_parallel_size</code>，本案例 = 2）。数据先切片再 <code>ray.put</code>，避免整批数据广播到所有节点。Day 3 的 forward fan-out、Day 4 的 experience 下发都走它。</li>
+</ul>
+<p>配套的 <code>BaseModelActor.execute_batch</code>（:67-101）在 worker 侧逐条调用目标方法——所以 <code>forward</code> RPC 的粒度是"每 rank 一串 micro-batch"。</p>
+<h3>三种部署形态（性能文档的第一决策点）</h3>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>flag</th>
+<th>GPU 布局</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hybrid Engine</strong>（本案例，官方推荐起步）</td>
+<td><code>--train.colocate_all --vllm.enable_sleep --ds.enable_sleep</code></td>
+<td>所有角色 + vLLM 分时复用同一组卡</td>
+<td>单机 4-8 卡、~1.5B-13B；官方定位"max stability"</td>
+</tr>
+<tr>
+<td>部分共卡</td>
+<td><code>--train.colocate_actor_ref</code> + <code>--train.colocate_critic_reward</code></td>
+<td>actor/ref 一组、critic/reward 一组、vLLM 独立</td>
+<td>多机中等模型</td>
+</tr>
+<tr>
+<td>全分离（Distributed）</td>
+<td>不加任何 colocate</td>
+<td>每角色独占 GPU 组</td>
+<td>70B+ 或异构硬件</td>
+</tr>
+</tbody>
+</table></div>
+<p>三条硬约束（源码里都有 assert/改写，<code>train_ppo_ray.py:56-64, 663-674</code>）：</p>
+<ol>
+<li><code>colocate_all</code>（非 async）要求 <code>actor 卡数 == vllm.num_engines × vllm.tensor_parallel_size</code>；</li>
+<li><code>vllm.enable_sleep</code> 与 <code>train.async_enable</code> <strong>互斥</strong>（sleep 靠严格串行分时，async 恰恰要并行）；</li>
+<li>async 模式下 <code>colocate_all</code> 只共卡 DeepSpeed 各模型，vLLM 独立占卡（要一直生成）。</li>
+</ol>
+<h3>费曼自测（讲不出来就回去重读）</h3>
+<ol>
+<li>为什么 PG 模式下每个 actor 只申请 0.2 GPU？"0.2"是显存配额吗？
+   <details><summary>答案</summary><div class="ans"><p>不是显存配额，只是 Ray 的调度记账值，目的是让 actor/ref/critic/reward/vLLM 五方能被调度到同一张物理卡。真实显存靠 vLLM sleep + DeepSpeed offload 分时腾挪。</p></div></details></li>
+<li>本案例里为什么 critic 和 RewardModelActor 都不存在？各自省在哪一行？
+   <details><summary>答案</summary><div class="ans"><p>estimator=reinforce_baseline ⇒ <code>train_ppo_ray.py:600-601</code> 把 <code>critic.model_name_or_path</code> 置 None；reward 走 py 文件 ⇒ <code>:132-142</code> 不建 RewardModelActor，判卷逻辑在 vLLM engine 侧的 SingleTurnAgentExecutor 里执行。</p></div></details></li>
+<li>为什么 critic 的初始化必须等 actor 之后？
+   <details><summary>答案</summary><div class="ans"><p>critic 的 lr scheduler 需要 max_steps；max_steps 依赖 trainer 构建 prompts dataset 之后才能算出（<code>train_ppo_ray.py:181-185</code> 的注释）。</p></div></details></li>
+<li><code>duplicate_actors</code> 是什么？本案例等于几？如果改成 <code>--ds.tensor_parallel_size 2</code> 会变成几？
+   <details><summary>答案</summary><div class="ans"><p>ring_attn_size × ds tensor_parallel_size，即"共享同一份数据的 rank 数"。本案例 2×1=2；再开 TP=2 就是 4——此时 4 张卡只剩 1 个 DP 组。</p></div></details></li>
+</ol>
+<h3>动手</h3>
+<ul>
+<li><code>pytest tests/</code> 在 Mac 上能直接跑（纯逻辑测试），确认环境 OK。</li>
+<li>打开 <code>examples/scripts/train_ppo_ray_hybrid_engine.sh</code>（经典 PPO+RM 版），对照今天内容画出它的 8 卡布局图：actor/ref/critic/reward 各 0.2 共享 + 4 个 TP=2 的 vLLM engine，全部落在同 8 张卡上。和本案例的差异恰好是"多了 critic 和 reward 两类 actor"。</li>
+</ul>
+<hr />
 </section>
 
-<!-- ─────────── Day 2 ─────────── -->
 <section class="day" id="day2">
-  <div class="day-head"><span class="day-badge">DAY 2</span><h2>采样：从 prompt 到 token 轨迹</h2></div>
-  <div class="goal"><b>目标</b>：吃透 rollout 生成、agent 抽象、Experience 数据结构 —— 理解 "token-in-token-out" 为什么是这个框架的设计基石。</div>
+  <div class="day-head"><span class="day-badge">D2</span><h2>采样：S₁ 的诞生（第①-④站）</h2></div>
+<div class="goal"><b>目标</b>：吃透从 prompt 字符串到 <code>Experience</code> 对象的每一步；理解"token-in-token-out"为什么是这个框架的设计基石；能手画 action_mask 的右移对齐图。</div>
+<h3>阅读清单</h3>
+<ol>
+<li>文档 <code>agent_paradigm.rst.txt</code>（设计哲学：<strong>执行模式 × RL 算法 × pipeline 三轴正交</strong>，所有组合都合法）</li>
+<li><code>openrlhf/datasets/prompts_dataset.py</code>（:26-46 <code>preprocess_data</code>）</li>
+<li><code>openrlhf/trainer/ppo_utils/samples_generator.py</code> 全文（314 行）</li>
+<li><code>openrlhf/utils/agent.py</code>：<code>SingleTurnAgentExecutor</code>（:184-301）精读，<code>MultiTurnAgentExecutor</code>（:31-181）通读</li>
+<li><code>openrlhf/trainer/ray/vllm_engine.py</code>：<code>RolloutRayActor.generate</code> / <code>generate_responses</code>（:153-206）</li>
+<li><code>openrlhf/trainer/ppo_utils/experience.py</code>：<code>Experience</code> 字段（:28-69）+ <code>_process_response_into_experience</code>（<code>samples_generator.py:247-314</code>）</li>
+<li><code>examples/python/math_reward_func.py</code>（52 行，判卷函数真身）</li>
+</ol>
+<h3>第①站：PromptDataset —— 字符串阶段的唯一一次加工</h3>
+<p><code>prompts_dataset.py:26-46</code>：开了 <code>--data.apply_chat_template</code>，P 被包成消息再由 tokenizer 的 chat template 展开（<code>add_generation_prompt=True</code>）：</p>
+<pre><code>&lt;|im_start|&gt;user
+Find the sum of all positive divisors of 36. Please reason step by step,
+and put your final answer within \boxed{}.&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+</code></pre>
+<p>此后 P 以<strong>字符串</strong>形式存进 <code>PromptDataset.prompts</code>，label <code>"91"</code> 存进 <code>labels</code>。注意：<strong>tokenize 不在这里发生</strong>——发生在 vLLM engine 侧的 executor 里（第③站）。dataloader 的 batch_size 是 1（<code>ppo_trainer.py:42-49</code>），由 SamplesGenerator 自己攒批。</p>
+<h3>第②站：SamplesGenerator —— 攒批、派发、过滤的调度中枢</h3>
+<p>入口是训练主循环 <code>PPOTrainer.fit</code>（<code>ppo_trainer.py:516-564</code>）每轮调用的 <code>generate_samples</code>（<code>samples_generator.py:89-138</code>）：</p>
+<ul>
+<li><strong>chunk 机制</strong>：一个训练 chunk = <code>rollout.batch_size × n_samples_per_prompt</code> = 128×8 = <strong>1024 条 Experience</strong>。<code>_sample_buffer</code> 不够就唤醒 vLLM 生成一批（<code>vllm_generate_batch_size</code> 默认 = rollout.batch_size；设得更大做超采样需要 async 模式）。</li>
+<li><strong>sleep 协同</strong>（:106-120）：生成前 <code>wake_up</code>，生成后 <code>sleep</code>——hybrid engine 的分时复用在这里落地。</li>
+<li><strong>最小堆负载均衡</strong>（<code>_dispatch_prompts_to_vllm</code>，:199-245）：先查询每个 engine 的未完成请求数入堆，每派一个 prompt 弹出最闲的 engine、计数 +n_samples 后压回。本案例 128 个 prompt 在 2 个 engine 上交替派发，每次 <code>generate_responses.remote(prompt, label, sampling_params, ...)</code> 让 engine 一次生成该 prompt 的全部 8 条。</li>
+<li><strong>SamplingParams</strong>（:203-211）：temperature 1.0、<code>max_tokens=64000</code>（来自 <code>max_new_tokens</code>；不设时为 None=按 prompt 长度动态分配）、<code>logprobs=1</code>——<strong>只因为开了 is_correction 才要 vLLM 返回逐 token logprob</strong>，不开就不传输。</li>
+<li><strong>流式回收</strong>（:161-196）：<code>ray.wait</code> 每完成一个 prompt 的 8 条就立即处理，不等全批。</li>
+</ul>
+<h3>第③站：SingleTurnAgentExecutor —— 生成 + 判卷都在 engine 侧</h3>
+<p><code>agent.py:184-301</code>。engine 收到 <code>generate_responses</code> 后并发跑 8 个 <code>executor.execute</code>（<code>vllm_engine.py:194-206</code>，asyncio.gather）。对 S₁ 逐行推演：</p>
+<ol>
+<li><strong>tokenize</strong>（:211-213）：<code>add_special_tokens=False</code>（template 已含特殊 token）→ 48 个 prompt token id。</li>
+<li><strong>生成预算</strong>（:216-234）：本案例显式设了 <code>--rollout.max_new_tokens 64000</code> ⇒ <code>max_tokens=64000</code>，prompt 预算只剩 74240−64000=10240，超长 prompt 会被<strong>左截断</strong>保住生成空间。若不设 max_new_tokens 则走动态分支：<code>max_tokens = max(1, max_len − L_p) = 74192</code>。</li>
+<li><strong>生成</strong>（:240-243）：<code>llm_engine.generate(prompt_token_ids, ...)</code> <strong>token 进 token 出</strong>——engine 的 <code>generate</code>（<code>vllm_engine.py:153-177</code>）收发的都是 token id。S₁ 得到 210 个 action token，<code>finish_reason="stop"</code> ⇒ <code>is_truncated=False</code>。</li>
+<li><strong>拼接与标注</strong>（:249-251）：<code>observation_tokens = prompt(48) + action(210)</code>，<code>action_ranges = [(48, 258)]</code>。</li>
+<li><strong>rollout log probs</strong>（:253-259）：prompt 段补 48 个 0.0 占位，action 段逐 token 取 vLLM 返回的 logprob → 长度 258 的列表。</li>
+<li><strong>判卷</strong>（:281-299）：把 258 个 token <strong>decode 回文本</strong>（这是唯一一次 detokenize，且只用于算 reward，不回流训练），调 <code>reward_func([query], [prompt], ["91"])</code>：</li>
+</ol>
+<pre><code class="language-python"># examples/python/math_reward_func.py（节选）
+pred_answer = extract_boxed_answer(response)   # → &quot;91&quot;
+is_correct = grade_answer(pred_answer, label)  # → True
+rewards.append(1.0 if is_correct else 0.0)
+return {&quot;rewards&quot;: tensor([1.0]), &quot;scores&quot;: tensor([1.0]),
+        &quot;extra_logs&quot;: {&quot;math_accuracy&quot;: ...}}
+</code></pre>
+<p>自定义 reward 函数的签名（RLVR 最常用扩展点）就是这个：<code>reward_func(queries, prompts, labels) → {"rewards", "scores", "extra_logs"}</code>。<code>rewards</code> 进 advantage 计算，<code>scores</code> 进动态过滤判断，<code>extra_logs</code> 进 wandb。HTTP remote RM 是同一接口的网络版（:322-356，5 次重试）。</p>
+<div class="callout key"><p><strong>Token-in-token-out（全框架第一设计基石）</strong>：轨迹从 vLLM 到训练全程以 token id + logprob 传递，<strong>从不重新 tokenize 文本</strong>。这消灭了 chat template 漂移、BOS/EOS 不一致、特殊 token 处理差异等一整类 silent bug——官方文档明说这是"最常见的 RLHF 隐性 bug 来源"。很多自研框架的"收敛玄学"根源就在这。</p></div>
+<h3>第④站：组装 Experience —— 那个必须画在纸上的右移</h3>
+<p><code>_process_response_into_experience</code>（<code>samples_generator.py:247-314</code>）把 executor 的返回打包成张量。S₁ 的具体形状：</p>
+<pre><code>索引:        0 ... 46  47 | 48 ... 256  257
+token:      &lt;prompt 48 个&gt;  &lt;action 210 个, 末尾 &lt;|im_end|&gt;&gt;
 
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单</div>
-    <ol>
-      <li>文档 <code>agent_paradigm.rst.txt</code>（execution mode × RL algorithm × pipeline 三轴正交的设计哲学）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/samples_generator.py</span> 全文：
-        <ul>
-          <li><code>generate_samples</code>（:88-138）：缓冲区 + chunk 机制，<code>chunk_size = rollout.batch_size × n_samples_per_prompt</code></li>
-          <li><code>_dispatch_prompts_to_vllm</code>（:199-245）：用最小堆做 vLLM 引擎负载均衡</li>
-          <li>动态过滤（:169-195）：同 prompt 的 n 条样本平均 reward 落在 <code>dynamic_filtering_range</code> 外则<strong>整组丢弃并补新 prompt</strong>（DAPO 的动态采样）</li>
-        </ul>
-      </li>
-      <li><span class="filepath">openrlhf/utils/agent.py</span> 全文：<code>SingleTurnAgentExecutor</code>（:184-356）单轮生成 + reward 三种来源；<code>MultiTurnAgentExecutor</code>（:31-181）多轮循环，<code>action_ranges</code> 记录哪些 token 是模型生成的（只有它们算 loss），env feedback token 的 rollout_log_prob 补 0</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/experience.py:28-69</span>：Experience 的每个字段</li>
-      <li><span class="filepath">openrlhf/trainer/ray/vllm_engine.py:183-207</span>：engine 侧怎么调 executor</li>
-    </ol>
-  </div>
-
-  <h3>分清三个 log_probs（贯穿全部 loss 代码）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>字段</th><th>含义</th><th>来源</th></tr>
-    <tr><td><code>rollout_log_probs</code></td><td>\(\log \pi_{\text{rollout}}\) —— vLLM 生成时的策略（可能已过时）</td><td>vLLM 生成阶段</td></tr>
-    <tr><td><code>action_log_probs</code></td><td>\(\log \pi_{\theta}\) —— 训练时 actor 重算的当前策略</td><td>actor forward</td></tr>
-    <tr><td><code>base_action_log_probs</code></td><td>\(\log \pi_{\text{ref}}\) —— 参考策略，用于 KL</td><td>reference actor</td></tr>
-  </table></div>
-
-  <div class="callout key">
-    <div class="co-title">⚑ Token-in-token-out</div>
-    <p>轨迹永远以 token id + logprob 传递，训练与采样之间<strong>从不重新 detokenize</strong>。这消灭了 chat template 漂移、BOS/EOS 不一致等一整类 silent bug —— 很多自研 RLHF 框架的收敛玄学问题根源就在这。</p>
-  </div>
-
-  <div class="callout warn">
-    <div class="co-title">⚠ action_mask 的偏移</div>
-    <p><span class="filepath">samples_generator.py:267</span> 中 <code>action_mask = action_mask[1:truncate_length]</code> —— 因为 log_prob 对应"预测下一个 token"，掩码相对 sequences <strong>右移一位</strong>。读 loss 代码时脑中要有这个对齐关系。</p>
-  </div>
-
-  <h3>自定义 reward 函数签名（RLVR 最常用）</h3>
-  <pre><code>def reward_func(queries, prompts, labels):
-    return {
-        "rewards": tensor,   <span class="cm"># 进 advantage 计算</span>
-        "scores":  tensor,   <span class="cm"># 进 dynamic_filtering 判断</span>
-        "extra_logs": dict,  <span class="cm"># 自定义 wandb 指标</span>
-    }</code></pre>
-
-  <div class="quiz">
-    <div class="card-title">✎ 自测</div>
-    <ol>
-      <li><code>n_samples_per_prompt=8</code> 且 <code>rollout.batch_size=128</code>，一次 generate_samples 产出多少条序列？哪些算法<strong>必须</strong> n&gt;1？
-        <details><summary>参考答案</summary><div class="ans">1024 条。rloo / reinforce_baseline / group_norm / dr_grpo 需要组内 baseline，必须 n&gt;1；dynamic_filtering 同样要求 n&gt;1。</div></details></li>
-      <li>多轮 agent 里环境反馈的 token 会参与 policy loss 吗？靠什么机制排除？
-        <details><summary>参考答案</summary><div class="ans">不会。<code>action_ranges</code> 只标记模型生成的 token，loss 只在这些位置计算；env feedback token 的 rollout_log_prob 填 0，且不在 action_mask 内。</div></details></li>
-      <li>动态过滤为什么要求 reward 在生成阶段就可得？
-        <details><summary>参考答案</summary><div class="ans">过滤发生在 samples_generator（生成侧），早于 experience_maker，所以只支持 remote RM / reward_func / agent 这些能即时返回 reward 的路径，不支持本地 RM actor。</div></details></li>
-    </ol>
-  </div>
+sequences      (1, 258)  全部 258 个 token id
+attention_mask (1, 258)  全 1（右 padding 之前）
+action_mask 原始: 长 258，位置 48..257 为 1
+action_mask 切片: action_mask[1:truncate] → (1, 257)，位置 47..256 为 1   ← 左移了一位!
+rollout_log_probs[1:] → (1, 257)，与 action_mask 对齐
+</code></pre>
+<p><strong>为什么切 <code>[1:]</code></strong>（:267）：causal LM 里 <code>log_prob[i]</code> 是"看到第 0..i 个 token 后预测第 i+1 个"的对数概率。第一个 action token（索引 48）的 logprob 来自模型在索引 47 处的输出。所以逐 token 量（logprob/KL/advantage/value）的坐标系整体比 <code>sequences</code> <strong>左移一位</strong>，长度 T−1。后面读 loss 代码时脑中必须有这幅对齐图——<code>action_mask</code> 出现的每一处，形状都是 <code>(B, T-1)</code> 坐标系（源码注释里的 <code>(B, A)</code>）。</p>
+<p><code>Experience</code>（<code>experience.py:28-69</code>）字段按 RL 语义分组，用 <code>tensor_field("step"/"episode")</code> 标记：step 张量形如 <code>(B, T)</code> 或 <code>(B, T-1)</code> 参与 padding 合并；episode 张量形如 <code>(B,)</code> 直接 stack。<strong>三个最容易混淆的 log_probs</strong>：</p>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>谁算的</th>
+<th>何时用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rollout_log_probs</code></td>
+<td>log π_rollout：<strong>生成这条样本时</strong> vLLM 的策略</td>
+<td>vLLM（采样时）</td>
+<td>off-policy 校正（icepop/tis）</td>
+</tr>
+<tr>
+<td><code>action_log_probs</code></td>
+<td>log π_old：训练前 actor 用当前权重重算</td>
+<td>actor forward（Day 3）</td>
+<td>PPO ratio 的分母</td>
+</tr>
+<tr>
+<td><code>base_action_log_probs</code></td>
+<td>log π_ref：冻结参考模型</td>
+<td>ref forward（Day 3）</td>
+<td>KL 正则</td>
+</tr>
+</tbody>
+</table></div>
+<p>sync 模式下 π_rollout 和 π_old 是<strong>同一套权重</strong>，但 vLLM 与 DeepSpeed 的 bf16 kernel 数值不同，logprob 仍有微小差异；async/partial rollout 下二者是<strong>不同版本的权重</strong>，差异是系统性的——这就是 is_correction 存在的原因（Day 4 展开）。</p>
+<h3>动态过滤（DAPO 的 Dynamic Sampling）：整组生死</h3>
+<p>回到 <code>_generate_vllm</code>（:169-196）。每个 prompt 的 8 条全部到齐后：</p>
+<ul>
+<li><strong>S₁ 所在组</strong>：scores = [1,1,0,0,0,0,0,0]，均值 0.25，落在开区间 (0,1) 内 ⇒ <strong>保留</strong>。</li>
+<li><strong>反例组 P′</strong>（比如"1+1=?"）：8 条全对，均值 1.0，不满足 <code>0 &lt; 1.0 &lt; 1</code> ⇒ <strong>整组丢弃</strong>，并立刻从 dataloader 补取 1 个新 prompt 派发（:184-195）。全错组（均值 0）同理。</li>
+</ul>
+<p>直觉：全对/全错的组减掉组均值后 advantage 恒为 0，白白浪费一次前向反向；过滤掉它们等于把算力集中在"有梯度信号"的题目上。<code>filter_pass_rate</code> 会被记进日志——它也是<strong>课程难度指示器</strong>（pass rate 越来越高说明题变简单了）。</p>
+<p>工程约束（<code>train_ppo_ray.py:700-709</code> 的 assert）：过滤发生在 samples_generator，<strong>早于</strong> experience_maker，所以 reward 必须在生成阶段就能拿到 ⇒ 只支持 remote RM / reward_func / agent 路径（RM actor 的 reward 要到 Day 3 才算出来，赶不上）。</p>
+<h3>多轮 Agent 预览（Day 7 深入）</h3>
+<p><code>MultiTurnAgentExecutor</code>（<code>agent.py:31-181</code>）是同一接口的多轮版：<code>while not done: 生成 → env.step() → 把环境反馈 tokenize 后拼进上下文</code>。两个关键机制现在先记住：</p>
+<ul>
+<li><code>action_ranges</code> 记录<strong>多段</strong> (start, end)——只有模型生成的 token 算 loss，环境反馈 token 的 <code>action_mask=0</code>；</li>
+<li>环境反馈 token 的 <code>rollout_log_probs</code> 补 0.0 占位（:159），反正 mask 会把它们排除在 loss 外。</li>
+</ul>
+<h3>费曼自测</h3>
+<ol>
+<li><code>n_samples_per_prompt=8</code> 且 <code>rollout.batch_size=128</code>，一次 <code>generate_samples</code> 至少消耗多少个 prompt？开了动态过滤后可能更多还是更少？
+   <details><summary>答案</summary><div class="ans"><p>产出 1024 条序列、至少消耗 128 个 prompt；动态过滤会<strong>更多</strong>——每个被过滤的组都会补发新 prompt（prompts_consumed 单调增），pass rate 60% 时约消耗 213 个。</p></div></details></li>
+<li>整条链路里唯一一次 detokenize 发生在哪、为什么它不违反 token-in-token-out 原则？
+   <details><summary>答案</summary><div class="ans"><p><code>SingleTurnAgentExecutor.execute</code> 里 decode 全文给 reward_func 判卷（agent.py:283）。它只用于计算 reward 标量，文本不回流到训练数据——训练消费的仍是原始 token id。</p></div></details></li>
+<li>为什么 <code>action_mask</code> 要做 <code>[1:truncate_length]</code> 切片？切完之后第一个 action token 的 logprob 对应 mask 的哪个下标？
+   <details><summary>答案</summary><div class="ans"><p>logprob 坐标系比 token 坐标系左移一位（预测下一个 token）。S₁ 的第一个 action token 在 sequences 索引 48，其 logprob/mask 在切片后坐标系的索引 47。</p></div></details></li>
+<li>动态过滤为什么设成开区间 (0,1) 而不是闭区间？
+   <details><summary>答案</summary><div class="ans"><p>目的恰恰是剔除均值恰好等于 0（全错）或 1（全对）的组——这些组组内无方差、baseline 减完 advantage 全 0，无学习信号。</p></div></details></li>
+</ol>
+<hr />
 </section>
 
-<!-- ─────────── Day 3 ─────────── -->
 <section class="day" id="day3">
-  <div class="day-head"><span class="day-badge">DAY 3</span><h2>算法核心 I：reward 管线与六种 advantage estimator</h2></div>
-  <div class="goal"><b>目标</b>：对每种算法（PPO / REINFORCE++ / RLOO / GRPO / Dr.GRPO）能手写 advantage 公式，并说出它们在代码里差在哪几行。</div>
-
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单</div>
-    <ol>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/experience_maker.py</span> 全文，重点 <code>compute_advantages_and_returns</code>（:238-329）</li>
-      <li><span class="filepath">openrlhf/models/utils.py:64-126</span>（KL 三种估计器 + <code>compute_reward</code>）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/kl_controller.py</span>（全文 30 行）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/length_penalty.py</span>（全文）</li>
-      <li>文档 <code>agent_training.rst.txt</code> 的算法表格部分</li>
-    </ol>
-  </div>
-
-  <h3>reward 的加工流水线（顺序很重要）</h3>
-  <div class="flow">
-    <div class="flow-node"><div class="fn-title">原始 reward</div><div class="fn-desc">RM / reward_func / env</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">Length penalty <span class="fn-file">length_penalty.py</span></div><div class="fn-desc">DAPO overlong、ProRL 截断惩罚</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">组内 baseline 减法 <span class="fn-file">experience_maker.py:246-272</span></div><div class="fn-desc">按 estimator 分派（rloo / grpo / reinforce_baseline…）</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">reward clip 到 (−10, 10) + KL 合成 <span class="fn-file">models/utils.py compute_reward</span></div><div class="fn-desc">KL 惩罚 \(-\beta\cdot\mathrm{KL}_t\) 加到每个 token，原始 r 只加在 EOS（仅 use_kl_loss=False 时）</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">折扣累积 / GAE → advantage</div><div class="fn-desc">部分 estimator 再做全局 (μ, σ) 归一化 <span class="fn-file">experience_maker.py:315-328</span></div></div>
-  </div>
-
-  <h3>六种 advantage estimator（<code>--algo.advantage.estimator</code>）</h3>
-  <p>设同一 prompt 的 \(n\) 条样本 reward 为 \(r_1, \dots, r_n\)，组均值 \(\bar r\)、组标准差 \(\sigma\)：</p>
-
-  <div class="tbl-wrap"><table>
-    <tr><th>estimator</th><th>论文名</th><th>公式</th><th>全局归一化</th><th>需要 critic</th></tr>
-    <tr><td><code>gae</code></td><td>PPO</td><td>\(\delta_t = r_t + \gamma V_{t+1} - V_t,\ \ A_t = \delta_t + \gamma\lambda A_{t+1}\)</td><td>✅ (μ,σ)</td><td>✅</td></tr>
-    <tr><td><code>reinforce</code></td><td>REINFORCE++</td><td>\(A_t = G_t = \sum_k \gamma^k r_{t+k}\)</td><td>✅</td><td>❌</td></tr>
-    <tr><td><code>rloo</code></td><td>RLOO</td><td>\(A_i = r_i - \frac{\sum_{j\ne i} r_j}{n-1}\)（留一均值）</td><td>❌</td><td>❌</td></tr>
-    <tr><td><code>reinforce_baseline</code></td><td>REINFORCE++-baseline<br><strong>（RLVR 官方推荐）</strong></td><td>\(A_i = r_i - \bar r\)，再全局 \(/\sigma\)</td><td>✅</td><td>❌</td></tr>
-    <tr><td><code>group_norm</code></td><td>GRPO</td><td>\(A_i = \dfrac{r_i - \bar r}{\sigma + 10^{-9}}\)</td><td>❌（组内已除 σ）</td><td>❌</td></tr>
-    <tr><td><code>dr_grpo</code></td><td>Dr. GRPO</td><td>\(A_i = r_i - \bar r\)（去掉 /σ，修正梯度偏差）</td><td>❌</td><td>❌</td></tr>
-  </table></div>
-
-  <div class="callout key">
-    <div class="co-title">⚑ 记忆锚点</div>
-    <p><strong>gae 之外全部 critic-free 且 γ 强制 1.0</strong>；<span class="filepath">train_ppo_ray.py:600-601</span> 非 gae 时直接把 critic 路径设 None。<code>--algo.advantage.no_std_norm</code> 可保留减均值但关掉除 σ。</p>
-  </div>
-
-  <h3>KL 的两种用法（最容易混淆的设计分叉）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th></th><th><code>algo.kl.use_loss=False</code>（默认，PPO 传统）</th><th><code>algo.kl.use_loss=True</code>（GRPO 式）</th></tr>
-    <tr><td>KL 去哪</td><td>变成 per-token reward 惩罚：\(r_t \mathrel{+}= -\beta \cdot \mathrm{KL}_t\)</td><td>作为独立 loss 项加在 policy loss 旁</td></tr>
-    <tr><td>推荐 estimator</td><td>只用 <code>k1</code></td><td><code>k2</code> 或 <code>k3</code>（k1 无效）</td></tr>
-    <tr><td>ref logprobs</td><td>用完即弃</td><td>保留传给 actor 训练</td></tr>
-    <tr><td>典型系数</td><td>0.01（RLHF 对话）</td><td>1e-5（RLVR）；GRPO 常配 k3</td></tr>
-  </table></div>
-
-  <p>三种 KL 近似（<span class="filepath">models/utils.py:64-95</span>，源自 Schulman 博客），记 \(\Delta = \log\pi - \log\pi_{\text{ref}}\)：</p>
-  <div class="formula-grid">
-    <div class="formula-card"><div class="f-name">k1</div>$$k_1 = \Delta$$<div class="f-note">无偏但可为负</div></div>
-    <div class="formula-card"><div class="f-name">k2</div>$$k_2 = \tfrac{1}{2}\Delta^2$$<div class="f-note">非负，低方差</div></div>
-    <div class="formula-card"><div class="f-name">k3</div>$$k_3 = e^{-\Delta} - 1 + \Delta$$<div class="f-note">非负、无偏，GRPO 论文用的就是它</div></div>
-  </div>
-
-  <p>自适应 KL（<span class="filepath">kl_controller.py:4-18</span>）：设了 <code>--algo.kl.target</code> 才启用：</p>
-  $$\beta \leftarrow \beta \cdot \Big(1 + \mathrm{clip}\big(\tfrac{\mathrm{KL}}{\mathrm{target}} - 1,\ -0.2,\ 0.2\big) \cdot \tfrac{n_{\text{steps}}}{\text{horizon}}\Big)$$
-
-  <h3>长度惩罚（reasoning 训练必调）</h3>
-  <div class="card">
-    <h4 style="margin-top:0">DAPO overlong（<span class="filepath">length_penalty.py:16-58</span>）</h4>
-    <p>设软区间 <code>overlong_buffer_len</code> \(= L_{\text{buf}}\)，超出 \(\text{max\_new\_tokens} - L_{\text{buf}}\) 的部分按比例罚：</p>
-    $$\text{penalty} = -\frac{\min(\text{len} - (\text{max\_new} - L_{\text{buf}}),\ L_{\text{buf}})}{L_{\text{buf}}} \times \text{factor}$$
-    <p class="f-note" style="font-size:13.5px;color:var(--ink-soft)">惩罚线性增长，最大罚 −factor。</p>
-    <h4>ProRL stop-properly（<span class="filepath">length_penalty.py:61-106</span>）</h4>
-    <p>对 <code>finish_reason=="length"</code> 的截断样本：系数 ≥0 时 reward 乘系数（0 = 清零）；&lt;0 时直接覆盖为该负值。两者可叠加。</p>
-  </div>
-
-  <div class="quiz">
-    <div class="card-title">✎ 自测</div>
-    <ol>
-      <li>Dr. GRPO 相对 GRPO 只改了一件事，是什么？为什么这个改动能修正偏差？
-        <details><summary>参考答案</summary><div class="ans">去掉了组内除以 σ。当一组样本几乎全对或全错时 σ 很小，除以 σ 会放大这些"低信息量"组的梯度，产生长度与难度偏差；只减均值保持梯度无偏。</div></details></li>
-      <li><code>use_kl_loss=True</code> 时 <span class="filepath">experience_maker.py</span> 为什么跳过 KL 计算但保留 <code>base_action_log_probs</code>？
-        <details><summary>参考答案</summary><div class="ans">KL 不再进 reward，所以经验构造阶段不需要算；但 actor 训练时要在 loss 里现算 KL 项，因此 ref 的 logprobs 必须随 experience 传下去（<span class="filepath">experience_maker.py:205-219</span>）。</div></details></li>
-      <li>为什么 rloo / group_norm / dr_grpo 不做全局 advantage 归一化而 reinforce_baseline 做？
-        <details><summary>参考答案</summary><div class="ans">对照 <span class="filepath">experience_maker.py:315</span> 的白名单（gae / reinforce / reinforce_baseline）。rloo 与 group_norm 的组内变换已经控制了尺度（后者已除 σ）；dr_grpo 有意保持"只减均值"的无偏性；reinforce_baseline 的设计则是"组内减均值 + 全局除 σ"两段式。</div></details></li>
-    </ol>
-  </div>
+  <div class="day-head"><span class="day-badge">D3</span><h2>Reward 管线与六种 Advantage（第⑤-⑥站）</h2></div>
+<div class="goal"><b>目标</b>：对每种算法（PPO/REINFORCE++/RLOO/GRPO/Dr.GRPO）能<strong>手写</strong> advantage 公式并代入 S₁ 的数字算出来；说清 KL 的两种用法在代码里的分叉点。</div>
+<h3>阅读清单</h3>
+<ol>
+<li><code>openrlhf/trainer/ppo_utils/experience_maker.py</code> 全文（411 行，今天的主战场）</li>
+<li><code>openrlhf/models/utils.py</code>：<code>compute_approx_kl</code>（:64-95）+ <code>compute_reward</code>（:98-126）</li>
+<li><code>openrlhf/trainer/ppo_utils/kl_controller.py</code>（全文 29 行）</li>
+<li><code>openrlhf/trainer/ppo_utils/length_penalty.py</code>（全文 153 行）</li>
+<li>文档 <code>agent_training.rst.txt</code> 的算法表格部分</li>
+</ol>
+<h3>第⑤站：make_experience —— 一次前向 fan-out</h3>
+<p>入口：<code>PPOTrainer.train_step</code>（<code>ppo_trainer.py:213-264</code>）拿到 1024 条 rollout 后调 <code>experience_maker.make_experience_batch</code>（<code>experience_maker.py:80-96</code>），分三步。</p>
+<p><strong>(a) <code>split_rollout_samples</code></strong>（:44-77）：开了 dynamic_batch ⇒ 按 <code>rollout.max_tokens_per_gpu=32768</code> 的 token 预算，用 Karmarkar-Karp 装箱把 1024 条切成若干前向 micro-batch，且 batch 数对齐到 effective_actor_num（本案例 2）的整数倍；每个 micro-batch 内右 padding 对齐（<code>Experience.concat_experiences</code>）。</p>
+<p><strong>(b) <code>make_experience</code></strong>（:113-233）：把 micro-batch 列表 fan-out 给各 actor group 做 forward——</p>
+<ul>
+<li><strong>reward model</strong>：<code>samples_list[0].rewards is None</code> 才需要。本案例 reward 已在生成时算好 ⇒ 跳过；</li>
+<li><strong>actor forward</strong> → <code>action_log_probs</code>（log π_old）；</li>
+<li><strong>critic forward</strong>：本案例无 critic ⇒ 用 <code>dummy_ref</code> 占位（值全 None）；</li>
+<li><strong>ref forward</strong> → <code>base_action_log_probs</code>。</li>
+</ul>
+<p><strong>colocation 决定同步纪律</strong>（<code>_dispatch_forward</code>，:100-106）：<code>colocate_all</code> 下 actor 和 ref 共卡，必须<strong>串行</strong>——每个 group 前向完 <code>ray.get</code> + <code>empty_cache</code> 再放下一个；全分离模式则四路并行。结果回收时 <code>[::duplicate_factor]</code> 去重（:108-110）——ring/TP 组内每个 rank 都算了同一份数据，只取一份。</p>
+<p><strong>(c) KL 分叉</strong>（:205-219，<strong>最容易混淆的设计点</strong>）：</p>
+<pre><code class="language-python">if (有 ref) and (not args.algo.kl.use_loss):     # PPO 传统路径
+    kl = compute_approx_kl(action_log_probs, base_action_log_probs, ...)
+else:                                            # 本案例（GRPO 式）
+    kl = zeros_like(...)                         # 不在 reward 里罚 KL
+if not args.algo.kl.use_loss:
+    base_action_log_probs = None                 # 用完即弃
+# use_loss=True 时保留 base_action_log_probs，Day 4 在 actor 训练里算 KL loss
+</code></pre>
+<h3>第⑥站：reward 加工流水线（顺序就是语义）</h3>
+<p><code>compute_advantages_and_returns</code>（:238-330）。对 S₁ 逐步代入：</p>
+<pre><code>原始 reward r=1.0
+ ① 长度惩罚 apply_length_penalties        本案例未配置 ⇒ 不变      length_penalty.py
+ ② 按原始 prompt 顺序重排 + reshape 成 (128 组, 8)                  :246-252
+ ③ 组内 baseline 减法（estimator 决定）    1.0 − 0.25 = 0.75        :264-271
+ ④ compute_reward: clip 到 (−10,10) → 散播到 EOS 位置               models/utils.py:98-126
+    S₁: 长度 257 的逐 token reward 向量，只有索引 256（EOS）= 0.75，其余全 0
+    （use_kl_loss=False 时这里还会加逐 token 的 −β·KL；本案例 kl 是零张量）
+ ⑤ get_cumulative_returns(γ=1): 从后往前累加 ⇒ 210 个 action token 的
+    return 全部 = 0.75；advantages = returns.clone()                :379-411
+ ⑥ 全局归一化（仅 gae/reinforce/reinforce_baseline）：
+    对全部 1024 条的 action token 求 (μ, σ)，A ← (A−μ)/σ            :315-328
+    设 μ≈−0.03、σ≈0.52（示意值）⇒ S₁ 每个 token 的最终 A ≈ 1.50
+</code></pre>
+<p>第④步的 EOS 散播值得单看一眼（<code>models/utils.py:121-122</code>）：用 <code>fliplr().argmax()</code> 找每行最后一个 action 位置，<code>scatter_</code> 把标量 reward 放上去——一行向量化代码替代了双重循环（注释里保留了等价循环版，对照读）。</p>
+<h3>六种 advantage estimator：同一组 r，六种算法的手算对照</h3>
+<p><code>--algo.advantage.estimator</code> 的分支就在 :264-271（baseline 减法）和 :284-309（return 计算）。设同组 n=8 条样本 reward 为 r₁..r₈ = [1,1,0,0,0,0,0,0]（均值 r̄=0.25，样本标准差 σ=0.463）：</p>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>estimator</th>
+<th>论文</th>
+<th>baseline 减法</th>
+<th>全局归一化</th>
+<th>需要 critic</th>
+<th>S₁（r=1）算出的 A</th>
+<th>错误样本（r=0）的 A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gae</code></td>
+<td>PPO</td>
+<td>无（用 V(s)，逐 token）</td>
+<td>✅</td>
+<td>✅</td>
+<td>依赖 V</td>
+<td>依赖 V</td>
+</tr>
+<tr>
+<td><code>reinforce</code></td>
+<td>REINFORCE++</td>
+<td>无</td>
+<td>✅</td>
+<td>❌</td>
+<td>1.0 → 全局归一</td>
+<td>0 → 全局归一</td>
+</tr>
+<tr>
+<td><code>rloo</code></td>
+<td>RLOO</td>
+<td>留一均值 (Σr−rᵢ)/(n−1)</td>
+<td>❌</td>
+<td>❌</td>
+<td>1 − 1/7 = <strong>0.857</strong></td>
+<td>0 − 2/7 = <strong>−0.286</strong></td>
+</tr>
+<tr>
+<td><code>reinforce_baseline</code></td>
+<td>REINFORCE++-baseline（<strong>本案例，官方 RLVR 推荐</strong>）</td>
+<td>组均值</td>
+<td>✅</td>
+<td>❌</td>
+<td>0.75 → 全局归一 ≈ <strong>1.50</strong></td>
+<td>−0.25 → ≈ <strong>−0.42</strong></td>
+</tr>
+<tr>
+<td><code>group_norm</code></td>
+<td>GRPO</td>
+<td>组均值再除组内 std</td>
+<td>❌</td>
+<td>❌</td>
+<td>0.75/0.463 = <strong>1.620</strong></td>
+<td>−0.25/0.463 = <strong>−0.540</strong></td>
+</tr>
+<tr>
+<td><code>dr_grpo</code></td>
+<td>Dr. GRPO</td>
+<td>组均值</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>0.75</strong></td>
+<td><strong>−0.25</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>记忆锚点：</p>
+<ul>
+<li><strong>gae 之外全部 critic-free 且 γ 强制 1.0</strong>（:293-300 会 warning 并改写）；此时"逐 token return"退化为"整句共享一个标量 advantage"。</li>
+<li>Dr. GRPO 相对 GRPO 只删了一件事：<strong>组内 /σ</strong>。GRPO 的 /σ 会放大低方差组（比如 7 对 1 错）的梯度，造成"简短、模型已会的题被过度奖励"的偏差；Dr. GRPO 论文证明去掉后梯度无偏。</li>
+<li><code>--algo.advantage.no_std_norm</code> 可让第⑥步只减 μ 不除 σ（reinforce_baseline 的变体）。</li>
+<li>为什么 rloo/group_norm/dr_grpo <strong>不做</strong>第⑥步全局归一化？对照 :315 的列表——它们的组内操作已经完成了尺度控制（rloo 的留一均值理论无偏、group_norm 已除过 σ、dr_grpo 刻意保持原始尺度），再做全局归一会破坏各自论文的定义。</li>
+</ul>
+<h3>KL 的两种用法（一定要能画出这张分叉表）</h3>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th><code>algo.kl.use_loss=False</code>（默认，PPO 传统）</th>
+<th><code>algo.kl.use_loss=True</code>（GRPO 式，<strong>本案例</strong>）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KL 去哪</td>
+<td>变成逐 token reward 惩罚：r_t += −β·KL_t（experience_maker）</td>
+<td>独立 loss 项：<code>loss = policy_loss + β·kl_loss</code>（Day 4，ppo_actor.py:319-337）</td>
+</tr>
+<tr>
+<td>计算时机</td>
+<td>采样后一次性（用 π_old）</td>
+<td>每个训练 micro-batch 用<strong>当前</strong> π_θ 重算</td>
+</tr>
+<tr>
+<td>推荐 estimator</td>
+<td><code>k1</code></td>
+<td><code>k2</code> 或 <code>k3</code>（k1 均值为 0 无意义，argparse help 里明说）</td>
+</tr>
+<tr>
+<td>ref logprobs</td>
+<td>用完即弃</td>
+<td>保留传给 actor 训练</td>
+</tr>
+<tr>
+<td>典型系数</td>
+<td>0.01（RLHF 对话）</td>
+<td>1e-5（RLVR，本案例）；GRPO 常配 k3</td>
+</tr>
+</tbody>
+</table></div>
+<p>三种 KL 近似（<code>models/utils.py:64-95</code>，源自 Schulman 博客 joschu.net/blog/kl-approx，Δ = logπ − logπ_ref，结果 clamp ±10）：</p>
+<ul>
+<li><strong>k1</strong> = Δ（无偏、可为负、方差大）</li>
+<li><strong>k2</strong> = Δ²/2（非负、低方差；有偏但实践近似好，本案例用它）</li>
+<li><strong>k3</strong> = e^{−Δ} − 1 + Δ（非负、无偏，GRPO 论文用它）</li>
+</ul>
+<p>自适应 KL 控制器（<code>kl_controller.py:4-18</code>）：设了 <code>--algo.kl.target</code> 才启用，<code>value *= 1 + clip(kl/target − 1, ±0.2) × n_steps/horizon</code>（Ziegler et al. 2019）。默认是 <code>FixedKLController</code>（本案例，β 恒 1e-5）。</p>
+<h3>长度惩罚（reasoning 训练必调，<code>length_penalty.py</code>）</h3>
+<p>发生在流水线第①步，直接改 <code>experience.rewards</code>：</p>
+<ul>
+<li><strong>DAPO overlong</strong>（:16-58）：软区间惩罚。设 <code>expected = max_new_tokens − overlong_buffer_len</code>，超出部分按 <code>−min(exceed, buffer)/buffer × factor</code> 线性罚。例：max_new=8192、buffer=6144、factor=1 时，一条 4096 token 的回答罚 −(4096−2048)/6144 = −0.33。</li>
+<li><strong>ProRL stop-properly</strong>（:61-106）：只看 <code>finish_reason=="length"</code>（truncated 标志）。系数 ≥0 时 reward <strong>乘</strong>系数（<code>0.0</code> = 截断样本 reward 清零，prorlv2 脚本的选择）；&lt;0 时 reward <strong>直接覆盖</strong>为该负值（如 −0.5）。</li>
+<li>两者可叠加；改完会同步 <code>info["reward"]</code> 保证日志一致（:150-153）。</li>
+</ul>
+<p>假如 S₃（答错且被截断）在 prorlv2 配置下：reward 0 × 0.0 = 0（本来就 0）；假如某条<strong>答对但被截断</strong>：1.0 × 0.0 = 0——"没写完的对答案不算对"，逼模型学会在预算内收尾。</p>
+<h3>费曼自测</h3>
+<ol>
+<li>把 r=[1,1,0,0,0,0,0,0] 换成 [1,1,1,1,1,1,1,0]，手算 group_norm 和 dr_grpo 下答对样本的 A，解释为什么 GRPO 会"过度奖励简单题"。
+   <details><summary>答案</summary><div class="ans"><p>r̄=0.875，σ=0.354。group_norm：(1−0.875)/0.354≈<strong>+0.354</strong>；dr_grpo：+0.125。同样是"答对"，GRPO 在低方差组里把 0.125 放大近 3 倍——模型越会做的题梯度越被放大，Dr. GRPO 删掉 /σ 就是修这个。</p></div></details></li>
+<li><code>use_kl_loss=True</code> 时 experience_maker 为什么把 kl 置零但保留 <code>base_action_log_probs</code>？
+   <details><summary>答案</summary><div class="ans"><p>KL 不进 reward（置零防止 compute_reward 加惩罚），但 Day 4 训练时要用当前 π_θ 对 π_ref 重算 KL loss，所以 ref 的 logprobs 必须随 Experience 传给 actor。</p></div></details></li>
+<li>compute_reward 后 S₁ 的逐 token reward 向量长什么样？γ=1 的累计 return 为什么让每个 action token 拿到同一个值？
+   <details><summary>答案</summary><div class="ans"><p>长 257、只有 EOS 位（索引 256）=0.75 其余全 0。从后往前累加时，每个位置的后缀和都恰好包含那唯一的 0.75。</p></div></details></li>
+<li>本案例的 KL 系数 1e-5 起什么作用？训练早期它几乎为 0，为什么还要配？
+   <details><summary>答案</summary><div class="ans"><p>k2 = Δ²/2，早期 π_θ≈π_ref ⇒ KL loss≈0；它是<strong>长跑的信任域</strong>——ProRL 式长期训练中防止策略漂离基座太远导致熵坍缩/退化，是随偏离量二次增长的"弹簧"而非常数拖拽。</p></div></details></li>
+</ol>
+<hr />
 </section>
 
-<!-- ─────────── Day 4 ─────────── -->
 <section class="day" id="day4">
-  <div class="day-head"><span class="day-badge">DAY 4</span><h2>算法核心 II：loss、聚合与训练步</h2></div>
-  <div class="goal"><b>目标</b>：吃透 <span class="filepath">models/loss.py</span> 每一个分支；理解 token-level vs sequence-level 聚合的数学差异；理解 off-policy 校正（这是 async 训练能 work 的前提）。</div>
-
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单</div>
-    <ol>
-      <li><span class="filepath">openrlhf/models/loss.py</span> 全文（重中之重）</li>
-      <li><span class="filepath">openrlhf/utils/loss_utils.py</span>（梯度累积下的全局归一化，被 <span class="filepath">tests/test_loss_aggregation.py</span> 覆盖 —— <strong>先跑测试再读实现</strong>）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_utils/replay_buffer.py</span>（dynamic batch + Karmarkar–Karp 序列长度均衡）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_trainer.py:213-298</span>（train_step / ppo_train 编排）+ <span class="filepath">trainer/ray/ppo_actor.py:155-259</span>（worker 内真正的优化循环）</li>
-    </ol>
-  </div>
-
-  <h3>PolicyLoss 主干（<span class="filepath">loss.py:116-231</span>）</h3>
-  <p>记 \(r_t = \exp\big(\mathrm{clamp}(\log\pi_\theta - \log\pi_{\text{old}},\ \pm 20)\big)\)：</p>
-  <div class="formula-card">
-    <div class="f-name">标准 PPO clip（ε 默认 0.2，可非对称）</div>
-    $$L = -\min\Big(r_t A,\ \ \mathrm{clip}(r_t,\ 1-\varepsilon_{\text{low}},\ 1+\varepsilon_{\text{high}})\, A\Big)$$
-    <div class="f-note"><code>--actor.eps_clip_low_high 0.2 0.27</code> 即 DAPO 的 clip-higher 技巧：抬高上界鼓励探索。</div>
-  </div>
-  <div class="formula-card">
-    <div class="f-name">Dual-clip PPO（<code>--actor.dual_clip c</code>，c &gt; 1，仅 A &lt; 0 时生效）</div>
-    $$L = -\begin{cases} \max\big(\min(r_tA,\ \text{clip})\,,\ c \cdot A\big) & A < 0 \\[4pt] \min(r_tA,\ \text{clip}) & A \ge 0 \end{cases}$$
-    <div class="f-note">给负 advantage 加下界，防止 ratio 过小导致过度惩罚把策略推崩。</div>
-  </div>
-  <div class="formula-card">
-    <div class="f-name">GSPO（<code>--actor.policy_loss_type gspo</code>，<span class="filepath">loss.py:170-178</span>）</div>
-    $$r_{\text{seq}} = \exp\Big(\frac{1}{|a|}\sum_t \Delta\log p_t\Big)$$
-    <div class="f-note">ratio 换成<strong>序列级几何平均</strong>，且强制 sequence-level 聚合。适合 MoE 等 token ratio 噪声大的场景。</div>
-  </div>
-
-  <h3>聚合语义（<code>aggregate_loss</code>，<span class="filepath">loss.py:11-39</span>）—— 本仓库最精细的工程点</h3>
-  <div class="formula-grid">
-    <div class="formula-card">
-      <div class="f-name">token-level（默认）</div>
-      $$L = \frac{\sum_{i,t} \ell_{i,t}\, m_{i,t}}{N_{\text{tokens}}^{\text{global}}} \times dp$$
-      <div class="f-note">分母是全局有效 token 总数 —— 长回答权重大。</div>
-    </div>
-    <div class="formula-card">
-      <div class="f-name">sequence-level</div>
-      $$L = \frac{1}{B_{\text{global}}}\sum_i \Big(\frac{\sum_t \ell_{i,t} m_{i,t}}{\sum_t m_{i,t}}\Big) \times dp$$
-      <div class="f-note">先序列内平均、再样本间平均 —— 每条样本等权（GRPO 论文原味）。</div>
-    </div>
-  </div>
-  <div class="callout key">
-    <div class="co-title">⚑ 两个隐藏的正确性保证</div>
-    <ul>
-      <li>乘 \(dp\) 是为了抵消 DeepSpeed 跨 DP rank 的梯度平均，保证<strong>梯度与单卡全量 batch 严格等价</strong>。</li>
-      <li><span class="filepath">loss_utils.py:80-105</span>：梯度累积时把同一 optimizer step 的所有 micro-batch 的 token 数<strong>先汇总再分摊</strong>，避免"均值的均值"偏差 —— <span class="filepath">tests/test_loss_aggregation.py</span> 专门验证 token 数不均时两种算法结果不同。</li>
-    </ul>
-  </div>
-
-  <h3>vLLM off-policy 校正（<code>--algo.advantage.is_correction_enable</code>）</h3>
-  <p>rollout 用的 \(\pi_{\text{rollout}}\) 与训练时的 \(\pi_{\text{old}}\) 可能不同（async / partial rollout 下必然不同），用重要性权重修正：</p>
-  $$w_t = \exp\big(\log\pi_{\text{old}} - \log\pi_{\text{rollout}}\big)$$
-  <div class="tbl-wrap"><table>
-    <tr><th>type</th><th>行为</th><th>场景</th></tr>
-    <tr><td><code>tis</code></td><td>\(w\) 截断到 [0.5, 5.0] 后乘 loss</td><td>默认</td></tr>
-    <tr><td><code>icepop</code></td><td>阈值外的 token 直接置 0（mask 掉）</td><td>partial rollout 官方推荐</td></tr>
-    <tr><td><code>seq-mask-tis</code></td><td>序列级几何均值超阈值 → 整句 mask，句内再乘 \(w\)</td><td>更保守</td></tr>
-  </table></div>
-
-  <h3>Critic 侧与 ReplayBuffer</h3>
-  <ul>
-    <li><strong>ValueLoss</strong>（<span class="filepath">loss.py:234-270</span>）：value clip（默认 0.5）+ 两个 MSE 取 max；<code>--critic.freezing_steps N</code> 让前 N 步只训 critic 不动 actor（PPO 冷启动稳定性技巧）。</li>
-    <li><strong>dynamic batch</strong>（<span class="filepath">replay_buffer.py:91-177</span>）：开 <code>--train.dynamic_batch_enable</code> 后不再按固定 micro_batch_size，而是按 <code>max_tokens_per_gpu</code> 的 token 预算装箱，用 Karmarkar–Karp 算法均衡各 micro-batch 的总长，跨 DP rank 对齐 step 数。变长 reasoning 输出下利用率远高于定长 batch。</li>
-  </ul>
-
-  <div class="quiz">
-    <div class="card-title">✎ 自测</div>
-    <ol>
-      <li>token-level 和 sequence-level 聚合，哪个会让"一条 8000 token 的长回答"对梯度影响更大？GRPO 论文的原始设定是哪个？
-        <details><summary>参考答案</summary><div class="ans">token-level（长序列贡献更多 token 项）。GRPO 原始设定是 sequence-level（每条样本等权）。</div></details></li>
-      <li>dual_clip 只在 advantage 为负时起作用，为什么？
-        <details><summary>参考答案</summary><div class="ans">A ≥ 0 时 min(surr1, surr2) 已有上界（clip 上限封顶）；A &lt; 0 时若 ratio → 0，−min(...) 会无界增大，dual_clip 用 c·A 给它加下界。</div></details></li>
-      <li>async 训练不开 is_correction 会发生什么？
-        <details><summary>参考答案</summary><div class="ans">π<sub>rollout</sub> 落后 π<sub>old</sub> 一到多个 batch，重要性比率整体偏移但未被修正，梯度估计有系统性偏差，通常表现为训练不稳或 reward 虚高后崩掉。</div></details></li>
-    </ol>
-  </div>
+  <div class="day-head"><span class="day-badge">D4</span><h2>Loss、聚合与训练步（第⑦-⑩站）</h2></div>
+<div class="goal"><b>目标</b>：吃透 <code>models/loss.py</code> 的每一个分支；理解 token-level vs sequence-level 聚合的数学差异（能用数字例子说明）；理解 off-policy 校正——这是 async 训练能 work 的前提。</div>
+<h3>阅读清单</h3>
+<ol>
+<li><code>openrlhf/models/loss.py</code> 全文（336 行，重中之重）</li>
+<li><code>openrlhf/utils/loss_utils.py</code>（105 行，梯度累积下的全局归一化——<strong>先跑 <code>pytest tests/test_loss_aggregation.py -v</code> 再读实现</strong>）</li>
+<li><code>openrlhf/trainer/ppo_utils/replay_buffer.py</code>（177 行）+ <code>experience.py:270-303</code>（<code>balance_experiences</code>）</li>
+<li><code>openrlhf/trainer/ppo_trainer.py:213-298</code>（train_step / ppo_train 编排）</li>
+<li><code>openrlhf/trainer/ray/ppo_actor.py:155-406</code>（worker 内真正的优化循环 <code>ppo_train</code> + <code>training_step</code>）</li>
+</ol>
+<h3>第⑦站：experience 下发与长度均衡</h3>
+<p><code>train_step</code>（<code>ppo_trainer.py:213-264</code>）拿到算好 advantage 的 experiences 后：</p>
+<ol>
+<li><strong><code>balance_experiences</code></strong>（<code>experience.py:270-303</code>，dynamic_batch 时）：把 1024 条按 <code>total_length</code> 降序排序，再用"首尾交错"法分给 2 个 DP rank——docstring 里的例子：长度 [8,7,6,5,4,3,2,1] 分 2 组 ⇒ [8,1,6,3] 和 [7,2,5,4]，两组总长 18 vs 18。<strong>目的</strong>：防止某个 rank 全拿长序列拖慢整个 step（DP 同步在 optimizer step 处等齐）。</li>
+<li><strong><code>async_run_method_batch(method_name="append", ...)</code></strong>：切好的 experiences 发给各 actor rank，进各自的 <code>NaiveReplayBuffer</code>（<code>replay_buffer.py:49-59</code>）——注意 append 时先 <code>split_experience_batch</code> 拆回单条并 <code>remove_padding_in_sequences</code> 去掉右 padding（存"裸"样本，用时再拼）。</li>
+</ol>
+<h3>第⑧站：动态 batch —— Karmarkar-Karp 装箱</h3>
+<p><code>setup_dynamic_batch</code>（<code>replay_buffer.py:91-177</code>），每次 <code>fit</code> 开头重建。本案例每个 DP rank 持有 512 条：</p>
+<ol>
+<li><code>local_train_batch_size = train.batch_size / dp_size = 1024/2 = 512</code> ⇒ <code>expected_num_steps = 128×8/1024 = 1</code> 个 optimizer step；</li>
+<li>对这 512 条的长度列表调 <code>get_minimum_num_micro_batch_size</code>：按 <code>train.max_tokens_per_gpu = 16192</code> 的预算算最少要几个 micro-batch，跨 DP rank <code>all_reduce(max)</code> 对齐 step 数；</li>
+<li><code>get_seqlen_balanced_partitions</code>（<code>seqlen_balancing.py</code>，从 verl 移植的 <strong>Karmarkar-Karp 最大差分法</strong>）把 512 条分进 N 个 micro-batch，使各箱 token 总数尽量均衡；</li>
+<li>预计算四组标量供训练用：<code>dynamic_batch_num_tokens</code>（整个 optimizer step 的<strong>全局</strong> action token 数）、<code>dynamic_global_batch_size</code>（全局有效样本数）、<code>dynamic_sample_loss_scale</code>、<code>dynamic_optimizer_step</code>（哪个 micro-batch 之后才真正 step，形如 [0,0,...,1]）。</li>
+</ol>
+<p>对比不开 dynamic_batch 的固定路径：按 <code>micro_train_batch_size</code> 均匀切，梯度累积步数 gas 由公式算（<code>deepspeed.py:110-116</code>）：<code>gas = train_bs × ring × tp / micro_bs / world_size</code>。变长 reasoning 输出下固定 batch 的利用率远低于 token 预算装箱——这就是官方 performance 文档把 dynamic batch 列为"始终建议开启"的原因。</p>
+<h3>第⑨站：training_step —— 一个 micro-batch 的完整解剖</h3>
+<p><code>ppo_actor.py:261-406</code>。输入：experience（含 sequences/action_mask/advantages/action_log_probs=π_old/base_action_log_probs=π_ref/rollout_log_probs=π_rollout）。流程：</p>
+<pre><code>actor 前向（当前 π_θ）→ action_log_probs                     :294-303
+→ PolicyLoss(π_θ, π_old, A, mask, π_rollout, 归一化参数)      :306-313
+→ use_kl_loss ⇒ 用 π_θ 与 π_ref 重算 KL → aggregate_loss     :319-333
+→ loss = actor_loss + kl_loss × kl_ctl                       :337
+→ (可选) MoE aux_loss、entropy 正则                           :339-352
+→ strategy.backward → optimizer_step（dynamic 时看 flag）     :354-359
+→ (可选) EMA 滑动平均                                         :361-366
+</code></pre>
+<h3>PolicyLoss 主干（<code>loss.py:116-231</code>）——代入 S₁</h3>
+<pre><code>ratio = exp(clamp(logπ_θ − logπ_old, ±20))
+surr1 = ratio · A
+surr2 = clamp(ratio, 1−ε_low, 1+ε_high) · A
+loss  = −min(surr1, surr2)                       # 标准 PPO（本案例 ε=0.2 对称）
+</code></pre>
+<p><strong>本案例的一个反直觉事实</strong>：每轮 rollout 恰好 1 次 optimizer step、max_epochs=1 ⇒ 训练时 π_θ 与 π_old 是<strong>同一套权重</strong>（梯度累积期间参数不动）⇒ ratio ≡ 1、clip 永不触发，loss 退化为 −A·(权重梯度方向)。clip 在这里是"保险丝"。什么时候真正起作用？<code>train.batch_size &lt; rollout.batch_size × n</code> 时——比如 prorlv2 脚本 rollout 512×16=8192、train_bs 1024 ⇒ 每轮 8 次 optimizer step，从第 2 步起 π_θ 已更新而 π_old 还是旧值，ratio 开始漂移，clip 生效。</p>
+<p>其余分支逐个看：</p>
+<ul>
+<li><strong>非对称 clip</strong>（DAPO clip-higher）：<code>--actor.eps_clip_low_high 0.2 0.27</code> 抬高上界——正 advantage 的低概率 token 允许涨得更多，鼓励探索。数字例：A=+1.5、ratio=1.35 时，对称 clip 卡在 1.2×1.5=1.8，clip-higher 卡在 1.27×1.5=1.905。</li>
+<li><strong>dual-clip</strong>（:185-194，arXiv:1912.09729）：<code>--actor.dual_clip 3</code>。只在 <strong>A&lt;0</strong> 时加下界 <code>max(min(surr1,surr2), c·A)</code>。数字例：A=−1、ratio=5 ⇒ 标准 PPO loss=−min(−5, −0.8×?)…实际取 −(−5)=5，梯度巨大；dual-clip 封在 −3·(−1)=3。防止"策略已大幅偏离的负样本"贡献爆炸梯度。为什么只管 A&lt;0？A&gt;0 时 min(surr1,surr2) 已经被 surr2 的上界封住了。</li>
+<li><strong>GSPO</strong>（:170-178，<code>--actor.policy_loss_type gspo</code>）：ratio 换成<strong>序列级几何平均</strong> <code>exp(mean_t Δlogp_t)</code> 并广播回每个 token，同时强制 sequence-level 聚合（:143-144）。MoE 等逐 token ratio 噪声大的场景用。</li>
+</ul>
+<h3>off-policy 校正（<code>--algo.advantage.is_correction_enable</code>，:196-219）</h3>
+<p>背景（fengyao.notion.site/off-policy-rl）：vLLM 的 π_rollout 与训练引擎的 π_old <strong>从来不严格相等</strong>（kernel 数值差异），async/partial rollout 下更是差整整一到多个版本。校正系数 <code>w = exp(logπ_old − logπ_rollout)</code>，三种用法：</p>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>type</th>
+<th>行为</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tis</code></td>
+<td>w 截到 [0.5, 5.0] 后乘 loss</td>
+<td>默认</td>
+</tr>
+<tr>
+<td><code>icepop</code>（<strong>本案例</strong>）</td>
+<td>阈值外的 token 系数直接置 0（mask 掉）</td>
+<td>官方 partial rollout 推荐</td>
+</tr>
+<tr>
+<td><code>seq-mask-tis</code></td>
+<td>序列级几何均值出界 ⇒ 整句 mask；句内仍乘 token 级 w</td>
+<td>更保守</td>
+</tr>
+</tbody>
+</table></div>
+<p>代入 S₁ 的某个 token：DS 前向 logπ_old=−1.20，vLLM 报 logπ_rollout=−1.15 ⇒ w=e^{−0.05}=0.951 ∈ [0.5,5] ⇒ 该 token 的 loss ×0.951。另一个数值分歧大的 token：w=e^{−1.2}=0.30 &lt; 0.5 ⇒ icepop 直接把它从 loss 里抹掉（tis 则会夹到 0.5 继续参与）。副产品 <code>vllm_kl</code>（:219）被记录进日志——<strong>监控两引擎分歧度的免费探针</strong>。</p>
+<h3>aggregate_loss：本仓库最精细的工程点（:11-39）</h3>
+<p>两种归约语义，用一个数字例子焊死记忆：样本 A = 10 个 token、每个 loss 1.0；样本 B = 90 个 token、每个 loss 0.1。</p>
+<ul>
+<li><strong>token-level</strong>（默认）：Σ(loss·mask)/全局token数 = (10×1.0+90×0.1)/100 = <strong>0.19</strong>——长回答权重大；</li>
+<li><strong>sequence-level</strong>：先句内平均再句间平均 = (1.0+0.1)/2 = <strong>0.55</strong>——每条样本等权（GRPO 论文原味）。</li>
+</ul>
+<p>两个"全局"修正因子是精髓：</p>
+<ul>
+<li><code>× dp_size</code>：DeepSpeed/DDP 会把梯度跨 DP rank <strong>平均</strong>，乘回 dp_size 抵消它，保证梯度与"单卡跑全量 batch"严格等价；</li>
+<li><code>batch_num_tokens / global_batch_size</code> 传<strong>全局</strong>总数（跨 rank all_reduce 或由 replay buffer 预计算），使 loss 对"数据怎么切片"不变。</li>
+</ul>
+<p>梯度累积再叠一层（<code>loss_utils.py:54-105</code>）：DeepSpeed 对每个 backward 的 loss 自动 ×1/gas，所以 <code>iter_grad_accum_global_norm</code> 把同一 optimizer step 窗口内所有 micro-batch 的 token 数<strong>先汇总再 ÷gas</strong> 作为分母——gas 个 micro-batch 的贡献最终加成"整个 step 的一个 token 均值"，而不是"均值的均值"（micro-batch token 数不均时二者不同）。<code>tests/test_loss_aggregation.py:151-196</code> 专门验证这两种算法的差异——<strong>这是全仓库唯一能在 Mac 上跑的算法级测试，先跑再读</strong>。</p>
+<h3>KL loss、entropy 与 critic 侧</h3>
+<ul>
+<li><strong>KL loss</strong>（<code>ppo_actor.py:319-333</code>）：k2 = (logπ_θ − logπ_ref)²/2，同一套 aggregate_loss 归约，×β=1e-5 加进总 loss。</li>
+<li><strong>entropy</strong>（:345-352）：<code>--actor.entropy_coef</code> 设 0 表示<strong>只记日志不进 loss</strong>（本案例；熵是崩溃监控指标），设正值则 <code>loss −= coef × entropy</code>鼓励探索。</li>
+<li><strong>ValueLoss</strong>（<code>loss.py:234-270</code>，仅 gae）：value clip（默认 0.5）+ 双 MSE 取 max，×0.5。<code>--critic.freezing_steps N</code>：前 N 步只训 critic 不动 actor（<code>ppo_trainer.py:272</code> 的 <code>run_actor</code> 条件）——PPO 冷启动时 critic 还是随机的，先冻 actor 让 V(s) 追上再放开。</li>
+<li><strong>指标归约</strong>（<code>ppo_actor.py:196-259</code>）：每个指标带 "token"/"sample" 权重标签，跨 rank all_reduce 时按 token 数或样本数加权——保证日志里的 <code>policy_loss</code>、<code>kl</code> 等与单卡全量计算一致。</li>
+</ul>
+<h3>费曼自测</h3>
+<ol>
+<li>token-level 和 sequence-level 聚合，哪个让"一条 8000 token 的长回答"对梯度影响更大？GRPO 论文原始设定是哪个？OpenRLHF 默认是哪个？
+   <details><summary>答案</summary><div class="ans"><p>token-level 影响大（8000 个 token 每个都是一票）。GRPO 原味是 sequence-level（每句等权）。OpenRLHF 默认 token-level（<code>token_level_loss=True</code>），GSPO 强制 seq-level。</p></div></details></li>
+<li>为什么 aggregate_loss 要 <code>× dp_size</code>？删掉它梯度会差多少？
+   <details><summary>答案</summary><div class="ans"><p>DeepSpeed 跨 DP rank 平均梯度，等效把 loss ÷dp_size；不乘回去，梯度会比"单卡全量 batch"小 dp_size 倍——lr 的有效值随卡数变化，跨规模复现实验时是灾难。</p></div></details></li>
+<li>本案例训练时 ratio≡1，那 icepop 还有作用吗？
+   <details><summary>答案</summary><div class="ans"><p>有。icepop 校正的是 π_old 与 π_rollout（vLLM）的差异，与 ratio=π_θ/π_old 无关。就算完全 on-policy，vLLM/DeepSpeed 的 bf16 数值分歧也存在，个别 token 的 w 可能出界。</p></div></details></li>
+<li>async 训练不开 is_correction 会发生什么？
+   <details><summary>答案</summary><div class="ans"><p>π_rollout 系统性落后 π_old 一到多个 batch，w 分布整体偏移；直接拿 π_old 当采样分布做 PPO 等于用错误的重要性权重，实践表现为熵异常、reward 虚高后崩掉。所以官方 async/partial rollout 配方必带 icepop。</p></div></details></li>
+<li>dual_clip 为什么只在 advantage&lt;0 时起作用？
+   <details><summary>答案</summary><div class="ans"><p>A&gt;0 时 surr2=clamp(ratio)·A 已提供上界；A&lt;0 时 min(surr1,surr2) 会选 ratio 大的那支（更负），ratio 极大时 loss 无界——dual_clip 用 c·A 兜底。</p></div></details></li>
+</ol>
+<hr />
 </section>
 
-<!-- ─────────── Day 5 ─────────── -->
 <section class="day" id="day5">
-  <div class="day-head"><span class="day-badge">DAY 5</span><h2>分布式基础设施：hybrid engine、权重同步、async</h2></div>
-  <div class="goal"><b>目标</b>：理解"训练 80% 时间在生成"这一根本矛盾的三种工程解法；能解释 NCCL vs CUDA IPC 权重同步的选择逻辑。</div>
-
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单</div>
-    <ol>
-      <li>文档 <code>hybrid_engine.rst.txt</code> + <code>async_training.rst.txt</code> + <code>performance.rst.txt</code></li>
-      <li><span class="filepath">openrlhf/trainer/ppo_trainer.py:300-319, 499-570</span>（broadcast_to_vllm 入口 + fit 主循环）</li>
-      <li><span class="filepath">openrlhf/trainer/ray/ppo_actor.py:102-153, 438-478</span>（同步后端选择 + IPC/NCCL 实现 + ZeRO-3 GatheredParameters）</li>
-      <li><span class="filepath">openrlhf/trainer/ray/vllm_worker_wrap.py</span>（vLLM worker 侧如何收权重：<code>update_weight</code> / <code>update_weight_cuda_ipc</code> → <code>load_weights</code>）</li>
-      <li><span class="filepath">openrlhf/utils/deepspeed/deepspeed.py</span> + <span class="filepath">deepspeed_utils.py</span>（DeepspeedStrategy：ZeRO 配置、Muon、ring attention mesh、offload/reload states）</li>
-      <li><span class="filepath">openrlhf/trainer/ppo_trainer_async.py</span>（GenerateSamplesActor / TrainingActor / rollout_queue / VLLMLock / partial rollout）</li>
-    </ol>
-  </div>
-
-  <h3>Hybrid engine 一个 step 的时序（colocate_all + 双 sleep）</h3>
-  <div class="flow">
-    <div class="flow-node"><div class="fn-title">① vLLM wake（全部）→ 生成 rollout → vLLM sleep</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">② DS reload states → critic 训练 → DS offload</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">③ DS reload states → actor 训练 → DS offload</div></div>
-    <div class="flow-arrow">▼</div>
-    <div class="flow-node"><div class="fn-title">④ vLLM wake（仅 weights）→ broadcast 权重</div><div class="fn-desc">KV cache 下次生成前才 wake，降低峰值显存</div></div>
-  </div>
-  <p>sleep 模式下 critic 和 actor <strong>必须串行</strong>（共享 GPU）；非 sleep 模式二者并行 fit（<span class="filepath">ppo_trainer.py:283-296</span>）。</p>
-
-  <h3>权重同步三条路（<span class="filepath">ppo_actor.py:102-103</span>）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>路径</th><th>触发条件</th><th>机制</th></tr>
-    <tr><td><strong>CUDA IPC</strong></td><td><code>nccl</code> + <code>colocate_all</code> + 非 async</td><td>actor 和 vLLM 在同一张物理卡上，直接传 IPC handle 零拷贝共享显存</td></tr>
-    <tr><td><strong>NCCL broadcast</strong>（默认）</td><td>其余情况</td><td>DS rank0 与所有 vLLM worker 组一个独立 process group（world = engines×tp + 1）逐参数广播</td></tr>
-    <tr><td><strong>Ray Collective</strong></td><td><code>--vllm.sync_with_ray</code></td><td>用 ray.util.collective 替代裸 torch 通信</td></tr>
-  </table></div>
-  <p>ZeRO-3 / TP 下参数是分片的，广播前须 <code>GatheredParameters</code> 聚合（<span class="filepath">ppo_actor.py:467-471</span>）。</p>
-
-  <h3>Async 的本质</h3>
-  <p>生成和训练变成生产者/消费者，<code>--train.async_queue_size</code>（默认 1）就是<strong>最大允许的 off-policy staleness（按 batch 计）</strong>。再加 <code>--train.partial_rollout_enable</code> 则权重切换时 vLLM 只 pause/resume，in-flight 序列前半旧权重后半新权重 —— 所以官方要求配 <code>is_correction</code>（icepop）。</p>
-  <div class="tbl-wrap"><table>
-    <tr><th>维度</th><th>Sync</th><th>Async</th></tr>
-    <tr><td>流水线</td><td>串行 generate → train → broadcast</td><td>generate / train 并行</td></tr>
-    <tr><td>staleness</td><td>0</td><td>最多 async_queue_size 个 batch</td></tr>
-    <tr><td>vLLM sleep</td><td>支持</td><td><strong>不支持</strong>（互斥）</td></tr>
-    <tr><td>colocate_all</td><td>全部模型 + vLLM 共卡</td><td>仅 DeepSpeed 模型共卡，vLLM 独立 GPU 组</td></tr>
-  </table></div>
-
-  <h3>DeepspeedStrategy 要点</h3>
-  <ul>
-    <li>梯度累积自动算：\(gas = \dfrac{\text{train.batch\_size} \times ring \times tp}{\text{micro\_batch\_size} \times \text{world\_size}}\)</li>
-    <li><strong>Muon 优化器</strong>（<code>--actor.optim muon</code>）：2D 权重走 Muon（lr 0.02）、embedding/head/1D 参数走 aux-Adam；与 <code>adam_offload</code> 不兼容；DS≥0.18.9；<strong>用 Muon 时 grad clip 建议设 0</strong> —— DS 的 clip 发生在 Newton–Schulz 之后，会把更新缩小约 700 倍（<span class="filepath">deepspeed.py:331-344</span>，典型的"读了源码才知道"的坑）。</li>
-    <li><strong>Ring attention</strong>：3D mesh (dp, sp, tp)，<code>ring_attn_size&gt;1</code> 强制要求 <code>packing_samples</code>。</li>
-    <li><strong>EMA</strong>（<code>--train.enable_ema</code>，β=0.992）：每 step 后在 CPU 上做滑动平均，保存时存 EMA 权重 —— RLHF 出模型更稳的老技巧。</li>
-  </ul>
-
-  <div class="quiz">
-    <div class="card-title">✎ 自测</div>
-    <ol>
-      <li>为什么 <code>vllm.enable_sleep</code> 和 <code>async_enable</code> 互斥？
-        <details><summary>参考答案</summary><div class="ans">sleep 靠训练/生成严格串行地时分复用同一组 GPU；async 恰恰要二者同时进行，vLLM 永远不能睡。</div></details></li>
-      <li>partial rollout 相比普通 async 多引入了什么噪声？框架用什么补救？
-        <details><summary>参考答案</summary><div class="ans">同一条序列前半由旧权重、后半由新权重生成（token 级混合策略）。补救：ICEPOP 重要性采样校正，把 ratio 异常的 token 直接 mask 掉。</div></details></li>
-      <li>什么条件下权重同步走 CUDA IPC？为什么该条件下 IPC 更优？
-        <details><summary>参考答案</summary><div class="ans">nccl + colocate_all + 非 async。此时 actor 与 vLLM worker 在同一张物理卡的同一显存里，IPC handle 零拷贝直读，省去一轮网络/NCCL 传输。</div></details></li>
-    </ol>
-  </div>
+  <div class="day-head"><span class="day-badge">D5</span><h2>分布式基础设施：hybrid engine、权重同步、async（第⑪-⑫站）</h2></div>
+<div class="goal"><b>目标</b>：理解"训练 80% 时间在生成"这一根本矛盾的三种工程解法；能解释本案例为什么走 CUDA IPC 而不是 NCCL broadcast；能画出 async 模式的生产者-消费者拓扑。</div>
+<h3>阅读清单</h3>
+<ol>
+<li>文档 <code>hybrid_engine.rst.txt</code> + <code>async_training.rst.txt</code> + <code>performance.rst.txt</code>（三份都不长，先读文档再读码）</li>
+<li><code>openrlhf/trainer/ppo_trainer.py:266-319</code>（ppo_train 的 sleep 编排 + broadcast_to_vllm 入口）</li>
+<li><code>openrlhf/trainer/ray/ppo_actor.py:102-153, 408-489</code>（同步后端选择 + NCCL/IPC 两条实现 + ZeRO-3 GatheredParameters）</li>
+<li><code>openrlhf/trainer/ray/vllm_worker_wrap.py</code>（73 行，vLLM worker 侧怎么收权重）</li>
+<li><code>openrlhf/utils/deepspeed/deepspeed.py</code> + <code>deepspeed_utils.py:151-211</code>（策略封装、offload/reload 的真实语义）</li>
+<li><code>openrlhf/trainer/ppo_trainer_async.py</code> 全文（353 行）</li>
+</ol>
+<h3>Hybrid engine：一个训练 step 的完整时序（本案例）</h3>
+<p>把 Day 2-4 的站点按 GPU 时间轴重排（<code>colocate_all</code> + 双 sleep）：</p>
+<pre><code>t0  vLLM wake_up(全部)          ← samples_generator.py:106-107
+t1  生成 1024 条 rollout（S₁ 在此诞生）        ~全 step 的 60-80% 时间
+t2  vLLM sleep                  ← :119-120，释放权重+KV cache 显存
+t3  make_experience: actor/ref 前向（串行 + empty_cache）
+      注意: DS 的 offload_deepspeed_states 只搬走 optimizer states/
+      梯度缓冲/hp_params，bf16 模型参数留在 GPU（deepspeed_utils.py:167-178）
+      ⇒ 前向不需要 reload，&quot;睡着&quot;也能推理
+t4  actor 训练: reload_states → fit(ppo_train) → offload_states
+      ← ppo_trainer.py:274-286 _run_sleep；有 critic 时 critic 先训
+t5  vLLM wake_up(tags=[&quot;weights&quot;]) ← 只醒权重不醒 KV cache，省峰值显存
+t6  broadcast_to_vllm: θ₁ 进入 vLLM               ← ppo_trainer.py:300-319
+t7  （下轮 t0 时 KV cache 才被唤醒）
+</code></pre>
+<p>sleep 模式下 critic 和 actor <strong>必须串行</strong>（共卡）；非 sleep 模式二者并行 <code>fit</code>（:288-296）。</p>
+<h3>第⑪站：权重同步的三条路</h3>
+<p>选择逻辑一行（<code>ppo_actor.py:103</code>）：<code>use_cuda_ipc = (backend=="nccl") and colocate_all and (not async_enable)</code>。</p>
+<ul>
+<li><strong>CUDA IPC（本案例命中）</strong>：actor 与 vLLM worker 在同一张物理卡 ⇒ 不走网络。每个参数：ZeRO-3 先 <code>GatheredParameters</code> 聚合分片 → <code>reduce_tensor</code> 拿 IPC handle → <code>all_gather_object</code> 按物理 GPU id 汇总 → vLLM worker <code>update_weight_cuda_ipc</code> 直接映射同卡显存 <code>load_weights</code>（<code>vllm_worker_wrap.py</code>）——<strong>零拷贝</strong>。</li>
+<li><strong>NCCL broadcast（默认路径）</strong>：DS rank0 与所有 vLLM worker 组一个独立进程组，world = engines×tp + 1（<code>_init_vllm_sync_group</code> :110-153 的布局注释值得抄进笔记）。逐参数：rank0 发 <code>update_weight.remote(name, dtype, shape)</code> 元数据 → NCCL broadcast 张量 → worker <code>load_weights</code>。</li>
+<li><strong>Ray collective</strong>（<code>--vllm.sync_with_ray</code>）：NCCL 建组失败环境的兜底。</li>
+</ul>
+<p>公共细节：ZeRO-3/TP 下参数是分片的，广播前须逐参数 gather（:467-471）；开 prefix cache 时同步前要 <code>reset_prefix_cache</code>（旧 KV 对应旧权重！:409-414）；最后一个参数带 <code>empty_cache=True</code>。</p>
+<h3>Async 模式：生产者-消费者 + 三个同步原语</h3>
+<p><code>ppo_trainer_async.py</code>。sync 模式"生成→训练"轮流空转 GPU，async 把二者拆成两个常驻 Ray actor 并行跑：</p>
+<pre><code>GenerateSamplesActor ──(rollout_queue, maxsize=async_queue_size)──▶ TrainingActor
+        ▲                                                              │
+        └────────────(rollout_slots: 令牌信号量, 携带 global_step)──────┘
+                VLLMLock: eval/broadcast 与生成互斥
+</code></pre>
+<ul>
+<li><strong><code>rollout_queue</code></strong>：产出的 rollout batch 排队；<code>--train.async_queue_size</code>（默认 1）就是<strong>最大 off-policy staleness（按 batch 计）</strong>。</li>
+<li><strong><code>rollout_slots</code></strong>（:295-297）：令牌池实现背压——trainer 消费一个 batch 才放回一个令牌，generator 拿到令牌才能生产下一批。令牌上还捎带 trainer 的最新 global_step，generator 用它判断"该做 eval 了"（:109-127，<code>_eval_just_done</code> 防连评）。</li>
+<li><strong><code>VLLMLock</code></strong>（:19-34）：普通 async 下，生成与权重广播用锁互斥（保证一个 batch 内权重一致）；<strong>partial rollout</strong>（<code>--train.partial_rollout_enable</code>）改用 vLLM 的 <code>pause_generation</code>/<code>resume_generation</code>（:255-265）——广播时只暂停不清空，in-flight 序列<strong>前半旧权重后半新权重</strong>。这是最激进的重叠，官方明确要求配 <code>is_correction</code>（icepop）。</li>
+<li>超采样：<code>--rollout.vllm_generate_batch_size &gt; rollout.batch_size</code> 仅 async 可用（多出的存 <code>_sample_buffer</code> 下轮直接用）。</li>
+</ul>
+<p>官方 performance 文档的定位一句话：<strong>async = max throughput，hybrid engine = max stability</strong>；async 上线前必须先在 sync 模式验证收敛。</p>
+<h3>DeepspeedStrategy 要点（<code>utils/deepspeed/deepspeed.py</code>）</h3>
+<ul>
+<li><strong>3D mesh</strong>：<code>(dp, sp, tp)</code>（:104-108），sp=ring attention 组。<code>ring_attn_size&gt;1</code> 强制 <code>packing_samples</code>。</li>
+<li><strong>梯度累积</strong>：<code>gas = train_bs × ring × tp / micro_bs / world_size</code>（:110-116）。</li>
+<li><strong>Muon 优化器</strong>（<code>--actor.optim muon</code>）：2D 权重走 Muon（lr 0.02）、embedding/head/1D 参数走 aux-Adam；要求 DS ≥ 0.18.9；与 <code>adam_offload</code> <strong>不兼容</strong>；<code>ns_steps</code>/<code>nesterov</code> 是占位符（DS 硬编码 5/True，改了无效，源码 :316-326 有 warning）；<strong>用 Muon 时 grad clip 建议设 0</strong>——DS 的 clip 发生在 Newton-Schulz 之后，会把更新缩小约 700 倍（典型的"读了源码才知道"的坑，:328 附近注释）。</li>
+<li><strong>EMA</strong>（<code>--train.enable_ema</code>，β=0.992）：每个 optimizer step 后在 CPU 上滑动平均（:507-521），保存时存 EMA 权重——RLHF 出模型更稳的老技巧。</li>
+</ul>
+<h3>第⑫站：checkpoint、恢复与评估</h3>
+<ul>
+<li><strong>两种格式</strong>：DS ckpt（含 optimizer/scheduler/dataloader 状态，可断点续训）+ HF 格式（<code>--ckpt.save_hf</code>，直接部署）。<code>client_states</code> 里存 <code>episode / global_step / total_consumed_prompts / data_loader_state_dict</code>（<code>ppo_trainer.py:548-553</code>）。</li>
+<li><strong>恢复时序</strong>（<code>fit</code> :499-514）：读 ckpt → <strong>先 broadcast_to_vllm</strong>（旧权重同步给 vLLM，否则第一轮采样用的是基座！）→ 恢复 dataloader 状态。</li>
+<li><strong>best checkpoint</strong>（:337-381）：eval 指标（默认自动检测第一个 <code>*_pass1</code>）创新高时保存 <code>best_global_stepN</code>。</li>
+<li><strong>eval 指标</strong>（<code>compute_eval_metrics</code> :82-145）：按 datasource 分组算 pass@1（n 条平均）与 pass@k（n 条取 max），外加长度与截断率。案例若配 <code>--eval.dataset OpenRLHF/aime-2024 --eval.n_samples_per_prompt 4</code> 就得到 <code>eval_aime_pass1 / pass4</code>。</li>
+<li>跨并行度恢复：<code>--ds.use_universal_ckpt</code>。</li>
+</ul>
+<h3>费曼自测</h3>
+<ol>
+<li>为什么 <code>vllm.enable_sleep</code> 和 <code>async_enable</code> 互斥？
+   <details><summary>答案</summary><div class="ans"><p>sleep 的前提是训练/生成在同一组卡上严格串行分时；async 的意义恰恰是二者并行。async 下 vLLM 必须常驻自己那组卡（colocate_all 在 async 里只共卡 DS 模型）。</p></div></details></li>
+<li>本案例满足哪三个条件走 CUDA IPC？换成 2 节点部署后走哪条路、为什么？
+   <details><summary>答案</summary><div class="ans"><p>backend=nccl + colocate_all + 非 async。2 节点时 actor 与 vLLM 不再同卡，IPC handle 跨不了机器，回落 NCCL broadcast（rank0 gather 后逐参数广播）。</p></div></details></li>
+<li>DS "睡着"时为什么还能做 make_experience 的前向？
+   <details><summary>答案</summary><div class="ans"><p>offload_deepspeed_states 只搬 optimizer states/梯度缓冲/hp_params，bf16 参数（lp_params）留在 GPU——前向只要参数在就行；训练前才 reload。</p></div></details></li>
+<li>partial rollout 相比普通 async 多引入了什么噪声？框架用什么补救？
+   <details><summary>答案</summary><div class="ans"><p>单条序列内部混合新旧权重生成的 token（π_rollout 不再是单一分布）。补救：token 级 IS 校正，官方推荐 icepop（出界 token 直接 mask，不放大方差）。</p></div></details></li>
+<li>断点续训时为什么必须先 broadcast_to_vllm 再开始采样？
+   <details><summary>答案</summary><div class="ans"><p>vLLM engines 是从 HF 基座权重初始化的；不广播 ckpt 权重，恢复后第一轮 rollout 就是"基座采样 + ckpt 训练"的严重 off-policy 错配。</p></div></details></li>
+</ol>
+<hr />
 </section>
 
-<!-- ─────────── Day 6 ─────────── -->
 <section class="day" id="day6">
-  <div class="day-head"><span class="day-badge">DAY 6</span><h2>调参艺术：性能与算法双维度</h2></div>
-  <div class="goal"><b>目标</b>：形成自己的调参决策树。今天以官方 performance 文档 + 示例脚本对照为主。</div>
-
-  <h3>第一步：选部署模式</h3>
-  <div class="card">
-    <div class="decision"><div class="d-q">单机 4-8 卡、≤13B？</div><div class="d-a">→ 模板 A：<code>colocate_all + vllm.enable_sleep + ds.enable_sleep + ZeRO-3 + packing_samples + dynamic_batch + sync_backend nccl</code></div></div>
-    <div class="decision"><div class="d-q">多机、模型放得下但卡不够？</div><div class="d-a">→ 模板 B：<code>colocate_actor_ref + colocate_critic_reward + 独立 vLLM + adam_offload</code></div></div>
-    <div class="decision"><div class="d-q">追极限吞吐、已在 sync 验证收敛？</div><div class="d-a">→ 模板 C：<code>async_enable（+ partial_rollout_enable + icepop）</code></div></div>
-    <div class="decision"><div class="d-q">70B+？</div><div class="d-a">→ 全分离 distributed 模式</div></div>
-  </div>
-
-  <div class="callout tip">
-    <div class="co-title">✓ 始终开启</div>
-    <p><code>--ds.packing_samples</code>（去 padding，大幅提速）、<code>--vllm.sync_backend nccl</code>、<code>--train.dynamic_batch_enable + max_tokens_per_gpu</code>。<br>
-    <code>vllm.gpu_memory_utilization</code> 经验值：8B→0.6，13B→0.5，34B→0.4。<br>
-    batch 关系式：<strong>train.batch_size = rollout.batch_size × n_samples_per_prompt</strong>；生成侧偏好<strong>多 engine 小 TP</strong>。</p>
-  </div>
-
-  <h3>OOM 处理优先级（顺序执行，别乱跳）</h3>
-  <ol>
-    <li><code>packing_samples</code> + <code>gradient_checkpointing_enable</code></li>
-    <li>降 <code>train.micro_batch_size</code> / <code>rollout.micro_batch_size</code></li>
-    <li>降 <code>vllm.gpu_memory_utilization</code></li>
-    <li><code>ds.adam_offload</code> + 提 <code>ds.zero_stage</code>（2→3）</li>
-    <li>最后手段：去掉 colocation</li>
-  </ol>
-  <p>长上下文（&gt;8K）：<code>ring_attn_size 2 + ring_attn_head_stride 2</code> 起步，配 ZeRO-3 + packing。</p>
-
-  <h3>算法调参速查（结合示例脚本实证）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>目标</th><th>推荐配置</th><th>出处</th></tr>
-    <tr><td><strong>RLVR / 数学推理（首选）</strong></td><td><code>estimator=reinforce_baseline, n_samples=8-16, kl.use_loss + k2, init_coef=1e-5, dynamic_filtering 0 1</code></td><td><span class="filepath">train_prorlv2_math_hybrid_engine.sh</span>（ProRL V2 实战配置）</td></tr>
-    <tr><td>经典 RLHF（有 RM）</td><td><code>estimator=gae, kl k1, init_coef=0.01, actor lr 1e-6 / critic lr 9e-6, critic.freezing_steps 预热</code></td><td><span class="filepath">train_ppo_ray_hybrid_engine.sh</span></td></tr>
-    <tr><td>DAPO 复现</td><td><code>estimator=group_norm, eps_clip_low_high 0.2 0.27, kl.use_loss + k3, n_samples=8, dynamic_filtering, overlong_buffer_len</code></td><td><span class="filepath">train_dapo_ray_hybrid_engine.sh</span></td></tr>
-    <tr><td>长 CoT 防刷长度</td><td><code>reward.overlong_buffer_len + overlong_penalty_factor</code>；截断样本 <code>stop_properly_penalty_coef 0</code>（清零）或负值</td><td>ProRL 脚本</td></tr>
-    <tr><td>async / partial rollout</td><td>必配 <code>is_correction_enable + is_correction_type icepop</code>，阈值默认 0.5 5.0</td><td><span class="filepath">train_reinforce_baseline_ray_agent_async.sh</span></td></tr>
-    <tr><td>MoE / token ratio 噪声大</td><td><code>policy_loss_type gspo</code></td><td>GSPO 论文场景</td></tr>
-    <tr><td>训练不稳、被负样本拖崩</td><td>加 <code>dual_clip 3</code></td><td>dual-clip PPO 论文</td></tr>
-  </table></div>
-
-  <div class="callout key">
-    <div class="co-title">⚑ 关键默认值（背下来）</div>
-    <p>actor lr <code>1e-6</code> · critic lr <code>9e-6</code> · eps_clip <code>0.2</code> · value_clip <code>0.5</code> · kl init_coef <code>0.01</code> · γ=λ=<code>1.0</code> · reward clip <code>(-10,10)</code> · scheduler <code>cosine_with_min_lr</code>（warmup 3%、min_lr_ratio 0.1）· EMA β <code>0.992</code></p>
-  </div>
-
-  <h3>Troubleshooting 高频坑</h3>
-  <ul>
-    <li>旧版平铺 flag（<code>--actor_num_nodes</code>）全部失效，报 unrecognized arguments → 查 common_options 的迁移表</li>
-    <li>Ray 下 GPU device index 错乱 → <code>RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES=1</code></li>
-    <li>vLLM 挂起 → 试 <code>--vllm.enforce_eager</code>（禁 CUDA graphs）</li>
-    <li>Muon：需 DS≥0.18.9、与 adam_offload 互斥、ns_steps/nesterov 是占位符改了无效、grad clip 设 0</li>
-    <li>卡死排查：<code>py-spy top --pid</code>（容器要 <code>--cap-add=SYS_PTRACE</code>）</li>
-    <li>LoRA 只支持 SFT/RM/DPO，<strong>Ray+vLLM PPO 不支持</strong></li>
-    <li>VLM：不支持 packing_samples、不支持 critic（必须 critic-free estimator）、attn 用 eager</li>
-  </ul>
-
-  <div class="exercise">
-    <div class="card-title">🛠 动手</div>
-    <p>把 <span class="filepath">train_prorlv2_math_hybrid_engine.sh</span>、<span class="filepath">train_dapo_ray_hybrid_engine.sh</span>、<span class="filepath">train_reinforce_baseline_ray_agent_async.sh</span> 三个脚本做一张 diff 表：同一列是 flag，每行一个脚本 —— 你会直观看到"算法差异只是十来个 flag 的差异"，这正是 agent 范式解耦的价值。</p>
-  </div>
+  <div class="day-head"><span class="day-badge">D6</span><h2>调参艺术：性能与算法双维度</h2></div>
+<div class="goal"><b>目标</b>：形成自己的调参决策树。今天以官方 <code>performance.rst.txt</code> + 三个示例脚本的对照为主，案例 recipe 作为锚点。</div>
+<h3>性能调参决策树（官方 performance 文档提炼）</h3>
+<p><strong>第一步：选部署模式</strong>（官方原话："Max throughput → async；Max stability → Hybrid Engine；Distributed 是大模型兜底"）</p>
+<ul>
+<li>单机 4-8 卡、≤13B、追稳定 → <strong>模板 A（本案例）</strong>：<code>colocate_all + vllm.enable_sleep + ds.enable_sleep + ZeRO-3 + packing_samples + dynamic_batch + sync_backend nccl</code></li>
+<li>多机、模型放得下但卡不够 → 模板 B：<code>colocate_actor_ref + colocate_critic_reward + 独立 vLLM + adam_offload</code></li>
+<li>追极限吞吐、已在 sync 验证收敛 → 模板 C：<code>async_enable (+ partial_rollout_enable + icepop)</code>，<code>async_queue_size</code> 从 1 起步</li>
+<li>70B+ → 全分离 distributed 模式</li>
+</ul>
+<p><strong>始终开启</strong>：<code>--ds.packing_samples</code>（去 padding，官方标注 "Always on"）、<code>--vllm.sync_backend nccl</code>、<code>--train.dynamic_batch_enable</code>（注意有<strong>两个</strong>预算旋钮：<code>train.max_tokens_per_gpu</code> 管训练、<code>rollout.max_tokens_per_gpu</code> 管前向，本案例 16192/32768）。</p>
+<p><strong>vllm.gpu_memory_utilization 经验值</strong>（官方表，8×A100-80G）：8B→0.6，13B→0.5，34B→0.4，70B+ 改分离模式。本案例 4B 用 0.7。</p>
+<p><strong>OOM 处理优先级</strong>（官方给的顺序，别乱跳）：</p>
+<ol>
+<li><code>packing_samples</code> + <code>gradient_checkpointing_enable</code></li>
+<li>降 <code>train.micro_batch_size</code> / <code>rollout.micro_batch_size</code></li>
+<li>降 <code>vllm.gpu_memory_utilization</code>（0.6→0.5→0.4）</li>
+<li><code>ds.adam_offload</code> + 提 <code>ds.zero_stage</code>（2→3）</li>
+<li>最后手段：去掉 colocation 转分离模式</li>
+</ol>
+<p><strong>长上下文（&gt;8K）</strong>：<code>ring_attn_size 2 + ring_attn_head_stride 2</code> 起步（本案例即是），配 ZeRO-3 + packing。</p>
+<p><strong>batch 关系式</strong>：<code>train.batch_size = rollout.batch_size × n_samples_per_prompt</code> 是常见起点（本案例 1024=128×8，每轮 1 次更新、严格 on-policy）；把 train_bs 调小（如 prorlv2 的 8192/1024）= 每轮 8 次更新，样本效率高但 off-policy 度升高、PPO clip 开始真正工作。生成侧偏好<strong>多 engine 小 TP</strong>而非少 engine 大 TP。</p>
+<h3>算法调参速查（结合示例脚本实证）</h3>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>目标</th>
+<th>推荐配置</th>
+<th>出处</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RLVR / 数学推理（首选）</td>
+<td><code>estimator=reinforce_baseline, n_samples=8-16, kl.use_loss + k2, init_coef 1e-5~1e-4, dynamic_filtering 0 1, is_correction icepop</code></td>
+<td>本案例 recipe（<code>hybrid_engine.rst</code>）+ <code>train_prorlv2_math_hybrid_engine.sh</code></td>
+</tr>
+<tr>
+<td>经典 RLHF（有 RM）</td>
+<td><code>estimator=gae, kl k1 (不开 use_loss), init_coef 0.01, actor lr 1e-6 / critic lr 9e-6, reward.normalize_enable, critic.freezing_steps 预热</code></td>
+<td><code>train_ppo_ray_hybrid_engine.sh</code></td>
+</tr>
+<tr>
+<td>DAPO 复现</td>
+<td><code>estimator=group_norm, eps_clip_low_high 0.2 0.27, kl.use_loss + k3, n_samples=8, dynamic_filtering, overlong_buffer_len</code></td>
+<td><code>train_dapo_ray_hybrid_engine.sh</code></td>
+</tr>
+<tr>
+<td>长 CoT 防刷长度</td>
+<td><code>reward.overlong_buffer_len + overlong_penalty_factor</code>；或截断样本 <code>stop_properly_penalty_coef 0</code>（清零）/负值（覆盖）</td>
+<td>ProRL 脚本注释</td>
+</tr>
+<tr>
+<td>async / partial rollout</td>
+<td>必配 <code>is_correction_enable + is_correction_type icepop</code>（阈值默认 0.5 5.0）</td>
+<td><code>train_reinforce_baseline_ray_agent_async.sh</code> + <code>async_training.rst</code></td>
+</tr>
+<tr>
+<td>MoE / token ratio 噪声大</td>
+<td><code>policy_loss_type gspo</code></td>
+<td>GSPO 论文场景</td>
+</tr>
+<tr>
+<td>训练不稳、被负样本拖崩</td>
+<td>加 <code>dual_clip 3</code></td>
+<td>dual-clip PPO 论文</td>
+</tr>
+<tr>
+<td>探索不足、熵掉太快</td>
+<td><code>eps_clip_low_high 0.2 0.27</code>（clip-higher）；或 <code>entropy_coef</code> 小正值</td>
+<td>DAPO / prorlv2</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>几个关键默认值</strong>（背下来，全在 <code>train_ppo_ray.py</code> argparse）：actor lr <code>1e-6</code>、critic lr <code>9e-6</code>、eps_clip <code>0.2</code>、value_clip <code>0.5</code>、kl init_coef <code>0.01</code>、γ=λ=<code>1.0</code>、reward clip <code>(-10,10)</code>、scheduler <code>cosine_with_min_lr</code>（warmup 3%、min_lr_ratio 0.1）、EMA β <code>0.992</code>、is_correction 阈值 <code>[0.5, 5.0]</code>、vllm.gpu_memory_utilization <code>0.95</code>（分离模式默认，共卡必须调低）。</p>
+<h3>监控什么（案例视角）</h3>
+<ul>
+<li><code>rollout/reward_mean</code>：题目正确率的直接体现；配合 <code>dynamic_filtering_pass_rate</code> 看课程难度。</li>
+<li><code>kl</code> / <code>logprobs_diff</code>：偏离基座的程度；<code>vllm_kl</code>：vLLM 与训练引擎的分歧（异常增大 = 数值问题或 off-policy 过头）。</li>
+<li><code>ppo_clip_ratio</code>：被 clip 的 token 占比；每轮 1 次更新的配置下应≈0，多次更新时持续 &gt;0.2 说明 lr 过大或 staleness 过高。</li>
+<li><code>rollout/response_length_mean</code> + <code>rollout/truncated_rate</code>：长度失控/截断率上升要么加长度惩罚要么放宽 max_new_tokens。</li>
+<li><code>entropy_loss</code>（coef=0 时纯监控）：熵坍缩预警。</li>
+</ul>
+<h3>Troubleshooting 高频坑（troubleshooting.rst + 源码验证）</h3>
+<ul>
+<li>旧版平铺 flag（<code>--actor_num_nodes</code>）全部失效，报 unrecognized arguments → 查 <code>common_options.rst</code> 的迁移表</li>
+<li>Ray 下 GPU device index 错乱 → <code>RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES=1</code></li>
+<li>vLLM 挂起 → 试 <code>--vllm.enforce_eager</code>（禁 CUDA graphs；官方 recipe 默认带上）</li>
+<li>Muon：DS≥0.18.9、与 adam_offload 互斥、ns_steps/nesterov 改了无效、grad clip 设 0</li>
+<li>卡死排查：<code>py-spy top --pid</code>（容器要 <code>--cap-add=SYS_PTRACE</code>）</li>
+<li>LoRA 只支持 SFT/RM/DPO，<strong>Ray+vLLM PPO 不支持</strong></li>
+<li>VLM：不支持 packing_samples、不支持 critic（必须 critic-free estimator）、attn 用 eager（<code>train_ppo_ray.py:617-627</code> 的 assert）</li>
+</ul>
+<h3>动手</h3>
+<p>把 <code>train_prorlv2_math_hybrid_engine.sh</code>、<code>train_dapo_ray_hybrid_engine.sh</code>、<code>train_reinforce_baseline_ray_agent_async.sh</code> 三个脚本做一张 diff 表：同一列是 flag，每行一个脚本。你会直观看到"算法差异只是十来个 flag 的差异"——这正是 agent 范式三轴解耦（算法 × 执行模式 × pipeline）的价值。</p>
+<hr />
 </section>
 
-<!-- ─────────── Day 7 ─────────── -->
 <section class="day" id="day7">
-  <div class="day-head"><span class="day-badge">DAY 7</span><h2>收官：非 RL 路径、多轮 Agent 与综合实战</h2></div>
-  <div class="goal"><b>目标</b>：补齐 SFT / RM / DPO 三条支线；能独立写多轮 agent；用实战练习检验一周成果。</div>
-
-  <div class="card reading">
-    <div class="card-title">📖 阅读清单</div>
-    <ol>
-      <li>文档 <code>non_rl.rst.txt</code> + <span class="filepath">openrlhf/trainer/{sft,rm,dpo}_trainer.py</span> + <span class="filepath">openrlhf/datasets/</span>（packing、chat template 处理）
-        <ul>
-          <li>RM 训练：PairWiseLoss \(-\log\sigma(r_c - r_r - m)\) 或 LogExpLoss；value_head_prefix 默认 <code>score</code></li>
-          <li>DPO：β 典型 0.1–0.5、<code>ipo_enable</code>、<code>label_smoothing</code>（cDPO）、<code>nll_loss_coef</code>（Llama 3.1 报告的 NLL 正则）</li>
-        </ul>
-      </li>
-      <li>文档 <code>agent_training.rst.txt</code> 多轮部分 + <span class="filepath">examples/python/</span> 下的 agent 示例（含 OpenAI 兼容 server executor：把本地 vLLM 包成 <code>/v1/chat/completions</code> 同时截获 token trace 训练 —— 工具调用 RL 的标准姿势）</li>
-      <li>文档 <code>checkpoint.rst.txt</code>：DS ckpt（可恢复，含 optimizer/dataloader 状态）vs HF 格式（<code>--ckpt.save_hf</code>）；best checkpoint 按 eval metric 轮转；<code>--ds.use_universal_ckpt</code> 跨并行度恢复</li>
-    </ol>
-  </div>
-
-  <h3>实战练习（检验一周成果）</h3>
-  <div class="exercise">
-    <div class="card-title">🏆 练习 1 · 算法</div>
-    <p>不看笔记，手推 REINFORCE++-baseline 和 GRPO 的完整 advantage 计算（从 raw reward 到进 loss 的张量），然后在 <span class="filepath">experience_maker.py</span> 里逐行验证。能指出二者在"全局归一化"上的差异算过关。</p>
-  </div>
-  <div class="exercise">
-    <div class="card-title">🏆 练习 2 · 代码</div>
-    <p>给 <code>PolicyLoss</code> 加一个假想的新 <code>policy_loss_type</code>（比如把 clip 换成 KL 罚项的 PPO-penalty 变体），在 <span class="filepath">tests/</span> 下仿照 <span class="filepath">test_loss_aggregation.py</span> 写单测并跑通（Mac 上可跑，纯 CPU 逻辑）。这会强迫你吃透 ratio / mask / 聚合的全部张量形状。</p>
-  </div>
-  <div class="exercise">
-    <div class="card-title">🏆 练习 3 · 系统设计</div>
-    <p>给定"2 节点 × 8×A100-80G，训 32B 模型做数学 RLVR"，写出完整启动脚本：选部署模式、estimator、KL 方案、长度惩罚、batch 关系、vLLM 参数，每个 flag 写一行理由。写完对照 examples 里最接近的脚本互评。</p>
-  </div>
-  <div class="exercise">
-    <div class="card-title">🏆 练习 4 · 多轮 agent（可选）</div>
-    <p>实现一个 <code>AgentInstanceBase</code> 子类做简单环境（如 20 questions 或计算器工具调用），接到 <code>--train.agent_func_path</code>，理解 reset/step 协议和 environment_feedback 的 token 拼接。</p>
-  </div>
-
-  <h3>延伸阅读（源码对应的论文）</h3>
-  <div class="tbl-wrap"><table>
-    <tr><th>代码</th><th>论文</th></tr>
-    <tr><td><code>reinforce</code> / <code>reinforce_baseline</code></td><td>REINFORCE++ (arXiv:2501.03262)；ScaleRL、ProRL V2 为其大规模实证</td></tr>
-    <tr><td><code>group_norm</code></td><td>GRPO（DeepSeekMath, arXiv:2402.03300）</td></tr>
-    <tr><td><code>dr_grpo</code></td><td>Dr. GRPO (arXiv:2503.20783)</td></tr>
-    <tr><td><code>dynamic_filtering</code> + <code>eps_clip_low_high</code> + overlong penalty</td><td>DAPO (arXiv:2503.14476)</td></tr>
-    <tr><td><code>policy_loss_type=gspo</code></td><td>GSPO (arXiv:2507.18071)</td></tr>
-    <tr><td><code>dual_clip</code></td><td>Dual-clip PPO (arXiv:1912.09729)</td></tr>
-    <tr><td>k1/k2/k3</td><td>Schulman, <em>Approximating KL Divergence</em>（joschu.net/blog/kl-approx）</td></tr>
-    <tr><td>TIS / ICEPOP</td><td>fengyao.notion.site/off-policy-rl</td></tr>
-    <tr><td>Adaptive KL</td><td>Ziegler et al. (arXiv:1909.08593)</td></tr>
-  </table></div>
+  <div class="day-head"><span class="day-badge">D7</span><h2>收官：非 RL 路径、多轮 Agent 与综合实战</h2></div>
+<div class="goal"><b>目标</b>：补齐 SFT/RM/DPO 三条支线；能独立写多轮 agent；用四个实战练习检验一周成果。</div>
+<h3>阅读清单</h3>
+<ol>
+<li>文档 <code>non_rl.rst.txt</code> + <code>openrlhf/trainer/{sft,rm,dpo}_trainer.py</code> + <code>openrlhf/datasets/</code>（packing、chat template 处理）</li>
+<li>文档 <code>agent_training.rst.txt</code> 多轮部分 + <code>examples/python/</code> 全部 agent 示例</li>
+<li>文档 <code>checkpoint.rst.txt</code>（Day 5 已覆盖大半，补 DS↔HF 转换与 <code>ckpt_ds_zero_to_universal.sh</code>）</li>
+</ol>
+<h3>非 RL 三条支线（与 RL 共享 <code>models/</code> 与 DeepspeedStrategy，但不走 Ray）</h3>
+<ul>
+<li><strong>SFT</strong>：<code>SFTLoss</code>（<code>loss.py:87-113</code>）= −logp 的 aggregate_loss 归约——与 RL 共用同一套 token/seq 聚合语义，<code>test_loss_aggregation.py</code> 同时覆盖两者。</li>
+<li><strong>RM 训练</strong>：<code>PairWiseLoss</code>（:273-285）<code>−logσ(r_chosen − r_reject − margin)</code> 或 <code>LogExpLoss</code>（:288-298）；value head 前缀默认 <code>score</code>（<code>--ds.value_head_prefix</code>）；<code>--reward.normalize_enable</code> 训完记录 mean/std 供 PPO 期归一。</li>
+<li><strong>DPO</strong>：<code>DPOLoss</code>（:301-336）。β 典型 0.1-0.5；<code>ipo=True</code> 走 IPO 的平方损失（Eq.17）；<code>label_smoothing</code> = cDPO；隐式奖励 <code>β·(logπ_chosen − logπ_ref_chosen)</code> 作为训练监控。DPO 需要 ref model 常驻（双倍显存）。</li>
+</ul>
+<h3>多轮 Agent：把环境接进训练循环</h3>
+<p><code>MultiTurnAgentExecutor</code>（<code>agent.py:31-181</code>）+ 用户实现的 <code>AgentInstanceBase</code> 子类（<code>--train.agent_func_path</code> 指向的 py 文件须暴露 <code>AgentExecutor</code> 类，<code>vllm_engine.py:19-30</code> 动态加载）。协议：</p>
+<pre><code class="language-python">class AgentInstance(AgentInstanceBase):
+    async def reset(self, states):      # states = {&quot;observation&quot;: prompt, &quot;label&quot;: label}
+        return {&quot;observation&quot;: ...}     # 初始观测文本
+    async def step(self, states):       # states = {observation_text, action_text, label, sampling_params}
+        return {
+            &quot;rewards&quot;: tensor,               # 本步奖励（累加成 episode reward）
+            &quot;scores&quot;: ...,                   # 动态过滤用（默认= 累计reward）
+            &quot;environment_feedback&quot;: &quot;...&quot;,   # 环境反馈文本 → tokenize 后拼进上下文
+            &quot;done&quot;: bool,
+            &quot;sampling_params&quot;: ...,          # 可选：下一步覆盖采样参数
+            &quot;extra_logs&quot;: {...},
+        }
+</code></pre>
+<p>执行循环（:90-166）：<code>生成 action → step() → feedback tokenize 拼接 → 直到 done 或 token 预算耗尽</code>。三个必须讲得出的细节：</p>
+<ol>
+<li><strong>每个 prompt 绑定独立 agent 实例</strong>（:38，环境隔离）；</li>
+<li><code>action_ranges</code> 多段记录，env feedback token 不进 loss（action_mask=0）、rollout_log_prob 补 0；</li>
+<li><code>sampling_params.max_tokens = max_length − len(current_obs)</code> 每轮重算——多轮的 token 预算是全局共享的。</li>
+</ol>
+<p>官方文档的警告（agent_paradigm.rst 结尾）：自定义 agent 时<strong>永远操作 token id 层面提供的字段</strong>，不要自己拼文本再 tokenize——否则重新引入 token-in-token-out 消灭掉的那类 bug。</p>
+<p>示例梯度：<code>agent_func.py</code>（随机 1-3 步玩具环境）→ <code>agent_func_gem_multiturn.py</code>（真实 GEM 环境）→ <code>agent_func_openai_server_executor.py</code>（把本地 vLLM 包成 OpenAI 兼容 <code>/v1/chat/completions</code>、同时截获 token trace 训练——<strong>工具调用 RL 的标准姿势</strong>）。</p>
+<h3>实战练习（检验一周成果）</h3>
+<p><strong>练习 1（算法·手算）</strong>：不看笔记，把 r=[1,0,1,1,0,0,0,0] 这组新数字从原始 reward 一路手算到"进 loss 的逐 token advantage"（reinforce_baseline 与 group_norm 各一遍），然后在 <code>experience_maker.py</code> 里逐行验证你的每一步。能指出二者在"全局归一化"上的差异算过关。</p>
+<p><strong>练习 2（代码·可本地跑）</strong>：给 <code>PolicyLoss</code> 加一个假想的 <code>policy_loss_type</code>（比如把 clip 换成 KL 罚项的 PPO-penalty 变体），在 <code>tests/</code> 下仿照 <code>test_loss_aggregation.py</code> 写单测并跑通（Mac 纯 CPU 可跑）。这会强迫你吃透 ratio/mask/聚合的全部张量形状。</p>
+<p><strong>练习 3（系统设计）</strong>：给定"2 节点 × 8×A100-80G，训 32B 模型做数学 RLVR"，写出完整启动脚本：部署模式、estimator、KL 方案、长度惩罚、batch 关系、vLLM 参数，每个 flag 一行理由。写完对照 examples 里最接近的脚本互评。</p>
+<p><strong>练习 4（多轮 agent）</strong>：实现一个 <code>AgentInstanceBase</code> 子类做简单环境（如 20 questions 或计算器工具调用），接上 <code>--train.agent_func_path</code>，画出你这个环境下"S₁ 的十二站旅程"变化了哪几站（提示：①③④站变了，⑤站之后完全不变——这就是解耦）。</p>
+<h3>延伸阅读（源码 ↔ 论文对照表）</h3>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>代码</th>
+<th>论文</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reinforce</code>/<code>reinforce_baseline</code></td>
+<td>REINFORCE++ (arXiv:2501.03262)；ProRL V2 为其大规模实证</td>
+</tr>
+<tr>
+<td><code>group_norm</code></td>
+<td>GRPO（DeepSeekMath, arXiv:2402.03300）</td>
+</tr>
+<tr>
+<td><code>dr_grpo</code></td>
+<td>Dr. GRPO (arXiv:2503.20783)</td>
+</tr>
+<tr>
+<td><code>dynamic_filtering</code> + <code>eps_clip_low_high</code> + overlong penalty</td>
+<td>DAPO (arXiv:2503.14476)</td>
+</tr>
+<tr>
+<td><code>policy_loss_type=gspo</code></td>
+<td>GSPO (arXiv:2507.18071)</td>
+</tr>
+<tr>
+<td><code>dual_clip</code></td>
+<td>Dual-clip PPO (arXiv:1912.09729)</td>
+</tr>
+<tr>
+<td>k1/k2/k3</td>
+<td>Schulman, <em>Approximating KL Divergence</em>（joschu.net/blog/kl-approx）</td>
+</tr>
+<tr>
+<td>TIS/ICEPOP</td>
+<td>fengyao.notion.site/off-policy-rl</td>
+</tr>
+<tr>
+<td>Adaptive KL</td>
+<td>Ziegler et al. (arXiv:1909.08593)</td>
+</tr>
+<tr>
+<td>Karmarkar-Karp 装箱</td>
+<td>verl 的 seqlen_balancing（代码头注释）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
 </section>
 
-<!-- ─────────── 附录 A ─────────── -->
 <section class="day" id="appA">
-  <div class="day-head"><span class="day-badge alt">附录 A</span><h2>一页公式速查</h2></div>
-
-  <h3>Policy Loss</h3>
-  <div class="formula-grid">
-    <div class="formula-card"><div class="f-name">PPO</div>$$L = -\mathbb{E}\big[\min(r A,\ \mathrm{clip}(r, 1{-}\varepsilon_l, 1{+}\varepsilon_h) A)\big]$$<div class="f-note">\(r = \pi_\theta / \pi_{\text{old}}\)</div></div>
-    <div class="formula-card"><div class="f-name">Dual-clip（A&lt;0 时）</div>$$L = -\max\big(\min(\text{surr}_1, \text{surr}_2),\ c \cdot A\big)$$</div>
-    <div class="formula-card"><div class="f-name">GSPO</div>$$r_{\text{seq}} = \exp\Big(\tfrac{1}{|a|}\textstyle\sum_t \log r_t\Big)$$<div class="f-note">seq-level 聚合强制开启</div></div>
-  </div>
-
-  <h3>Advantage Estimators</h3>
-  <div class="formula-grid">
-    <div class="formula-card"><div class="f-name">GAE</div>$$\delta_t = r_t + \gamma V_{t+1} - V_t,\quad A_t = \delta_t + \gamma\lambda A_{t+1}$$<div class="f-note">returns = A + V</div></div>
-    <div class="formula-card"><div class="f-name">REINFORCE++</div>$$A_t = \sum\nolimits_k \gamma^k r_{t+k}$$<div class="f-note">全局 (μ,σ) 归一化</div></div>
-    <div class="formula-card"><div class="f-name">RLOO</div>$$A_i = r_i - \frac{\sum_{j \neq i} r_j}{n-1}$$</div>
-    <div class="formula-card"><div class="f-name">R++-baseline</div>$$A_i = r_i - \bar r_{\text{group}}$$<div class="f-note">再全局 /σ</div></div>
-    <div class="formula-card"><div class="f-name">GRPO</div>$$A_i = \frac{r_i - \bar r}{\sigma_{\text{group}} + 10^{-9}}$$</div>
-    <div class="formula-card"><div class="f-name">Dr. GRPO</div>$$A_i = r_i - \bar r$$<div class="f-note">无任何 σ 归一化</div></div>
-  </div>
-
-  <h3>KL 与 reward 合成</h3>
-  <div class="formula-grid">
-    <div class="formula-card"><div class="f-name">KL 估计器（Δ = logπ − logπ_ref，clamp ±10）</div>$$k_1 = \Delta \qquad k_2 = \tfrac{1}{2}\Delta^2 \qquad k_3 = e^{-\Delta} - 1 + \Delta$$</div>
-    <div class="formula-card"><div class="f-name">reward 合成（use_kl_loss=False）</div>$$r_t = -\beta\,\mathrm{KL}_t + \mathbb{1}[t = \text{EOS}] \cdot \mathrm{clip}(r, -10, 10)$$</div>
-  </div>
-
-  <h3>其它</h3>
-  <div class="formula-grid">
-    <div class="formula-card"><div class="f-name">DAPO overlong penalty</div>$$p = -\frac{\min\big(\text{len} - (\text{max} - L_{\text{buf}}),\ L_{\text{buf}}\big)}{L_{\text{buf}}} \cdot f$$</div>
-    <div class="formula-card"><div class="f-name">token-level 聚合</div>$$L = \frac{\sum \ell \cdot m}{N_{\text{tokens}}^{\text{global}}} \times dp$$</div>
-    <div class="formula-card"><div class="f-name">seq-level 聚合</div>$$L = \frac{1}{B}\sum_i \overline{\ell_i} \times dp$$</div>
-    <div class="formula-card"><div class="f-name">IS 校正</div>$$w = e^{\log\pi_{\text{old}} - \log\pi_{\text{rollout}}}$$<div class="f-note">tis = clamp(w)；icepop = mask(w ∉ [lo, hi])</div></div>
-  </div>
+  <div class="day-head"><span class="day-badge alt">附A</span><h2>一页公式速查</h2></div>
+<pre><code>PPO:        L = −E[min(r·A, clip(r, 1−εl, 1+εh)·A)],  r = π_θ/π_old
+dual-clip:  A&lt;0 时 L = −max(min(surr1,surr2), c·A)
+GSPO:       r_seq = exp(mean_t log r_t)，强制 seq-level 聚合
+GAE:        δ_t = r_t + γV_{t+1} − V_t;  A_t = δ_t + γλ·A_{t+1};  ret = A + V
+REINFORCE++: A_t = Σ_k γ^k r_{t+k}，全局 (μ,σ) 归一化
+RLOO:       A_i = r_i − (Σ_j r_j − r_i)/(n−1)
+R++-baseline: A_i = r_i − r̄_group，再全局 (μ,σ) 归一化
+GRPO:       A_i = (r_i − r̄)/(σ_group + 1e-9)
+Dr.GRPO:    A_i = r_i − r̄（无任何 σ 归一化）
+KL:  k1 = Δ;  k2 = Δ²/2;  k3 = e^{−Δ} − 1 + Δ   （Δ = logπ − logπ_ref, clamp ±10）
+reward 合成（use_kl_loss=False）: r_t = −β·KL_t + 𝟙[t=EOS]·clip(r, −10, 10)
+DAPO overlong: penalty = −min(len − (max_new − buf), buf)/buf × factor
+ProRL 截断: coef ≥ 0 ⇒ r ← r·coef;  coef &lt; 0 ⇒ r ← coef
+token-level 聚合: Σ(l·m)/N_tokens_global × dp    seq-level: mean_i(mean_t l_it) × dp
+IS 校正: w = exp(logπ_old − logπ_rollout)；tis=clamp(w, lo, hi)，icepop=w·𝟙[w∈[lo,hi]]
+gas = train_bs × ring × tp / micro_bs / world_size
+</code></pre>
 </section>
 
-<!-- ─────────── 附录 B ─────────── -->
 <section class="day" id="appB">
-  <div class="day-head"><span class="day-badge alt">附录 B</span><h2>学习习惯建议</h2></div>
-  <ol>
-    <li><strong>每读一个模块先跑/写测试</strong>：<code>tests/</code> 在 Mac 可跑，是唯一的本地验证手段（训练路径需要多卡 CUDA，别在本机试图启动训练）。</li>
-    <li><strong>grep 用嵌套名</strong>：<code>rg "kl\.init_coef" openrlhf/</code> 而不是搜 <code>--algo.kl.init_coef</code>。</li>
-    <li><strong>文档 → 源码 → 脚本三角验证</strong>：文档说语义、源码定真相、examples 脚本给实证组合。有出入以源码为准。</li>
-    <li><strong>中文文档</strong>在 <code>zh/latest/</code>，与英文同名对照读，术语翻译由管线生成、以英文为准。</li>
-    <li>学完后真正的毕业考：<strong>去 upstream 的 issue 列表挑一个训练稳定性相关的 issue，用这一周的知识写出诊断分析。</strong></li>
-  </ol>
+  <div class="day-head"><span class="day-badge alt">附B</span><h2>样本 S₁ 数字总表（案例速查）</h2></div>
+<div class="tbl-wrap"><table>
+<thead>
+<tr>
+<th>站</th>
+<th>位置</th>
+<th>S₁ 的值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入</td>
+<td>dapo-math-17k</td>
+<td>prompt="...divisors of 36...\boxed{}"，label="91"</td>
+</tr>
+<tr>
+<td>① template</td>
+<td>prompts_dataset.py</td>
+<td>48 token 的 prompt（含 <code>&lt;|im_start|&gt;</code>）</td>
+</tr>
+<tr>
+<td>③ 生成</td>
+<td>agent.py:240</td>
+<td>210 个 action token，<code>\boxed{91}&lt;|im_end|&gt;</code>，stop</td>
+</tr>
+<tr>
+<td>③ 判卷</td>
+<td>math_reward_func.py</td>
+<td>reward = scores = 1.0</td>
+</tr>
+<tr>
+<td>④ 张量</td>
+<td>samples_generator.py:247-314</td>
+<td>sequences(1,258)、action_mask(1,257)（索引47..256 为 1）</td>
+</tr>
+<tr>
+<td>④ 过滤</td>
+<td>samples_generator.py:169</td>
+<td>组 scores 均值 0.25 ∈ (0,1) ⇒ 保留</td>
+</tr>
+<tr>
+<td>⑤ 前向</td>
+<td>experience_maker.py:113</td>
+<td>得 π_old、π_ref 两组 (1,257) logprobs；kl=0 张量</td>
+</tr>
+<tr>
+<td>⑥ baseline</td>
+<td>experience_maker.py:267</td>
+<td>1.0 − 0.25 = 0.75</td>
+</tr>
+<tr>
+<td>⑥ EOS 散播</td>
+<td>models/utils.py:121</td>
+<td>逐 token reward：仅索引 256 = 0.75</td>
+</tr>
+<tr>
+<td>⑥ return</td>
+<td>experience_maker.py:379</td>
+<td>γ=1 ⇒ 210 个 action token 全部 0.75</td>
+</tr>
+<tr>
+<td>⑥ 全局归一</td>
+<td>experience_maker.py:315</td>
+<td>(0.75−μ)/σ ≈ 1.50（μ≈−0.03, σ≈0.52 为示意）</td>
+</tr>
+<tr>
+<td>⑨ ratio</td>
+<td>loss.py:166</td>
+<td>首次更新 π_θ=π_old ⇒ ratio≡1，loss=−A</td>
+</tr>
+<tr>
+<td>⑨ icepop</td>
+<td>loss.py:201</td>
+<td>w=exp(logπ_old−logπ_rollout)≈0.95 ⇒ ×0.95；出界 token 置 0</td>
+</tr>
+<tr>
+<td>⑨ KL loss</td>
+<td>ppo_actor.py:319</td>
+<td>k2=(logπ_θ−logπ_ref)²/2 ≈ 0（早期），×1e-5</td>
+</tr>
+<tr>
+<td>⑩ 更新</td>
+<td>ppo_actor.py:354</td>
+<td>唯一一次 optimizer step：θ₀ → θ₁</td>
+</tr>
+<tr>
+<td>⑪ 同步</td>
+<td>ppo_actor.py:408</td>
+<td>CUDA IPC 零拷贝，θ₁ 进 vLLM</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+<section class="day" id="appC">
+  <div class="day-head"><span class="day-badge alt">附C</span><h2>学习习惯建议</h2></div>
+<ol>
+<li><strong>每读一个模块先跑/写测试</strong>：<code>tests/</code> 在 Mac 可跑，是唯一的本地验证手段（训练路径需要多卡 CUDA，别在本机试图启动训练）。</li>
+<li><strong>grep 用嵌套名</strong>：<code>rg "kl\.init_coef" openrlhf/</code> 而不是搜 <code>--algo.kl.init_coef</code>。</li>
+<li><strong>文档→源码→脚本三角验证</strong>：文档说语义、源码定真相、examples 脚本给实证组合。有出入以源码为准。</li>
+<li><strong>中文文档</strong>在 <code>zh/latest/</code>，与英文同名对照读；术语翻译由管线生成，以英文为准。</li>
+<li>学完后真正的毕业考：<strong>去 upstream 的 issue 列表挑一个训练稳定性相关的 issue，用这一周的知识写出诊断分析</strong>——能定位到"第几站、哪一行"，才算真的吃透。</li>
+</ol>
 </section>
 
 <footer>
-  OpenRLHF 七天精通指南 · 基于本仓库源码与 <code>docs/official-docs</code> 官方文档镜像编写 · 公式由 KaTeX 渲染（需网络加载 CDN）
+  OpenRLHF-K · 七天吃透指南（案例驱动版）· 行号对应仓库当前 feat-learn 分支 · 文档/源码/脚本三角验证
 </footer>
-
 </main>
 </div>
 
-<a href="#" class="top-link" id="topLink" title="回到顶部">↑</a>
+<a href="#" class="top-link" id="topLink">↑</a>
 
 <script>
-// KaTeX 渲染
-document.addEventListener("DOMContentLoaded", function() {
-  var tryRender = function() {
-    if (window.renderMathInElement) {
-      renderMathInElement(document.body, {
-        delimiters: [
-          {left: "$$", right: "$$", display: true},
-          {left: "\\(", right: "\\)", display: false}
-        ],
-        throwOnError: false
-      });
-    } else { setTimeout(tryRender, 200); }
-  };
-  tryRender();
-});
-
-// 侧栏滚动高亮
-var links = document.querySelectorAll("#sideNav a");
-var sections = Array.from(links).map(function(a) {
-  return document.querySelector(a.getAttribute("href"));
-});
-function onScroll() {
-  var pos = window.scrollY + 120;
-  var active = 0;
-  sections.forEach(function(s, i) { if (s && s.offsetTop <= pos) active = i; });
-  links.forEach(function(a, i) { a.classList.toggle("active", i === active); });
-  document.getElementById("topLink").classList.toggle("show", window.scrollY > 600);
-}
-window.addEventListener("scroll", onScroll, {passive: true});
-onScroll();
-
-// 每日进度（localStorage）
-var boxes = document.querySelectorAll("input[data-day]");
-function refreshProgress() {
-  var done = 0;
-  boxes.forEach(function(b) { if (b.checked) done++; });
-  document.getElementById("progFill").style.width = (done / boxes.length * 100) + "%";
-  document.getElementById("progLabel").textContent = "已完成 " + done + " / " + boxes.length + " 天";
-}
-boxes.forEach(function(b) {
-  b.checked = localStorage.getItem("openrlhf-guide-" + b.dataset.day) === "1";
-  b.addEventListener("change", function() {
-    localStorage.setItem("openrlhf-guide-" + b.dataset.day, b.checked ? "1" : "0");
-    refreshProgress();
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.renderMathInElement) renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ], throwOnError: false
   });
+
+  // progress checkboxes (localStorage)
+  const boxes = document.querySelectorAll('.side-nav input[type=checkbox]');
+  const fill = document.getElementById('progFill'), label = document.getElementById('progLabel');
+  const KEY = 'openrlhf-guide-progress-v2';
+  const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+  const update = () => {
+    let done = 0; boxes.forEach(b => { if (b.checked) done++; });
+    fill.style.width = (done / boxes.length * 100) + '%';
+    label.textContent = `已完成 ${done} / ${boxes.length} 天`;
+  };
+  boxes.forEach(b => {
+    b.checked = !!saved[b.dataset.day];
+    b.addEventListener('change', () => {
+      saved[b.dataset.day] = b.checked;
+      localStorage.setItem(KEY, JSON.stringify(saved));
+      update();
+    });
+  });
+  update();
+
+  // active section highlight
+  const links = document.querySelectorAll('.side-nav a');
+  const secs = [...document.querySelectorAll('section.day')];
+  const onScroll = () => {
+    let cur = secs[0];
+    for (const s of secs) if (s.getBoundingClientRect().top < 120) cur = s;
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur.id));
+    document.getElementById('topLink').classList.toggle('show', window.scrollY > 600);
+  };
+  document.addEventListener('scroll', onScroll, {passive: true});
+  onScroll();
 });
-refreshProgress();
 </script>
 </body>
 </html>
