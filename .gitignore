@@ -161,3 +161,6 @@ wandb
 docs/official-docs/*/zh/
 docs/official-docs/vllm.io/en/examples/
 docs/official-docs/vllm.io/en/contributing/
+
+# local clone of the verl repo (reference only, not part of this project)
+docs/verl/
