@@ -614,16 +614,14 @@ if __name__ == "__main__":
             args.rollout.n_samples_per_prompt > 1
         ), f"{args.algo.advantage.estimator} requires n_samples_per_prompt > 1"
 
-    # VLM constraints: critic and packing_samples are not supported
+    # VLM constraints: critic is not supported. packing_samples IS supported for mRoPE VLMs
+    # (Qwen2/2.5/3-VL) — the actor precomputes 4-row position_ids and packs them (see
+    # openrlhf/models/actor.py). The packing combination checks live below, AFTER ring_attn /
+    # dynamic_batch may force-enable packing_samples, so they can't be silently bypassed.
     if args.data.max_images_per_prompt > 0:
         assert args.critic.model_name_or_path is None, (
             "VLM training does not support critic model. "
             "Use --advantage_estimator other than 'gae' (e.g., reinforce_baseline, rloo, group_norm)."
-        )
-        assert not args.ds.packing_samples, (
-            "VLM training does not support --packing_samples. "
-            "Packing collapses the batch dimension, breaking alignment between image tokens and pixel_values. "
-            "VLM models also require model-computed position_ids (e.g., M-RoPE) which is incompatible with packing."
         )
 
     if args.reward.remote_url:
@@ -651,6 +649,17 @@ if __name__ == "__main__":
         if args.rollout.max_tokens_per_gpu is None:
             print("[Warning] Set --rollout_max_tokens_per_gpu to --train_max_tokens_per_gpu.")
             args.rollout.max_tokens_per_gpu = args.train.max_tokens_per_gpu
+
+    # VLM + packing_samples combination constraints. Placed AFTER the ring_attn / dynamic_batch
+    # blocks above (which may force-enable packing_samples) so those paths cannot silently bypass
+    # these checks. dynamic_batch IS supported for VLM (v2): it only reorders per-sample items by
+    # token budget, and make_experience_batch / merge_mm_train_inputs preserve mm<->sequence order,
+    # so image-token/pixel_values/mRoPE alignment is kept (validated 2026-07-23).
+    if args.data.max_images_per_prompt > 0 and args.ds.packing_samples:
+        assert args.ds.ring_attn_size == 1, (
+            "VLM --packing_samples does not support ring attention: sequence parallelism splits a "
+            "single image's tokens across ranks, breaking image-token/pixel_values alignment."
+        )
 
     if args.ds.packing_samples:
         if "flash_attention" not in args.ds.attn_implementation:

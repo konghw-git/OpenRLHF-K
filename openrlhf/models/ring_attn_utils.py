@@ -148,6 +148,26 @@ def unpad_and_slice_tensor(sequences, attention_mask, ring_attn_group):
     return sequences, position_ids, rolled_sequences, ring_attn_pad_len, indices
 
 
+def pack_position_ids(pos4, indices):
+    """Pack precomputed (4, B, L) mRoPE position ids to (4, 1, total) using the SAME
+    ``indices`` that :func:`unpad_and_slice_tensor` produced for the tokens, so positions
+    stay token-aligned after unpadding.
+
+    Row 0 is the text position (resets to 0 at each sample start, which drives HF's
+    flash-attention varlen segmentation, see transformers ``_is_packed_sequence`` /
+    ``prepare_fa_kwargs_from_position_ids``); rows 1-3 are the mRoPE t/h/w positions.
+
+    ``indices`` come from ``unpad_input(..., attention_mask)`` and index the row-major
+    flattened (b, l) grid, so we flatten pos4 the same way before selecting.
+    """
+    flat = rearrange(pos4, "r b l -> (b l) r")  # (B*L, 4), row-major over (b, l) -> matches indices
+    packed = index_first_axis(flat, indices)  # (total, 4)
+    packed = packed.transpose(0, 1).unsqueeze(1).contiguous()  # (4, 1, total)
+    # Case-1 varlen boundary invariant: first token of the first packed segment has text pos 0.
+    assert packed[0, 0, 0] == 0, "packed text position must start at 0 (flash-attn varlen boundary)"
+    return packed
+
+
 def gather_and_pad_tensor(tensor, ring_attn_group, ring_attn_pad_len, indices, batch, seqlen):
     """
     Gather and pad tensor data (such as logits, log_probs, etc.).

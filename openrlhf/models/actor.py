@@ -8,7 +8,7 @@ from peft.tuners.lora import LoraLayer
 from transformers import AutoModelForCausalLM, AutoModelForImageTextToText, BitsAndBytesConfig
 from transformers.integrations.deepspeed import HfDeepSpeedConfig
 
-from .ring_attn_utils import gather_and_pad_tensor, unpad_and_slice_tensor
+from .ring_attn_utils import gather_and_pad_tensor, pack_position_ids, unpad_and_slice_tensor
 from .utils import compute_entropy, log_probs_from_logits, set_z3_leaf_modules
 
 
@@ -215,8 +215,60 @@ class Actor(nn.Module):
 
             # packing samples using Flash Attention 2
             self.packing_samples = packing_samples
+
+            # VLM + packing: precompute mRoPE 3D position_ids ourselves (packing collapses the
+            # batch dim, so the model can't self-compute them). Resolve the model's get_rope_index
+            # via a wrapper-agnostic down-drill (PeftModel -> LoraModel -> *ForConditionalGeneration
+            # -> *VLModel), since it lives on the inner VL model, not the outer for-generation class.
+            self._get_rope_index = None
+            if self.is_vlm and self.packing_samples:
+                if any("linear_attn" in n for n, _ in self.model.named_modules()):
+                    # Qwen3.5-style hybrid linear-attention VLMs expose get_rope_index too, but
+                    # linear-attn layers don't segment via cu_seqlens -> state leaks across packed
+                    # samples. Refuse rather than train silently-wrong (spec 2026-07-23 §5.7).
+                    raise ValueError(
+                        "VLM packing is not supported for hybrid linear-attention models "
+                        "(e.g. Qwen3.5); only full-attention mRoPE VLMs (Qwen2/2.5/3-VL). "
+                        "Disable --packing_samples for this model."
+                    )
+                inner = self.model
+                while inner is not None and not hasattr(inner, "get_rope_index"):
+                    inner = getattr(inner, "model", None)
+                if inner is None:
+                    raise ValueError(
+                        "VLM --packing_samples requires an mRoPE model exposing get_rope_index "
+                        "(e.g. Qwen2/2.5/3-VL); this model does not. Disable --packing_samples."
+                    )
+                self._get_rope_index = inner.get_rope_index
         else:
             self.model = pretrain_or_model
+
+    def _build_mm_token_type_ids(self, sequences):
+        """Reconstruct multimodal token-type ids (0=text, 1=image, 2=video) for the full
+        sequence (prompt + response). The processor only produced it for the prompt."""
+        cfg = self._vlm_config
+        token_type_ids = (sequences == cfg.image_token_id).to(torch.int32)
+        if getattr(cfg, "video_token_id", None) is not None:
+            token_type_ids[sequences == cfg.video_token_id] = 2
+        return token_type_ids
+
+    def _build_vlm_position_ids(self, sequences, attention_mask, mm_inputs):
+        """(4, B, L) position ids for VLM packing: row 0 = text position (cumsum-based,
+        resets to 0 per sample), rows 1-3 = mRoPE t/h/w from the model's get_rope_index.
+        Built on the padded batch so it can be unpadded with the same indices as the tokens."""
+        token_type_ids = self._build_mm_token_type_ids(sequences)  # (B, L)
+        text_pos = torch.clip(attention_mask.long().cumsum(-1) - 1, min=0)  # (B, L)
+        if mm_inputs.get("image_grid_thw") is not None or mm_inputs.get("video_grid_thw") is not None:
+            mrope_pos, _ = self._get_rope_index(
+                sequences,
+                token_type_ids,
+                image_grid_thw=mm_inputs.get("image_grid_thw"),
+                video_grid_thw=mm_inputs.get("video_grid_thw"),
+                attention_mask=attention_mask,
+            )  # (3, B, L)
+        else:
+            mrope_pos = text_pos.unsqueeze(0).expand(3, -1, -1)
+        return torch.cat([text_pos.unsqueeze(0), mrope_pos], dim=0)  # (4, B, L)
 
     def forward(
         self,
@@ -234,9 +286,18 @@ class Actor(nn.Module):
         """Returns action log probs"""
         batch, seqlen = sequences.size()
         if self.packing_samples:
+            # VLM: precompute 4-row (text + mRoPE t/h/w) position_ids from the ORIGINAL padded
+            # batch before packing collapses the batch dim; carry them through the same unpad.
+            vlm_pos4 = None
+            if getattr(self, "is_vlm", False) and mm_inputs:
+                assert ring_attn_group is None, "VLM packing does not support ring attention"
+                assert bool(attention_mask[:, 0].all()), "VLM packing assumes right padding"
+                vlm_pos4 = self._build_vlm_position_ids(sequences, attention_mask, mm_inputs)
             sequences, position_ids, rolled_sequences, ring_attn_pad_len, indices = unpad_and_slice_tensor(
                 sequences, attention_mask, ring_attn_group
             )
+            if vlm_pos4 is not None:
+                position_ids = pack_position_ids(vlm_pos4, indices)  # (4, 1, total); bypasses HF self-compute
             foward_attention_mask = None
         else:
             # https://github.com/OpenRLHF/OpenRLHF/issues/217
@@ -251,10 +312,7 @@ class Actor(nn.Module):
                 # the full sequence including the response.  The processor only
                 # produced this for the prompt.
                 if mm_inputs:
-                    cfg = self._vlm_config
-                    token_type_ids = (sequences == cfg.image_token_id).to(torch.int32)
-                    if getattr(cfg, "video_token_id", None) is not None:
-                        token_type_ids[sequences == cfg.video_token_id] = 2
+                    token_type_ids = self._build_mm_token_type_ids(sequences)
                     # Qwen: mm_token_type_ids (M-RoPE); Gemma: token_type_ids (bidir attn)
                     key = "mm_token_type_ids" if "image_grid_thw" in mm_inputs else "token_type_ids"
                     mm_inputs[key] = token_type_ids
