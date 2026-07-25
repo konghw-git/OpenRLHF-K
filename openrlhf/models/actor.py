@@ -9,7 +9,7 @@ from transformers import AutoModelForCausalLM, AutoModelForImageTextToText, Bits
 from transformers.integrations.deepspeed import HfDeepSpeedConfig
 
 from .ring_attn_utils import gather_and_pad_tensor, pack_position_ids, unpad_and_slice_tensor
-from .utils import compute_entropy, log_probs_from_logits, set_z3_leaf_modules
+from .utils import compute_entropy, log_probs_from_logits, sanitize_mm_token_type_ids, set_z3_leaf_modules
 
 
 # Fix https://github.com/OpenRLHF/OpenRLHF/issues/1232
@@ -243,20 +243,34 @@ class Actor(nn.Module):
         else:
             self.model = pretrain_or_model
 
-    def _build_mm_token_type_ids(self, sequences):
+    def _build_mm_token_type_ids(self, sequences, mm_inputs=None):
         """Reconstruct multimodal token-type ids (0=text, 1=image, 2=video) for the full
-        sequence (prompt + response). The processor only produced it for the prompt."""
+        sequence (prompt + response). The processor only produced it for the prompt.
+
+        When ``mm_inputs`` is given we also *sanitize* the markers (see
+        ``_sanitize_mm_token_type_ids``): the policy can emit stray image/video placeholder
+        tokens inside a generated response, but the processor only guarantees the PROMPT
+        placeholders match the provided grids. A spurious placeholder makes downstream
+        ``get_rope_index`` consume a phantom grid -> wrong mRoPE positions, or a hard crash
+        (``StopIteration`` / ``next(None)``). Re-type any such token as text."""
         cfg = self._vlm_config
         token_type_ids = (sequences == cfg.image_token_id).to(torch.int32)
         if getattr(cfg, "video_token_id", None) is not None:
             token_type_ids[sequences == cfg.video_token_id] = 2
+        if mm_inputs is not None:
+            token_type_ids = sanitize_mm_token_type_ids(
+                token_type_ids,
+                mm_inputs.get("image_grid_thw"),
+                mm_inputs.get("video_grid_thw"),
+                self._vlm_config.vision_config.spatial_merge_size,
+            )
         return token_type_ids
 
     def _build_vlm_position_ids(self, sequences, attention_mask, mm_inputs):
         """(4, B, L) position ids for VLM packing: row 0 = text position (cumsum-based,
         resets to 0 per sample), rows 1-3 = mRoPE t/h/w from the model's get_rope_index.
         Built on the padded batch so it can be unpadded with the same indices as the tokens."""
-        token_type_ids = self._build_mm_token_type_ids(sequences)  # (B, L)
+        token_type_ids = self._build_mm_token_type_ids(sequences, mm_inputs)  # (B, L)
         text_pos = torch.clip(attention_mask.long().cumsum(-1) - 1, min=0)  # (B, L)
         if mm_inputs.get("image_grid_thw") is not None or mm_inputs.get("video_grid_thw") is not None:
             mrope_pos, _ = self._get_rope_index(
@@ -312,7 +326,7 @@ class Actor(nn.Module):
                 # the full sequence including the response.  The processor only
                 # produced this for the prompt.
                 if mm_inputs:
-                    token_type_ids = self._build_mm_token_type_ids(sequences)
+                    token_type_ids = self._build_mm_token_type_ids(sequences, mm_inputs)
                     # Qwen: mm_token_type_ids (M-RoPE); Gemma: token_type_ids (bidir attn)
                     key = "mm_token_type_ids" if "image_grid_thw" in mm_inputs else "token_type_ids"
                     mm_inputs[key] = token_type_ids

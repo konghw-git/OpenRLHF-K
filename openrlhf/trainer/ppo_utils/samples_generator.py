@@ -57,6 +57,49 @@ class SamplesGenerator:
         self.prompts_dataloader = prompts_dataloader
         self.eval_dataloader = eval_dataloader
 
+    # Multimodal placeholder tokens (image/video/vision_start/vision_end) must NEVER appear in a
+    # generated response: the VLM position builder marks them as an image/video modality and
+    # transformers get_rope_index then consumes a grid that the response has no pixels for ->
+    # wrong mRoPE positions or a hard crash (StopIteration / next(None); observed on C2-4B,
+    # 2026-07-24). We ban them at the sampler (primary prevention). actor._build_mm_token_type_ids
+    # sanitizes as defense-in-depth.
+    _VLM_PLACEHOLDER_ATTRS = (
+        "image_token_id",
+        "video_token_id",
+        "vision_start_token_id",
+        "vision_end_token_id",
+    )
+    _VLM_PLACEHOLDER_STRS = ("<|image_pad|>", "<|video_pad|>", "<|vision_start|>", "<|vision_end|>")
+
+    def _vlm_placeholder_logit_bias(self):
+        """{token_id: -inf} for multimodal placeholder tokens, or None for a text tokenizer.
+        Resolved once from the processor (Qwen*-VL expose *_token_id) with a token-string
+        fallback; empty -> None so text-only runs are unaffected."""
+        cache = getattr(self, "_vlm_ph_bias_cache", "unset")
+        if cache != "unset":
+            return cache
+        ids = set()
+        tok = self.tokenizer
+        for attr in self._VLM_PLACEHOLDER_ATTRS:
+            v = getattr(tok, attr, None)
+            if isinstance(v, int) and v >= 0:
+                ids.add(v)
+        inner = getattr(tok, "tokenizer", None)
+        if inner is not None and hasattr(inner, "convert_tokens_to_ids"):
+            unk = getattr(inner, "unk_token_id", None)
+            for s in self._VLM_PLACEHOLDER_STRS:
+                try:
+                    i = inner.convert_tokens_to_ids(s)
+                except Exception:
+                    i = None
+                if isinstance(i, int) and i >= 0 and i != unk:
+                    ids.add(i)
+        bias = {int(i): -1.0e9 for i in ids} if ids else None
+        if bias:
+            logger.info(f"rollout: banning multimodal placeholder tokens from generation: {sorted(bias)}")
+        self._vlm_ph_bias_cache = bias
+        return bias
+
     @torch.no_grad()
     def generate_eval_samples(self, **generate_kwargs) -> List[Experience]:
         """Generate evaluation samples for the entire eval dataloader."""
@@ -208,6 +251,7 @@ class SamplesGenerator:
             min_tokens=generate_kwargs.get("min_new_tokens", 1),
             skip_special_tokens=generate_kwargs.get("skip_special_tokens", False),
             logprobs=1 if self.args.algo.advantage.is_correction_enable else None,
+            logit_bias=self._vlm_placeholder_logit_bias(),
         )
         truncate_length = generate_kwargs.get("max_len", 2048)
         n_samples = generate_kwargs.get("n_samples_per_prompt", self.args.rollout.n_samples_per_prompt)

@@ -328,6 +328,25 @@ class ActorPPOTrainer(ABC):
                 kl = torch.zeros_like(action_log_probs)
                 logprobs_diff = torch.zeros_like(action_log_probs)
             kl_loss = aggregate_loss(kl, experience.action_mask, **loss_batch_info)
+            # Diagnostic (opt-in): logprobs_diff (policy-vs-reference per-token log-ratio) is a
+            # masked MEAN, so a few outlier tokens with astronomical |log-ratio| drag it while the
+            # k2 KL stays bounded (compute_approx_kl clamps to +/-10). On C2-4B (2026-07-24) it hit
+            # -9 mean; root cause was the policy emitting vision placeholder tokens (now banned at
+            # rollout). If it recurs, LOGPROBS_DIFF_DEBUG=1 dumps the outlier magnitudes to confirm
+            # whether it is again a few extreme tokens (and how many) vs a broad shift.
+            if os.environ.get("LOGPROBS_DIFF_DEBUG", "0") == "1":
+                with torch.no_grad():
+                    pt = logprobs_diff.float()
+                    am = experience.action_mask
+                    ptm = pt[am.bool()] if (am is not None and am.shape == pt.shape) else pt.flatten()
+                    if ptm.numel() > 0:
+                        k = min(8, ptm.numel())
+                        top_abs, _ = ptm.abs().topk(k)
+                        logger.info(
+                            f"[logprobs_diff] mean={masked_mean(pt, am).item():.3f} "
+                            f"max|.|={float(ptm.abs().max()):.2f} n(|.|>5)={int((ptm.abs() > 5).sum())}/{ptm.numel()} "
+                            f"top|.|={[round(float(v), 1) for v in top_abs.tolist()]}"
+                        )
             logprobs_diff = masked_mean(logprobs_diff, experience.action_mask)
             experience.info["kl"] = kl_loss.detach()
             experience.info["logprobs_diff"] = logprobs_diff.detach()

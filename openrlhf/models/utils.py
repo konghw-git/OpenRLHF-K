@@ -169,6 +169,32 @@ def masked_mean(tensor: torch.Tensor, mask: Optional[torch.Tensor], dim: int = N
     return (tensor * mask).sum(dim=dim) / mask.sum(dim=dim)
 
 
+def sanitize_mm_token_type_ids(token_type_ids, image_grid_thw, video_grid_thw, spatial_merge_size):
+    """Neutralize stray multimodal placeholder markers so ``get_rope_index`` cannot consume a
+    phantom grid (silent mRoPE position corruption, or a ``StopIteration`` / ``next(None)`` crash).
+
+    The RL policy can generate image/video placeholder tokens *inside a response*, but the
+    processor only guarantees the PROMPT placeholders match the provided grids. Any marker beyond
+    the grid-implied capacity (or with no grid at all) is spurious -> re-type it as text (0).
+    Handles the single-image-per-sample case exactly; multi-image row->grid mapping is ambiguous
+    here so the per-row image clamp is skipped (the rollout logit-bias guard remains the primary
+    prevention). ``token_type_ids`` is (B, L) with 0=text/1=image/2=video; modified in place.
+    """
+    if video_grid_thw is None:
+        token_type_ids[token_type_ids == 2] = 0
+    if image_grid_thw is None:
+        token_type_ids[token_type_ids == 1] = 0
+        return token_type_ids
+    merge2 = spatial_merge_size**2
+    per_img = (image_grid_thw[:, 0] * image_grid_thw[:, 1] * image_grid_thw[:, 2] // merge2).tolist()
+    if len(per_img) == token_type_ids.size(0):  # one image per sample -> exact per-row clamp
+        for i in range(token_type_ids.size(0)):
+            idx = (token_type_ids[i] == 1).nonzero(as_tuple=True)[0]
+            if idx.numel() > per_img[i]:
+                token_type_ids[i, idx[per_img[i] :]] = 0
+    return token_type_ids
+
+
 def masked_normalize(tensor: torch.Tensor, mask: torch.Tensor, dim: int = 1, eps: float = 1e-8) -> torch.Tensor:
     # keepdim=True so the per-row mean/var broadcast back over `dim` correctly; masked_mean
     # reduces `dim` without keepdim, so using it here would broadcast along the wrong axis.
