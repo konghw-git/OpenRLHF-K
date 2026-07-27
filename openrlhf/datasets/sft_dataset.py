@@ -55,6 +55,12 @@ class SFTDataset(Dataset):
     ) -> None:
         super().__init__()
         self.tokenizer = tokenizer
+        # VLM 下 get_tokenizer 返回的是 AutoProcessor(utils.py:51-68),而 processor.__call__
+        # 的第一个位置参数是 images(Qwen3VLProcessor)。本类所有纯文本 tokenize 必须走
+        # 内层 tokenizer,否则文本会被当成图片路径 -> ValueError: Incorrect image source。
+        # 纯文本模型下 processor is None、text_tokenizer is tokenizer,行为不变。
+        self.processor = tokenizer if hasattr(tokenizer, "image_processor") else None
+        self.text_tokenizer = tokenizer.tokenizer if self.processor is not None else tokenizer
         self.strategy = strategy
         self.pretrain_mode = pretrain_mode
         self.max_length = max_length
@@ -104,7 +110,7 @@ class SFTDataset(Dataset):
                     response = apply_chat_template(data[input_key][: idx + 1], tokenize=False)[len(prompt) :]
 
                     start_idx = (
-                        self.tokenizer(
+                        self.text_tokenizer(
                             prompt,
                             max_length=self.max_length,
                             padding=False,
@@ -119,7 +125,7 @@ class SFTDataset(Dataset):
 
                     end_idx = (
                         start_idx
-                        + self.tokenizer(
+                        + self.text_tokenizer(
                             response,
                             max_length=self.max_length,
                             padding=False,
@@ -144,7 +150,7 @@ class SFTDataset(Dataset):
         )
 
         if not self.pretrain_mode:
-            prompt_token = self.tokenizer(
+            prompt_token = self.text_tokenizer(
                 prompt,
                 max_length=self.max_length,
                 padding=False,
@@ -176,12 +182,12 @@ class SFTDataset(Dataset):
 
         if not self.pretrain_mode:
             text = (prompt + response).rstrip("\n")
-            if not text.endswith(self.tokenizer.eos_token):
-                text += " " + self.tokenizer.eos_token
+            if not text.endswith(self.text_tokenizer.eos_token):
+                text += " " + self.text_tokenizer.eos_token
         else:
             text = prompt
 
-        input_token = self.tokenizer(
+        input_token = self.text_tokenizer(
             text,
             max_length=self.max_length,
             padding=False,
@@ -195,7 +201,7 @@ class SFTDataset(Dataset):
 
         if not self.pretrain_mode:
             # to avoid EOS_token truncation
-            input_ids[0][-1] = self.tokenizer.eos_token_id
+            input_ids[0][-1] = self.text_tokenizer.eos_token_id
             attention_mask[0][-1] = True
         return input_ids, attention_mask, loss_mask
 
@@ -223,7 +229,7 @@ class SFTDataset(Dataset):
             attention_masks.append(attention_mask)
             loss_masks.append(loss_mask)
 
-        input_ids = zero_pad_sequences(input_ids, "right", self.tokenizer.pad_token_id)
+        input_ids = zero_pad_sequences(input_ids, "right", self.text_tokenizer.pad_token_id)
         attention_masks = zero_pad_sequences(attention_masks, "right")
         loss_masks = zero_pad_sequences(loss_masks, "right")
         return input_ids, attention_masks, loss_masks
