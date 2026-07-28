@@ -187,7 +187,12 @@ def sanitize_mm_token_type_ids(token_type_ids, image_grid_thw, video_grid_thw, s
         return token_type_ids
     merge2 = spatial_merge_size**2
     per_img = (image_grid_thw[:, 0] * image_grid_thw[:, 1] * image_grid_thw[:, 2] // merge2).tolist()
-    if len(per_img) == token_type_ids.size(0):  # one image per sample -> exact per-row clamp
+    # `len(per_img) == B` alone does NOT imply one image per row: a MIXED text/image batch
+    # (SFT cold start is 70% text) can hit it by coincidence, e.g. 2 image rows x 2 images
+    # in a batch of 4, and then row i's grid is not per_img[i] and the clamp would zero
+    # legitimate markers. Require every row to carry a marker before trusting the 1:1 map.
+    row_has_marker = (token_type_ids == 1).any(dim=-1).all().item()
+    if len(per_img) == token_type_ids.size(0) and row_has_marker:  # one image per sample -> exact clamp
         for i in range(token_type_ids.size(0)):
             idx = (token_type_ids[i] == 1).nonzero(as_tuple=True)[0]
             if idx.numel() > per_img[i]:

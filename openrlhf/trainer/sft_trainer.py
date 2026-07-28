@@ -10,6 +10,14 @@ from openrlhf.utils.distributed_sampler import DistributedSampler
 from openrlhf.utils.loss_utils import iter_grad_accum_global_norm
 
 
+def _mm_to_device(mm_inputs, device):
+    """Move the collated multimodal tensors (pixel_values, image_grid_thw, ...) to the model
+    device.  Empty dict for an all-text batch, so `**mm_inputs` stays a no-op there."""
+    if not mm_inputs:
+        return {}
+    return {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in mm_inputs.items()}
+
+
 class SFTTrainer(ABC):
     """
     Trainer for supervised fine-tuning (SFT).
@@ -152,18 +160,20 @@ class SFTTrainer(ABC):
             def sft_loss_mask(batch):
                 return batch[2].squeeze(1)[:, :-1]
 
-            for (inputs, attention_masks, loss_masks), loss_batch_info in iter_grad_accum_global_norm(
+            for (inputs, attention_masks, loss_masks, mm_inputs), loss_batch_info in iter_grad_accum_global_norm(
                 self.train_dataloader, self.strategy, self.strategy.accumulated_gradient, sft_loss_mask
             ):
                 inputs = inputs.to(device).squeeze(1)
                 attention_mask = attention_masks.to(device).squeeze(1)
                 loss_mask = loss_masks.to(device).squeeze(1)
+                mm_inputs = _mm_to_device(mm_inputs, device)
                 per_token_log_probs, output = self.model(
                     inputs,
                     attention_mask=attention_mask,
                     return_output=True,
                     return_logprobs=True,
                     ring_attn_group=self.strategy.ring_attn_group,
+                    **mm_inputs,
                 )
 
                 # mixtral
@@ -255,15 +265,17 @@ class SFTTrainer(ABC):
             )
 
             device = next(self.model.parameters()).device
-            for inputs, attention_masks, loss_masks in eval_dataloader:
+            for inputs, attention_masks, loss_masks, mm_inputs in eval_dataloader:
                 inputs = inputs.to(device).squeeze(1)
                 attention_mask = attention_masks.to(device).squeeze(1)
                 loss_mask = loss_masks.to(device).squeeze(1)
+                mm_inputs = _mm_to_device(mm_inputs, device)
                 per_token_log_probs = self.model(
                     inputs,
                     attention_mask=attention_mask,
                     return_logprobs=True,
                     ring_attn_group=self.strategy.ring_attn_group,
+                    **mm_inputs,
                 )
 
                 loss = self.loss_fn(per_token_log_probs, loss_mask[:, :-1])

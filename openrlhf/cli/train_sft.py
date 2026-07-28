@@ -276,6 +276,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--data.input_key", type=str, default="input", help="JSON dataset key")
     parser.add_argument("--data.output_key", type=str, default=None, help="JSON dataset key")
+    parser.add_argument("--data.image_key", type=str, default="images", help="Dataset key for image paths/URLs")
     parser.add_argument("--data.input_template", type=str, default="User: {}\nAssistant: ")
     parser.add_argument(
         "--data.apply_chat_template", action="store_true", default=False, help="Use HF tokenizer chat template"
