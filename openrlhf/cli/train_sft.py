@@ -30,6 +30,7 @@ def train(args):
         ds_config=strategy.get_ds_train_config(is_actor=True),
         packing_samples=args.ds.packing_samples,
         use_liger_kernel=args.ds.use_liger_kernel,
+        freeze_visual_encoder=args.model.freeze_visual_encoder,
     )
     # configure tokenizer
     tokenizer = get_tokenizer(
@@ -72,6 +73,18 @@ def train(args):
         num_workers=args.data.dataloader_num_workers,
     )
 
+    # eval 集与 train 集走完全相同的 SFTDataset(含 image_key / 图像分辨率上限 / 四元组
+    # collate_fn),所以留出集带图也能正常跑。
+    # ⚠ 但 eval loss 与 train loss 的**归一化口径不同,不是同一个估计量**:
+    #   train: sft_trainer.py fit() 把 **loss_batch_info 传进 loss_fn —— 分母是整个
+    #          optimizer-step 窗口 × 所有 DP rank 的全局 token 数
+    #          (loss_utils.iter_grad_accum_global_norm / _optimizer_step_loss_norm);
+    #   eval : sft_trainer.py evaluate() 只调 self.loss_fn(logps, loss_mask[:, :-1]),
+    #          batch_num_tokens=None -> aggregate_loss 退化成 masked_mean(**本 micro-batch
+    #          局部** token 均值),再用 loss_sum/times 对 micro-batch 做**等权**平均。
+    # 两者量纲相同(都是 per-token NLL,趋势可粗看),但序列长度不均时加权方式不同 ——
+    # 本项目 70% 纯文本 / 30% 多模态、长 CoT 长度差异大,差异不可忽略。
+    # -> eval 曲线自身纵向可比,**不要与 train 曲线做精确数值对齐**。
     eval_dataloader = None
     if getattr(args.eval, "dataset", None):
         eval_data = blending_datasets(
@@ -213,6 +226,16 @@ if __name__ == "__main__":
     parser.add_argument("--model.aux_loss_coef", type=float, default=0, help="MoE balancing loss")
     parser.add_argument("--model.model_name_or_path", type=str, default=None)
     parser.add_argument("--model.pretrain_mode_enable", action="store_true", default=False, help="Use pretrain loss")
+    parser.add_argument(
+        "--model.freeze_visual_encoder",
+        action="store_true",
+        default=False,
+        help="VLM: freeze the visual tower (Qwen3-VL `model.visual.*`, i.e. ViT blocks + patch/pos "
+        "embed + merger + deepstack mergers) and train only the language backbone "
+        "(`model.language_model.*` + `lm_head`). Mirrors the RL stage's "
+        "--actor.freeze_visual_encoder so SFT and RL agree on what is trainable. "
+        "Off by default -> the ViT is fully trained.",
+    )
 
     # Optimizer + scheduler + grad clip.  Two sections:
     #   --muon.*  Muon-specific hypers (only used when --optim=muon)
