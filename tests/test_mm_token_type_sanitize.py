@@ -46,6 +46,35 @@ def test_no_image_grid_drops_all_image_markers():
     assert out.sum().item() == 0  # every marker neutralized when no grids exist
 
 
+def test_excess_video_markers_clamped_to_grid():
+    # Symmetry with the image clamp: a batch that legitimately carries video must still have a
+    # STRAY video marker removed.  The pre-2026-08-06 version only clamped image markers, so a
+    # generated <|video_pad|> in a video run survived and shifted every later mRoPE position.
+    tt = torch.tensor([[0, 2, 2, 2, 2, 0, 2, 0]])  # 5 video markers, grid only covers 4
+    out = sanitize_mm_token_type_ids(
+        tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2
+    )
+    assert out.tolist() == [[0, 2, 2, 2, 2, 0, 0, 0]]
+
+
+def test_video_grid_present_leaves_legit_video_markers():
+    tt = torch.tensor([[0, 2, 2, 2, 2, 0]])
+    before = tt.clone()
+    out = sanitize_mm_token_type_ids(
+        tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2
+    )
+    assert torch.equal(out, before)
+
+
+def test_image_and_video_clamped_independently_in_one_batch():
+    # 4 legit image + 4 legit video tokens, one stray of each.
+    tt = torch.tensor([[1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 2]])
+    out = sanitize_mm_token_type_ids(
+        tt, image_grid_thw=_grid(1, 4, 4), video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2
+    )
+    assert out.tolist() == [[1, 1, 1, 1, 0, 0, 2, 2, 2, 2, 0]]
+
+
 def test_multi_image_batch_skips_row_clamp_but_drops_video():
     # 2 grids but batch size 1 -> per-row mapping ambiguous: image clamp skipped, video still dropped.
     tt = torch.tensor([[1, 1, 1, 1, 2]])

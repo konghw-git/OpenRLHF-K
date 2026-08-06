@@ -176,27 +176,38 @@ def sanitize_mm_token_type_ids(token_type_ids, image_grid_thw, video_grid_thw, s
     The RL policy can generate image/video placeholder tokens *inside a response*, but the
     processor only guarantees the PROMPT placeholders match the provided grids. Any marker beyond
     the grid-implied capacity (or with no grid at all) is spurious -> re-type it as text (0).
-    Handles the single-image-per-sample case exactly; multi-image row->grid mapping is ambiguous
-    here so the per-row image clamp is skipped (the rollout logit-bias guard remains the primary
+    Handles the single-item-per-sample case exactly; multi-item row->grid mapping is ambiguous
+    here so the per-row clamp is skipped (the rollout logit-bias guard remains the primary
     prevention). ``token_type_ids`` is (B, L) with 0=text/1=image/2=video; modified in place.
+
+    Image (1) and video (2) markers get the SAME treatment -- an earlier version zeroed
+    marker-with-no-grid for both but only ever clamped excess *image* markers, so a stray
+    video token in a batch that legitimately carried video survived.
     """
-    if video_grid_thw is None:
-        token_type_ids[token_type_ids == 2] = 0
-    if image_grid_thw is None:
-        token_type_ids[token_type_ids == 1] = 0
-        return token_type_ids
     merge2 = spatial_merge_size**2
-    per_img = (image_grid_thw[:, 0] * image_grid_thw[:, 1] * image_grid_thw[:, 2] // merge2).tolist()
-    # `len(per_img) == B` alone does NOT imply one image per row: a MIXED text/image batch
-    # (SFT cold start is 70% text) can hit it by coincidence, e.g. 2 image rows x 2 images
-    # in a batch of 4, and then row i's grid is not per_img[i] and the clamp would zero
-    # legitimate markers. Require every row to carry a marker before trusting the 1:1 map.
-    row_has_marker = (token_type_ids == 1).any(dim=-1).all().item()
-    if len(per_img) == token_type_ids.size(0) and row_has_marker:  # one image per sample -> exact clamp
-        for i in range(token_type_ids.size(0)):
-            idx = (token_type_ids[i] == 1).nonzero(as_tuple=True)[0]
-            if idx.numel() > per_img[i]:
-                token_type_ids[i, idx[per_img[i] :]] = 0
+
+    def _clamp(marker, grid):
+        if grid is None:
+            # No grid for this modality at all -> every such marker is spurious.
+            token_type_ids[token_type_ids == marker] = 0
+            return
+        # Tokens one grid expands into: prod(t, h, w) / merge**2.  (get_rope_index splits a
+        # video grid per frame, but the per-sample total it consumes is the same.)
+        per_item = (grid[:, 0] * grid[:, 1] * grid[:, 2] // merge2).tolist()
+        # `len(per_item) == B` alone does NOT imply one item per row: a MIXED text/image batch
+        # can hit it by coincidence, e.g. 2 image rows x 2 images in a batch of 4, and then
+        # row i's grid is not per_item[i] and the clamp would zero legitimate markers.
+        # Requiring every row to carry a marker closes that: if every row has >= 1 item and the
+        # item count equals B, the mapping is necessarily 1:1.
+        row_has_marker = (token_type_ids == marker).any(dim=-1).all().item()
+        if len(per_item) == token_type_ids.size(0) and row_has_marker:
+            for i in range(token_type_ids.size(0)):
+                idx = (token_type_ids[i] == marker).nonzero(as_tuple=True)[0]
+                if idx.numel() > per_item[i]:
+                    token_type_ids[i, idx[per_item[i] :]] = 0
+
+    _clamp(1, image_grid_thw)
+    _clamp(2, video_grid_thw)
     return token_type_ids
 
 

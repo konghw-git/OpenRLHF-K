@@ -258,12 +258,21 @@ class Actor(nn.Module):
         if getattr(cfg, "video_token_id", None) is not None:
             token_type_ids[sequences == cfg.video_token_id] = 2
         if mm_inputs is not None:
-            token_type_ids = sanitize_mm_token_type_ids(
-                token_type_ids,
-                mm_inputs.get("image_grid_thw"),
-                mm_inputs.get("video_grid_thw"),
-                self._vlm_config.vision_config.spatial_merge_size,
-            )
+            # Sanitizing is mRoPE-SPECIFIC: what a stray marker derails is the *_grid_thw
+            # iterator inside get_rope_index.  Non-mRoPE VLMs (Gemma/Llava: Siglip/CLIP
+            # vision_config) pass no grids and have no `spatial_merge_size`, and for them
+            # token_type_ids drives the *bidirectional image attention mask* instead --
+            # so blanket-sanitizing there would either raise AttributeError or, worse,
+            # zero every image marker and silently disable that mask.  Gate on both.
+            merge_size = getattr(getattr(cfg, "vision_config", None), "spatial_merge_size", None)
+            has_grid = mm_inputs.get("image_grid_thw") is not None or mm_inputs.get("video_grid_thw") is not None
+            if has_grid and merge_size is not None:
+                token_type_ids = sanitize_mm_token_type_ids(
+                    token_type_ids,
+                    mm_inputs.get("image_grid_thw"),
+                    mm_inputs.get("video_grid_thw"),
+                    merge_size,
+                )
         return token_type_ids
 
     def _build_vlm_position_ids(self, sequences, attention_mask, mm_inputs):

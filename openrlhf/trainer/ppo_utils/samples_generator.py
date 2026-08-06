@@ -74,7 +74,14 @@ class SamplesGenerator:
     def _vlm_placeholder_logit_bias(self):
         """{token_id: -inf} for multimodal placeholder tokens, or None for a text tokenizer.
         Resolved once from the processor (Qwen*-VL expose *_token_id) with a token-string
-        fallback; empty -> None so text-only runs are unaffected."""
+        fallback; empty -> None so text-only runs are unaffected.
+
+        Known caliber gap: vLLM reports logprobs from the BIASED distribution, while the
+        training-side logprobs come from the unbiased model.  With
+        --algo.advantage.is_correction_enable the importance ratio therefore compares two
+        slightly different distributions, off by log(1 - p_banned).  That is ~0 whenever the
+        policy is healthy -- but it is exactly the pathological case (C2-4B) where it is not,
+        so read logprobs_diff with that in mind rather than as a pure policy-drift signal."""
         cache = getattr(self, "_vlm_ph_bias_cache", "unset")
         if cache != "unset":
             return cache

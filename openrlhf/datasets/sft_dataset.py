@@ -75,6 +75,7 @@ class SFTDataset(Dataset):
         self.max_length = max_length
         self.multiturn = multiturn
         self._truncation_warned = False
+        self._caliber_fallback_warned = False
 
         if self.processor is not None and hasattr(self.processor, "image_processor"):
             # Cap the image resolution: uncapped images blow up the placeholder expansion,
@@ -139,27 +140,53 @@ class SFTDataset(Dataset):
         Uses the processor's public size->patch utility (the same one vLLM uses to plan
         placeholders), so only the image *header* is read -- no decode, no resize.  Returns
         None when it cannot be determined, in which case callers fall back to text caliber.
+
+        A LOCAL PATH that cannot be opened raises instead: it is a data defect, and it has to
+        fail here (dataset build) rather than be papered over with the text caliber.  Falling
+        back would KEEP the row, and it then dies in ``__getitem__`` -- ``load_images`` only
+        warns, the processor gets an empty image list, and transformers raises
+        ``IndexError: list index out of range`` minutes into training with no path in the
+        message.  (2026-08-06 review: 2322/2322 refs in coldstart_sft_v3.jsonl had gone stale
+        after a directory move, and this was the failure mode.)
         """
         if self.processor is None or not images:
             return 0
-        try:
-            from PIL import Image
+        from PIL import Image
 
-            sizes = []
-            for ref in images if isinstance(images, list) else [images]:
-                if ref is None:
-                    continue
-                if isinstance(ref, Image.Image):
-                    w, h = ref.size
-                else:
+        from openrlhf.utils.vlm_utils import _is_base64_image
+
+        sizes = []
+        for ref in images if isinstance(images, list) else [images]:
+            if ref is None:
+                continue
+            if isinstance(ref, Image.Image):
+                w, h = ref.size
+            elif isinstance(ref, str) and not ref.startswith(("http://", "https://")) and not _is_base64_image(ref):
+                try:
                     with Image.open(ref) as im:  # lazy: reads the header only
                         w, h = im.size
-                sizes.append([h, w])
-            if not sizes:
-                return 0
+                except Exception as e:
+                    raise FileNotFoundError(f"SFTDataset: unreadable image reference {ref!r} ({e})") from e
+            else:
+                # URL / base64 / raw bytes: no cheap header read (a URL would mean a network
+                # fetch per row) -> text caliber, and __getitem__ still guards the count.
+                # Say so once: a length filter that quietly changes caliber reads as "all
+                # accounted for" when it is not.
+                if not self._caliber_fallback_warned:
+                    self._caliber_fallback_warned = True
+                    logger.warning(
+                        f"SFTDataset: image reference {type(ref).__name__} is not a local path "
+                        "(URL/base64/bytes); image expansion is NOT accounted for in the length "
+                        "filter for such rows -- they may be truncated at max_length."
+                    )
+                return None
+            sizes.append([h, w])
+        if not sizes:
+            return 0
+        try:
             mm_data = self.processor._get_num_multimodal_tokens(image_sizes=sizes)
             return int(sum(mm_data.num_image_tokens))
-        except Exception as e:  # unknown processor API / unreadable image
+        except Exception as e:  # unknown processor API -> text caliber is an acceptable fallback
             logger.warning(f"Cannot pre-compute image token count ({e}); falling back to text-caliber length")
             return None
 
@@ -252,7 +279,10 @@ class SFTDataset(Dataset):
                 extra = 0
                 if images and self.processor is not None:
                     n_expanded = self._num_image_placeholder_tokens(images)
-                    if n_expanded is not None and self._image_pad_token is not None:
+                    # _image_pad_id is the guard (not _image_pad_token): it is None when the
+                    # placeholder is absent from the vocab, i.e. when this accounting cannot be
+                    # trusted at all.  _expanded_prompt_ids_len uses the same guard.
+                    if n_expanded is not None and self._image_pad_id is not None:
                         n_pad = prompt.count(self._image_pad_token)
                         extra = n_expanded - n_pad
                 # +2: the eos appended in __getitem__, plus one token of slack for the
@@ -300,6 +330,17 @@ class SFTDataset(Dataset):
             from openrlhf.utils.vlm_utils import load_images  # same loading path as the RL side
 
             pil_images = load_images(images)
+            # load_images() only WARNS on a bad reference and drops it.  Handing the processor a
+            # short image list does not degrade gracefully: with zero images transformers raises
+            # `IndexError: list index out of range` (image_transforms._get_device_from_images),
+            # and with a partial list the placeholder count no longer matches the grids.  Fail
+            # here instead, naming the reference.
+            n_expected = sum(1 for r in (images if isinstance(images, list) else [images]) if r is not None)
+            if len(pil_images) != n_expected:
+                raise ValueError(
+                    f"SFTDataset: sample {idx} declares {n_expected} image(s) but only "
+                    f"{len(pil_images)} loaded (see the load_images warning above); refs={images!r}"
+                )
             enc = self.processor(images=pil_images, text=[text], **tokenize_kwargs)
             input_ids = enc["input_ids"]
             attention_mask = enc["attention_mask"]
@@ -344,14 +385,21 @@ class SFTDataset(Dataset):
         return input_ids, attention_mask, loss_mask, mm_inputs
 
     def _expanded_prompt_ids_len(self, idx, image_grid_thw):
-        """Processor-caliber prompt length for a multimodal sample (see __getitem__)."""
-        prompt_text_ids = self.text_tokenizer(self.prompts[idx], add_special_tokens=False)["input_ids"]
+        """Processor-caliber prompt length for a multimodal sample (see __getitem__).
+
+        ``self.prompt_ids_lens[idx]`` is already the text-caliber length: process_data tokenized
+        with truncation at max_length, and every row that survived the filter is shorter than
+        that, so it is the untruncated length.  Counting the placeholder in the prompt *string*
+        (as the length filter does) rather than re-tokenizing keeps ONE caliber for the same
+        quantity and takes a full prompt re-tokenization out of the dataloader hot path.
+        """
+        prompt_ids_len = self.prompt_ids_lens[idx]
         if image_grid_thw is None or self._image_pad_id is None:
-            return len(prompt_text_ids)
+            return prompt_ids_len
         merge = getattr(self.processor.image_processor, "merge_size", 2)
         grid_tokens = sum(int(g[0]) * int(g[1]) * int(g[2]) // (merge**2) for g in image_grid_thw)
-        n_pad = sum(1 for t in prompt_text_ids if t == self._image_pad_id)
-        return len(prompt_text_ids) - n_pad + grid_tokens
+        n_pad = self.prompts[idx].count(self._image_pad_token)
+        return prompt_ids_len - n_pad + grid_tokens
 
     def get_loss_mask(self, input_ids, idx, prompt_ids_len=None):
         if self.pretrain_mode:
