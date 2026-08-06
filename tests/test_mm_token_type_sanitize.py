@@ -1,12 +1,13 @@
 """Regression tests for sanitize_mm_token_type_ids.
 
-Root cause (kong C2-4B, 2026-07-24): the RL policy generated a video placeholder token
-(id 151656) inside a response; the VLM position builder marked it modality-2 and
-transformers get_rope_index did next(grid_iters[2]) with video_grid_thw=None -> crash
-`TypeError: 'NoneType' object is not an iterator`. A stray image placeholder likewise makes
-get_rope_index consume a phantom grid (StopIteration). sanitize_mm_token_type_ids neutralizes
-such stray markers (defense-in-depth behind the rollout logit-bias guard).
+An RL policy can generate a video placeholder token inside a response. The VLM position builder
+then marks it modality-2 and transformers get_rope_index calls next(grid_iters[2]) with
+video_grid_thw=None -> `TypeError: 'NoneType' object is not an iterator`. A stray image
+placeholder likewise makes get_rope_index consume a phantom grid (StopIteration).
+sanitize_mm_token_type_ids neutralizes such markers, as defense-in-depth behind the rollout
+logit-bias guard.
 """
+
 import torch
 
 from openrlhf.models.utils import sanitize_mm_token_type_ids
@@ -48,21 +49,16 @@ def test_no_image_grid_drops_all_image_markers():
 
 def test_excess_video_markers_clamped_to_grid():
     # Symmetry with the image clamp: a batch that legitimately carries video must still have a
-    # STRAY video marker removed.  The pre-2026-08-06 version only clamped image markers, so a
-    # generated <|video_pad|> in a video run survived and shifted every later mRoPE position.
+    # stray video marker removed, or it shifts every later mRoPE position.
     tt = torch.tensor([[0, 2, 2, 2, 2, 0, 2, 0]])  # 5 video markers, grid only covers 4
-    out = sanitize_mm_token_type_ids(
-        tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2
-    )
+    out = sanitize_mm_token_type_ids(tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2)
     assert out.tolist() == [[0, 2, 2, 2, 2, 0, 0, 0]]
 
 
 def test_video_grid_present_leaves_legit_video_markers():
     tt = torch.tensor([[0, 2, 2, 2, 2, 0]])
     before = tt.clone()
-    out = sanitize_mm_token_type_ids(
-        tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2
-    )
+    out = sanitize_mm_token_type_ids(tt, image_grid_thw=None, video_grid_thw=_grid(1, 4, 4), spatial_merge_size=2)
     assert torch.equal(out, before)
 
 

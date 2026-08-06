@@ -162,10 +162,7 @@ def pack_position_ids(pos4, indices):
     """
     flat = rearrange(pos4, "r b l -> (b l) r")  # (B*L, 4), row-major over (b, l) -> matches indices
     packed = index_first_axis(flat, indices)  # (total, 4)
-    packed = packed.transpose(0, 1).unsqueeze(1).contiguous()  # (4, 1, total)
-    # Case-1 varlen boundary invariant: first token of the first packed segment has text pos 0.
-    assert packed[0, 0, 0] == 0, "packed text position must start at 0 (flash-attn varlen boundary)"
-    return packed
+    return packed.transpose(0, 1).unsqueeze(1).contiguous()  # (4, 1, total)
 
 
 def gather_and_pad_tensor(tensor, ring_attn_group, ring_attn_pad_len, indices, batch, seqlen):

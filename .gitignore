@@ -152,15 +152,5 @@ core
 exp
 wandb
 .claude/*
-!.claude/docs/
 *tmp*
-
-# snapshot of crawled official docs (openrlhf + vllm), copied from the
-# ~/Desktop/learning-docs archive repo (konghw-git/learning-docs).
-# EN side is tracked; ZH side and vllm's bulky auto-rendered parts stay local-only.
-docs/official-docs/*/zh/
-docs/official-docs/vllm.io/en/examples/
-docs/official-docs/vllm.io/en/contributing/
-
-# local clone of the verl repo (reference only, not part of this project)
-docs/verl/
+.ruff_cache/

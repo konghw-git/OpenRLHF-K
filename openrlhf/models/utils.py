@@ -178,11 +178,8 @@ def sanitize_mm_token_type_ids(token_type_ids, image_grid_thw, video_grid_thw, s
     the grid-implied capacity (or with no grid at all) is spurious -> re-type it as text (0).
     Handles the single-item-per-sample case exactly; multi-item row->grid mapping is ambiguous
     here so the per-row clamp is skipped (the rollout logit-bias guard remains the primary
-    prevention). ``token_type_ids`` is (B, L) with 0=text/1=image/2=video; modified in place.
-
-    Image (1) and video (2) markers get the SAME treatment -- an earlier version zeroed
-    marker-with-no-grid for both but only ever clamped excess *image* markers, so a stray
-    video token in a batch that legitimately carried video survived.
+    prevention). Image (1) and video (2) markers get the same treatment. ``token_type_ids`` is
+    (B, L) with 0=text/1=image/2=video; modified in place.
     """
     merge2 = spatial_merge_size**2
 
@@ -194,11 +191,11 @@ def sanitize_mm_token_type_ids(token_type_ids, image_grid_thw, video_grid_thw, s
         # Tokens one grid expands into: prod(t, h, w) / merge**2.  (get_rope_index splits a
         # video grid per frame, but the per-sample total it consumes is the same.)
         per_item = (grid[:, 0] * grid[:, 1] * grid[:, 2] // merge2).tolist()
-        # `len(per_item) == B` alone does NOT imply one item per row: a MIXED text/image batch
-        # can hit it by coincidence, e.g. 2 image rows x 2 images in a batch of 4, and then
-        # row i's grid is not per_item[i] and the clamp would zero legitimate markers.
-        # Requiring every row to carry a marker closes that: if every row has >= 1 item and the
-        # item count equals B, the mapping is necessarily 1:1.
+        # len(per_item) == B alone does NOT imply one item per row: a mixed text/image batch can
+        # hit it by coincidence (e.g. 2 image rows x 2 images in a batch of 4), and then row i's
+        # grid is not per_item[i] and the clamp would zero legitimate markers. Requiring every
+        # row to carry a marker closes that -- if every row has >= 1 item and the item count
+        # equals B, the mapping is necessarily 1:1.
         row_has_marker = (token_type_ids == marker).any(dim=-1).all().item()
         if len(per_item) == token_type_ids.size(0) and row_has_marker:
             for i in range(token_type_ids.size(0)):

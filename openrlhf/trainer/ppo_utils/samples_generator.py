@@ -57,12 +57,11 @@ class SamplesGenerator:
         self.prompts_dataloader = prompts_dataloader
         self.eval_dataloader = eval_dataloader
 
-    # Multimodal placeholder tokens (image/video/vision_start/vision_end) must NEVER appear in a
+    # Multimodal placeholder tokens (image/video/vision_start/vision_end) must never appear in a
     # generated response: the VLM position builder marks them as an image/video modality and
     # transformers get_rope_index then consumes a grid that the response has no pixels for ->
-    # wrong mRoPE positions or a hard crash (StopIteration / next(None); observed on C2-4B,
-    # 2026-07-24). We ban them at the sampler (primary prevention). actor._build_mm_token_type_ids
-    # sanitizes as defense-in-depth.
+    # wrong mRoPE positions or a hard crash. Banning them at the sampler is the primary
+    # prevention; actor._build_mm_token_type_ids sanitizes as defense-in-depth.
     _VLM_PLACEHOLDER_ATTRS = (
         "image_token_id",
         "video_token_id",
@@ -76,12 +75,11 @@ class SamplesGenerator:
         Resolved once from the processor (Qwen*-VL expose *_token_id) with a token-string
         fallback; empty -> None so text-only runs are unaffected.
 
-        Known caliber gap: vLLM reports logprobs from the BIASED distribution, while the
-        training-side logprobs come from the unbiased model.  With
-        --algo.advantage.is_correction_enable the importance ratio therefore compares two
-        slightly different distributions, off by log(1 - p_banned).  That is ~0 whenever the
-        policy is healthy -- but it is exactly the pathological case (C2-4B) where it is not,
-        so read logprobs_diff with that in mind rather than as a pure policy-drift signal."""
+        Caveat: vLLM reports logprobs from the biased distribution while the training-side
+        logprobs come from the unbiased model, so under --algo.advantage.is_correction_enable
+        the importance ratio compares two distributions that differ by log(1 - p_banned). That
+        is ~0 for a healthy policy, but non-negligible exactly when the policy is degenerate and
+        emitting placeholders -- read logprobs_diff accordingly."""
         cache = getattr(self, "_vlm_ph_bias_cache", "unset")
         if cache != "unset":
             return cache

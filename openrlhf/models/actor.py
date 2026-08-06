@@ -225,7 +225,7 @@ class Actor(nn.Module):
                 if any("linear_attn" in n for n, _ in self.model.named_modules()):
                     # Qwen3.5-style hybrid linear-attention VLMs expose get_rope_index too, but
                     # linear-attn layers don't segment via cu_seqlens -> state leaks across packed
-                    # samples. Refuse rather than train silently-wrong (spec 2026-07-23 §5.7).
+                    # samples. Refuse rather than train silently-wrong.
                     raise ValueError(
                         "VLM packing is not supported for hybrid linear-attention models "
                         "(e.g. Qwen3.5); only full-attention mRoPE VLMs (Qwen2/2.5/3-VL). "
@@ -247,23 +247,22 @@ class Actor(nn.Module):
         """Reconstruct multimodal token-type ids (0=text, 1=image, 2=video) for the full
         sequence (prompt + response). The processor only produced it for the prompt.
 
-        When ``mm_inputs`` is given we also *sanitize* the markers (see
-        ``_sanitize_mm_token_type_ids``): the policy can emit stray image/video placeholder
+        When ``mm_inputs`` is given the markers are also sanitized (see
+        :func:`sanitize_mm_token_type_ids`): the policy can emit stray image/video placeholder
         tokens inside a generated response, but the processor only guarantees the PROMPT
         placeholders match the provided grids. A spurious placeholder makes downstream
-        ``get_rope_index`` consume a phantom grid -> wrong mRoPE positions, or a hard crash
-        (``StopIteration`` / ``next(None)``). Re-type any such token as text."""
+        ``get_rope_index`` consume a phantom grid -> wrong mRoPE positions, or a hard crash.
+        """
         cfg = self._vlm_config
         token_type_ids = (sequences == cfg.image_token_id).to(torch.int32)
         if getattr(cfg, "video_token_id", None) is not None:
             token_type_ids[sequences == cfg.video_token_id] = 2
         if mm_inputs is not None:
-            # Sanitizing is mRoPE-SPECIFIC: what a stray marker derails is the *_grid_thw
-            # iterator inside get_rope_index.  Non-mRoPE VLMs (Gemma/Llava: Siglip/CLIP
-            # vision_config) pass no grids and have no `spatial_merge_size`, and for them
-            # token_type_ids drives the *bidirectional image attention mask* instead --
-            # so blanket-sanitizing there would either raise AttributeError or, worse,
-            # zero every image marker and silently disable that mask.  Gate on both.
+            # Sanitizing is mRoPE-specific: a stray marker derails the *_grid_thw iterator
+            # inside get_rope_index. Non-mRoPE VLMs (Gemma/Llava, i.e. Siglip/CLIP vision
+            # configs) pass no grids and have no spatial_merge_size, and there token_type_ids
+            # drives the bidirectional image attention mask instead -- blanket-sanitizing would
+            # raise AttributeError or, worse, zero every image marker and disable that mask.
             merge_size = getattr(getattr(cfg, "vision_config", None), "spatial_merge_size", None)
             has_grid = mm_inputs.get("image_grid_thw") is not None or mm_inputs.get("video_grid_thw") is not None
             if has_grid and merge_size is not None:

@@ -6,13 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fork of [OpenRLHF/OpenRLHF](https://github.com/OpenRLHF/OpenRLHF) — a Ray + vLLM + DeepSpeed based distributed RLHF training framework. Development happens on the `feat-learn` branch; `main` stays a clean mirror of upstream.
 
-**Progressive disclosure** — this file stays lean. Read the deep-dive docs only when the task needs them:
-
-| When you need | Read |
-|---|---|
-| Training data flow, Ray actor topology, sync/async/hybrid-engine details | `.claude/docs/architecture.md` |
-| Authoritative feature/option docs (crawled official readthedocs, EN + ZH) | `.claude/docs/official-docs-map.md` |
-| Branch/remote/git-identity conventions for this fork | `.claude/docs/git-workflow.md` |
+This fork holds framework code only. Project-private material (specs, notes, offline doc snapshots, experiment scripts) lives in the consuming repo, not here.
 
 ## Commands
 
@@ -35,10 +29,9 @@ Runnable reference configs live in `examples/scripts/*.sh` (e.g. `train_ppo_ray_
 
 ## Architecture in one paragraph
 
-`train_ppo_ray` builds Ray placement groups and spawns four kinds of GPU actors from `openrlhf/trainer/ray/launcher.py` — PolicyModelActor, CriticModelActor, ReferenceModelActor, RewardModelActor (each a DeepSpeed-wrapped `RayActorGroup`) — plus vLLM engines (`vllm_engine.py`) for rollout generation. `trainer/ppo_utils/` turns rollouts into training data: `samples_generator.py` → `experience_maker.py` (rewards, KL, advantages) → `replay_buffer.py` → `ppo_trainer.py` / `ppo_trainer_async.py` train steps. CLI args are hierarchized by `openrlhf/utils/config.py` into nested namespaces (`args.actor.*`, `args.vllm.*`, `args.algo.kl.*`, `args.train.*`, `args.ds.*`) — grep for the nested name, not the raw flag. Multi-turn agent RL goes through `openrlhf/utils/agent.py` executors. Details: `.claude/docs/architecture.md`.
+`train_ppo_ray` builds Ray placement groups and spawns four kinds of GPU actors from `openrlhf/trainer/ray/launcher.py` — PolicyModelActor, CriticModelActor, ReferenceModelActor, RewardModelActor (each a DeepSpeed-wrapped `RayActorGroup`) — plus vLLM engines (`vllm_engine.py`) for rollout generation. `trainer/ppo_utils/` turns rollouts into training data: `samples_generator.py` → `experience_maker.py` (rewards, KL, advantages) → `replay_buffer.py` → `ppo_trainer.py` / `ppo_trainer_async.py` train steps. CLI args are hierarchized by `openrlhf/utils/config.py` into nested namespaces (`args.actor.*`, `args.vllm.*`, `args.algo.kl.*`, `args.train.*`, `args.ds.*`) — grep for the nested name, not the raw flag. Multi-turn agent RL goes through `openrlhf/utils/agent.py` executors.
 
 ## Repo-specific caveats
 
-- Most code paths require multi-GPU + CUDA (DeepSpeed/vLLM/Ray); only the pure-logic parts (losses, config, dataset packing, `tests/`) run on this Mac. Don't try to "verify" training changes locally by launching training.
-- `docs/official-docs/` is a snapshot of the crawled OpenRLHF + vLLM official docs — see the docs map before answering "how does feature X work" questions; prefer citing those pages over guessing. EN side is tracked in git; ZH side and vllm's `en/{examples,contributing}` are gitignored, restorable from the master archive repo at `~/Desktop/learning-docs` (more sites + crawl/translation tooling).
-- Never commit to `main`; it must stay identical to `upstream/main`. Work on `feat-learn` (see git-workflow doc).
+- Most code paths require multi-GPU + CUDA (DeepSpeed/vLLM/Ray). Only the pure-logic parts (losses, config, dataset packing, `tests/`) run without one — don't try to "verify" training changes by launching training locally.
+- Never commit to `main`; it must stay identical to `upstream/main`. Work on `feat-learn`.

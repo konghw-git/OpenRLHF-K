@@ -14,6 +14,12 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
+# Processor outputs that must NOT be forwarded as multimodal tensors: they are
+# sequence-length dependent and get reconstructed from input_ids during training
+# (see Actor.forward) — the training sequence includes the response while the
+# processor only saw the prompt.
+MM_SKIP_KEYS = {"input_ids", "attention_mask", "token_type_ids", "mm_token_type_ids"}
+
 
 def _is_base64_image(s: str) -> bool:
     """Heuristic check for base64-encoded image data."""
@@ -106,13 +112,8 @@ def process_prompt_with_images(
     proc_out = processor(text=[prompt], images=pil_images, add_special_tokens=False, return_tensors="pt")
     token_ids = proc_out["input_ids"][0].tolist()
 
-    # Keep only multimodal tensors (pixel_values, image_grid_thw, ...).
-    # Token-type fields are excluded because they are sequence-length
-    # dependent and get reconstructed from input_ids during training
-    # (see Actor.forward) — the training sequence includes the response
-    # while the processor only saw the prompt.
-    _skip_keys = {"input_ids", "attention_mask", "token_type_ids", "mm_token_type_ids"}
-    mm_train_inputs = {k: v for k, v in proc_out.items() if k not in _skip_keys}
+    # Keep only multimodal tensors (pixel_values, image_grid_thw, ...); see MM_SKIP_KEYS.
+    mm_train_inputs = {k: v for k, v in proc_out.items() if k not in MM_SKIP_KEYS}
 
     return token_ids, (mm_train_inputs or None), pil_images
 

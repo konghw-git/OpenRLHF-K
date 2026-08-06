@@ -1,15 +1,14 @@
 """Regression tests for Actor._build_mm_token_type_ids across VLM families.
 
-2026-08-06 review: the method read `config.vision_config.spatial_merge_size` unconditionally
-in order to sanitize stray placeholder markers.  That attribute only exists on Qwen-style
-mRoPE vision configs; on Gemma3 (SiglipVisionConfig) and Llava (CLIPVisionConfig) -- both of
-which upstream supports, and for which token_type_ids drives the *bidirectional image
-attention mask* rather than mRoPE -- it raised AttributeError on the first forward.  Had the
-attribute existed, the fallback would have been worse: no `image_grid_thw` means sanitize
-zeroes every image marker, silently disabling that mask.
+Marker sanitization must stay gated on the model being mRoPE-based. `spatial_merge_size` only
+exists on Qwen-style vision configs; reading it unconditionally raises AttributeError on Gemma3
+(SiglipVisionConfig) and Llava (CLIPVisionConfig). Sanitizing them anyway would be worse still:
+with no `image_grid_thw` it zeroes every image marker, silently disabling the bidirectional
+image attention mask that token_type_ids drives on those families.
 
 These run on CPU with no weights: only the pure token_type_ids logic is under test.
 """
+
 import torch
 
 from openrlhf.models.actor import Actor

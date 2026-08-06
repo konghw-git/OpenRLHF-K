@@ -2,17 +2,15 @@ import logging
 from typing import Callable
 
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 
 from openrlhf.utils.utils import zero_pad_sequences
+from openrlhf.utils.vlm_utils import MM_SKIP_KEYS, _is_base64_image, load_images
 
 logger = logging.getLogger(__name__)
 
-# Processor outputs that must NOT be forwarded as multimodal tensors: they are
-# sequence-length dependent, so they would break right-padding/batching.  Actor.forward
-# rebuilds (mm_)token_type_ids from input_ids for the full prompt+response sequence.
-# Mirrors openrlhf/utils/vlm_utils.py::process_prompt_with_images.
-_MM_SKIP_KEYS = {"input_ids", "attention_mask", "token_type_ids", "mm_token_type_ids"}
+IMAGE_PAD_TOKEN = "<|image_pad|>"
 
 
 def preprocess_data(
@@ -64,10 +62,10 @@ class SFTDataset(Dataset):
     ) -> None:
         super().__init__()
         self.tokenizer = tokenizer
-        # VLM 下 get_tokenizer 返回的是 AutoProcessor(utils.py:51-68),而 processor.__call__
-        # 的第一个位置参数是 images(Qwen3VLProcessor)。本类所有纯文本 tokenize 必须走
-        # 内层 tokenizer,否则文本会被当成图片路径 -> ValueError: Incorrect image source。
-        # 纯文本模型下 processor is None、text_tokenizer is tokenizer,行为不变。
+        # For VLMs, get_tokenizer returns an AutoProcessor whose __call__ takes `images` as its
+        # first positional argument. Every text-only tokenization below must therefore go through
+        # the inner tokenizer, or the text is parsed as an image reference. For text-only models
+        # processor is None and text_tokenizer is tokenizer, so behaviour is unchanged.
         self.processor = tokenizer if hasattr(tokenizer, "image_processor") else None
         self.text_tokenizer = tokenizer.tokenizer if self.processor is not None else tokenizer
         self.strategy = strategy
@@ -76,18 +74,13 @@ class SFTDataset(Dataset):
         self.multiturn = multiturn
         self._truncation_warned = False
         self._caliber_fallback_warned = False
+        self._image_pad_id = None
 
-        if self.processor is not None and hasattr(self.processor, "image_processor"):
-            # Cap the image resolution: uncapped images blow up the placeholder expansion,
-            # which OOMs or overruns max_len (C2 crashed on exactly this).  Same cap as the
-            # RL side uses.
-            self.processor.image_processor.size = {"longest_edge": 2097152, "shortest_edge": 3136}
-            self._image_pad_token = "<|image_pad|>"
-            pad_id = self.text_tokenizer.convert_tokens_to_ids(self._image_pad_token)
-            self._image_pad_id = None if pad_id == self.text_tokenizer.unk_token_id else pad_id
-        else:
-            self._image_pad_token = None
-            self._image_pad_id = None
+        if self.processor is not None:
+            self._apply_image_pixel_limits()
+            pad_id = self.text_tokenizer.convert_tokens_to_ids(IMAGE_PAD_TOKEN)
+            if pad_id != self.text_tokenizer.unk_token_id:
+                self._image_pad_id = pad_id
 
         # chat template
         self.input_template = input_template
@@ -125,7 +118,20 @@ class SFTDataset(Dataset):
         self.images = processed_dataset["images"]
         self.response_ranges = processed_dataset["response_ranges"] if self.multiturn else None
 
-        if self.multiturn and self.processor is not None and any(self.images):
+        self.has_images = self.processor is not None and any(self.images)
+        self._check_unsupported_combinations()
+
+    def _check_unsupported_combinations(self):
+        """Reject option combinations that images are known to break.
+
+        Checked here rather than at argument-parse time: unlike the RL path there is no VLM
+        flag on the SFT command line, so whether images are involved is only known once the
+        dataset is built. Both the train and eval datasets go through this.
+        """
+        if not self.has_images:
+            return
+
+        if self.multiturn:
             # response_ranges are computed with the TEXT tokenizer, so they do not account for
             # the image placeholder expansion -> every range would be shifted left. Refuse
             # rather than train on a silently misaligned loss mask.
@@ -134,26 +140,55 @@ class SFTDataset(Dataset):
                 "and would misalign the loss mask by the image placeholder expansion)."
             )
 
+        if getattr(getattr(self.strategy.args, "ds", None), "ring_attn_size", 1) > 1:
+            # Without this the run starts fine and Actor.forward only asserts on the first
+            # micro-batch that carries images, which on a mixed text/image corpus can be many
+            # steps in.
+            raise ValueError(
+                "SFT with images does not support ring attention: sequence parallelism splits a "
+                "single image's tokens across ranks, breaking image-token/pixel_values alignment. "
+                "Set --ds.ring_attn_size 1."
+            )
+
+    def _apply_image_pixel_limits(self):
+        """Override the image processor's resolution limits from --data.image_{max,min}_pixels.
+
+        Uncapped images expand into very large placeholder runs, which overruns max_length or
+        OOMs. Only applies to processors that express their limits as longest/shortest_edge
+        (Qwen*-VL); processors sized by height/width (Siglip/CLIP) are left untouched.
+        """
+        max_pixels = getattr(self.strategy.args.data, "image_max_pixels", None)
+        min_pixels = getattr(self.strategy.args.data, "image_min_pixels", None)
+        if max_pixels is None and min_pixels is None:
+            return
+        size = self.processor.image_processor.size
+        if getattr(size, "longest_edge", None) is None and (not isinstance(size, dict) or "longest_edge" not in size):
+            self.strategy.print(
+                "SFTDataset: --data.image_{max,min}_pixels ignored; this image processor is not "
+                "sized by longest_edge/shortest_edge."
+            )
+            return
+        # Merge rather than replace, so setting only one bound keeps the processor's other one.
+        limits = {k: v for k, v in dict(size).items() if v is not None}
+        if max_pixels is not None:
+            limits["longest_edge"] = max_pixels
+        if min_pixels is not None:
+            limits["shortest_edge"] = min_pixels
+        self.processor.image_processor.size = limits
+
     def _num_image_placeholder_tokens(self, images):
-        """Number of tokens one image placeholder expands into, per image, summed.
+        """Number of tokens the image placeholders of one sample expand into, summed.
 
-        Uses the processor's public size->patch utility (the same one vLLM uses to plan
-        placeholders), so only the image *header* is read -- no decode, no resize.  Returns
-        None when it cannot be determined, in which case callers fall back to text caliber.
+        Uses the processor's size->patch utility, so only the image *header* is read -- no
+        decode, no resize. Returns None when it cannot be determined, in which case callers
+        fall back to text caliber.
 
-        A LOCAL PATH that cannot be opened raises instead: it is a data defect, and it has to
-        fail here (dataset build) rather than be papered over with the text caliber.  Falling
-        back would KEEP the row, and it then dies in ``__getitem__`` -- ``load_images`` only
-        warns, the processor gets an empty image list, and transformers raises
-        ``IndexError: list index out of range`` minutes into training with no path in the
-        message.  (2026-08-06 review: 2322/2322 refs in coldstart_sft_v3.jsonl had gone stale
-        after a directory move, and this was the failure mode.)
+        An unreadable LOCAL PATH raises instead of falling back: falling back would keep the
+        row, and it would then die in ``__getitem__`` with an ``IndexError`` from deep inside
+        transformers, minutes into training and with no path in the message.
         """
         if self.processor is None or not images:
             return 0
-        from PIL import Image
-
-        from openrlhf.utils.vlm_utils import _is_base64_image
 
         sizes = []
         for ref in images if isinstance(images, list) else [images]:
@@ -169,9 +204,8 @@ class SFTDataset(Dataset):
                     raise FileNotFoundError(f"SFTDataset: unreadable image reference {ref!r} ({e})") from e
             else:
                 # URL / base64 / raw bytes: no cheap header read (a URL would mean a network
-                # fetch per row) -> text caliber, and __getitem__ still guards the count.
-                # Say so once: a length filter that quietly changes caliber reads as "all
-                # accounted for" when it is not.
+                # fetch per row) -> text caliber. Say so, since a length filter that quietly
+                # changes caliber reads as "all accounted for" when it is not.
                 if not self._caliber_fallback_warned:
                     self._caliber_fallback_warned = True
                     logger.warning(
@@ -264,10 +298,9 @@ class SFTDataset(Dataset):
             # filter the sample whose length is greater than max_length (2 for answer length)
             drop = not prompt or not response or prompt_ids_len >= self.max_length - 2
 
-            # Also filter on the TOTAL length.  Checking only the prompt lets a short prompt
-            # with a long (e.g. long-CoT) target through, where it is silently truncated at
+            # Also filter on the TOTAL length. Checking only the prompt lets a short prompt with
+            # a long (e.g. long-CoT) target through, where it is silently truncated at
             # max_length -- i.e. the model is trained on a derivation that stops mid-way.
-            # Dropping is the correct behaviour; truncating is not.
             if not drop:
                 response_ids_len = len(
                     self.text_tokenizer(response, padding=False, truncation=False, add_special_tokens=False)[
@@ -276,15 +309,13 @@ class SFTDataset(Dataset):
                 )
                 # VLM: one <|image_pad|> in the prompt expands into grid/merge**2 tokens at
                 # __getitem__ time, so the text caliber above underestimates image samples.
+                # _image_pad_id is None when the placeholder is absent from the vocab, i.e. when
+                # this accounting cannot be trusted; _expanded_prompt_ids_len uses the same guard.
                 extra = 0
                 if images and self.processor is not None:
                     n_expanded = self._num_image_placeholder_tokens(images)
-                    # _image_pad_id is the guard (not _image_pad_token): it is None when the
-                    # placeholder is absent from the vocab, i.e. when this accounting cannot be
-                    # trusted at all.  _expanded_prompt_ids_len uses the same guard.
                     if n_expanded is not None and self._image_pad_id is not None:
-                        n_pad = prompt.count(self._image_pad_token)
-                        extra = n_expanded - n_pad
+                        extra = n_expanded - prompt.count(IMAGE_PAD_TOKEN)
                 # +2: the eos appended in __getitem__, plus one token of slack for the
                 # prompt/response boundary re-tokenization.
                 if prompt_ids_len + response_ids_len + extra + 2 > self.max_length:
@@ -327,14 +358,11 @@ class SFTDataset(Dataset):
 
         images = self.images[idx] if (self.processor is not None and self.images is not None) else None
         if images:
-            from openrlhf.utils.vlm_utils import load_images  # same loading path as the RL side
-
-            pil_images = load_images(images)
-            # load_images() only WARNS on a bad reference and drops it.  Handing the processor a
-            # short image list does not degrade gracefully: with zero images transformers raises
-            # `IndexError: list index out of range` (image_transforms._get_device_from_images),
-            # and with a partial list the placeholder count no longer matches the grids.  Fail
-            # here instead, naming the reference.
+            pil_images = load_images(images)  # same loading path as the RL side
+            # load_images() only warns on a bad reference and drops it, and a short image list
+            # does not degrade gracefully: zero images raises IndexError deep in transformers,
+            # a partial list silently desyncs the placeholder count from the grids. Fail here
+            # instead, naming the reference.
             n_expected = sum(1 for r in (images if isinstance(images, list) else [images]) if r is not None)
             if len(pil_images) != n_expected:
                 raise ValueError(
@@ -344,16 +372,11 @@ class SFTDataset(Dataset):
             enc = self.processor(images=pil_images, text=[text], **tokenize_kwargs)
             input_ids = enc["input_ids"]
             attention_mask = enc["attention_mask"]
-            mm_inputs = {k: v for k, v in enc.items() if k not in _MM_SKIP_KEYS}
-            # ⚠ self.prompt_ids_lens[idx] is TEXT caliber: it does not include the image
-            # placeholder expansion, so reusing it here shifts the loss mask ~grid tokens to
-            # the left and supervises the image pad tokens.  Silent: no error, no OOM, a
-            # perfectly normal-looking loss curve, and 30% of the data learned wrong.
-            # (An over-long multimodal sample is at least loud: if truncation cuts into the
-            # image block, the processor itself raises "Mismatch in image token count".)
-            # Recover the real boundary with a closed form over the grids we already have,
-            # instead of a second (CPU-expensive) image_processor call:
-            #   prompt_len(processor) = prompt_len(text) - n_placeholder + sum(prod(grid))/merge**2
+            mm_inputs = {k: v for k, v in enc.items() if k not in MM_SKIP_KEYS}
+            # self.prompt_ids_lens[idx] is text caliber and excludes the placeholder expansion:
+            # reusing it here would shift the loss mask left by the grid size and supervise the
+            # image pad tokens, with no error and a normal-looking loss curve. Recover the real
+            # boundary from the grids we already have, rather than a second image_processor call.
             prompt_ids_len = self._expanded_prompt_ids_len(idx, mm_inputs.get("image_grid_thw"))
         else:
             input_token = self.text_tokenizer(text, **tokenize_kwargs)
@@ -366,11 +389,10 @@ class SFTDataset(Dataset):
 
         if not self.pretrain_mode:
             eos_token_id = self.text_tokenizer.eos_token_id
-            # `truncation=True` may have cut the sample at max_length.  Forcing EOS onto the
-            # last token of a TRUNCATED sample teaches the model to stop mid-derivation, so
-            # only do it when the sample actually ended (where it is a no-op anyway, since
-            # `text` ends with eos).  Over-long samples are supposed to be dropped by the
-            # length filter in process_data; if one still gets here, say so loudly.
+            # `truncation=True` may have cut the sample at max_length, and forcing EOS onto the
+            # last token of a truncated sample teaches the model to stop mid-derivation. Only do
+            # it when the sample actually ended -- where it is a no-op anyway, since `text` ends
+            # with eos. Over-long samples should have been dropped by the filter in process_data.
             if int(input_ids[0][-1]) != eos_token_id:
                 if input_ids.shape[-1] < self.max_length:
                     input_ids[0][-1] = eos_token_id
@@ -385,21 +407,22 @@ class SFTDataset(Dataset):
         return input_ids, attention_mask, loss_mask, mm_inputs
 
     def _expanded_prompt_ids_len(self, idx, image_grid_thw):
-        """Processor-caliber prompt length for a multimodal sample (see __getitem__).
+        """Processor-caliber prompt length for a multimodal sample (see __getitem__):
 
-        ``self.prompt_ids_lens[idx]`` is already the text-caliber length: process_data tokenized
-        with truncation at max_length, and every row that survived the filter is shorter than
-        that, so it is the untruncated length.  Counting the placeholder in the prompt *string*
-        (as the length filter does) rather than re-tokenizing keeps ONE caliber for the same
-        quantity and takes a full prompt re-tokenization out of the dataloader hot path.
+            prompt_len(processor) = prompt_len(text) - n_placeholders + sum(prod(grid)) / merge**2
+
+        ``self.prompt_ids_lens[idx]`` is the untruncated text-caliber length: process_data
+        tokenizes with truncation at max_length, and every row that survived the filter is
+        shorter than that. Counting placeholders in the prompt *string* rather than
+        re-tokenizing keeps one caliber for the same quantity and keeps a full prompt
+        re-tokenization out of the dataloader hot path.
         """
         prompt_ids_len = self.prompt_ids_lens[idx]
         if image_grid_thw is None or self._image_pad_id is None:
             return prompt_ids_len
         merge = getattr(self.processor.image_processor, "merge_size", 2)
         grid_tokens = sum(int(g[0]) * int(g[1]) * int(g[2]) // (merge**2) for g in image_grid_thw)
-        n_pad = self.prompts[idx].count(self._image_pad_token)
-        return prompt_ids_len - n_pad + grid_tokens
+        return prompt_ids_len - self.prompts[idx].count(IMAGE_PAD_TOKEN) + grid_tokens
 
     def get_loss_mask(self, input_ids, idx, prompt_ids_len=None):
         if self.pretrain_mode:
@@ -432,10 +455,10 @@ class SFTDataset(Dataset):
         attention_masks = zero_pad_sequences(attention_masks, "right")
         loss_masks = zero_pad_sequences(loss_masks, "right")
 
-        # Concatenate only the rows that actually carry multimodal tensors, along the batch
-        # dim.  The model re-associates them with their rows via the <|image_pad|> runs in
-        # input_ids, so a mixed text/image batch works.  All-text batch -> {} (never a None
-        # value: that would be forwarded as a kwarg and crash the model).
+        # Concatenate only the rows that actually carry multimodal tensors, along the batch dim.
+        # The model re-associates them with their rows via the <|image_pad|> runs in input_ids,
+        # so a mixed text/image batch works. All-text batch -> {}, never a None value: that
+        # would be forwarded as a kwarg and crash the model.
         mm_inputs = {}
         for mm in mm_list:
             for k, v in mm.items():

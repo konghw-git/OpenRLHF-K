@@ -73,18 +73,13 @@ def train(args):
         num_workers=args.data.dataloader_num_workers,
     )
 
-    # eval 集与 train 集走完全相同的 SFTDataset(含 image_key / 图像分辨率上限 / 四元组
-    # collate_fn),所以留出集带图也能正常跑。
-    # ⚠ 但 eval loss 与 train loss 的**归一化口径不同,不是同一个估计量**:
-    #   train: sft_trainer.py fit() 把 **loss_batch_info 传进 loss_fn —— 分母是整个
-    #          optimizer-step 窗口 × 所有 DP rank 的全局 token 数
-    #          (loss_utils.iter_grad_accum_global_norm / _optimizer_step_loss_norm);
-    #   eval : sft_trainer.py evaluate() 只调 self.loss_fn(logps, loss_mask[:, :-1]),
-    #          batch_num_tokens=None -> aggregate_loss 退化成 masked_mean(**本 micro-batch
-    #          局部** token 均值),再用 loss_sum/times 对 micro-batch 做**等权**平均。
-    # 两者量纲相同(都是 per-token NLL,趋势可粗看),但序列长度不均时加权方式不同 ——
-    # 本项目 70% 纯文本 / 30% 多模态、长 CoT 长度差异大,差异不可忽略。
-    # -> eval 曲线自身纵向可比,**不要与 train 曲线做精确数值对齐**。
+    # The eval set goes through the same SFTDataset as the train set, so held-out images work.
+    # Note that eval loss and train loss are normalized differently and are NOT the same
+    # estimator: fit() passes **loss_batch_info, so the denominator is the global token count
+    # over the whole optimizer-step window across all DP ranks, whereas evaluate() passes no
+    # batch_num_tokens, so aggregate_loss degrades to a per-micro-batch masked_mean that is then
+    # averaged with equal weight per micro-batch. Both are per-token NLL, but they weight uneven
+    # sequence lengths differently -- compare an eval curve against itself, not against train.
     eval_dataloader = None
     if getattr(args.eval, "dataset", None):
         eval_data = blending_datasets(
@@ -300,6 +295,20 @@ if __name__ == "__main__":
     parser.add_argument("--data.input_key", type=str, default="input", help="JSON dataset key")
     parser.add_argument("--data.output_key", type=str, default=None, help="JSON dataset key")
     parser.add_argument("--data.image_key", type=str, default="images", help="Dataset key for image paths/URLs")
+    parser.add_argument(
+        "--data.image_max_pixels",
+        type=int,
+        default=None,
+        help="VLM: override the image processor's longest_edge (max pixels per image). Uncapped "
+        "images expand into very large placeholder runs that overrun --max_len or OOM. "
+        "Default: keep the processor's own configuration.",
+    )
+    parser.add_argument(
+        "--data.image_min_pixels",
+        type=int,
+        default=None,
+        help="VLM: override the image processor's shortest_edge (min pixels per image).",
+    )
     parser.add_argument("--data.input_template", type=str, default="User: {}\nAssistant: ")
     parser.add_argument(
         "--data.apply_chat_template", action="store_true", default=False, help="Use HF tokenizer chat template"
