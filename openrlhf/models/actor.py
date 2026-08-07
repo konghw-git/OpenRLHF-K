@@ -311,7 +311,18 @@ class Actor(nn.Module):
             # VLM: precompute 4-row (text + mRoPE t/h/w) position_ids from the ORIGINAL padded
             # batch before packing collapses the batch dim; carry them through the same unpad.
             vlm_pos4 = None
-            if getattr(self, "is_vlm", False) and mm_inputs:
+            if getattr(self, "is_vlm", False):
+                # NOTE: unconditional, NOT gated on `mm_inputs` being non-empty.  An mRoPE VLM
+                # only segments a packed batch when it receives the 4-row position_ids form:
+                # Qwen2/2.5/3-VLTextModel.forward takes `text_position_ids = position_ids[0]`
+                # *only* for `ndim == 3 and shape[0] == 4`, and that row is what builds the
+                # varlen mask.  A 2-row/1D position_ids (what unpad_and_slice_tensor produces)
+                # hits the `else: text_position_ids = None` branch -> plain causal attention
+                # over the whole pack -> samples attend across pack boundaries.  Measured on
+                # Qwen2.5-VL-3B with an all-text batch: 3 identical copies packed together gave
+                # max|Δlogprob| of 0.0 / 19.6 / 27.5 against copy 0 (silent corruption); with
+                # the 4-row form they are bit-identical.  Text-only samples are handled inside
+                # _build_vlm_position_ids (no grids -> mRoPE rows = the text row).
                 assert ring_attn_group is None, "VLM packing does not support ring attention"
                 assert bool(attention_mask[:, 0].all()), "VLM packing assumes right padding"
                 vlm_pos4 = self._build_vlm_position_ids(sequences, attention_mask, mm_inputs)
