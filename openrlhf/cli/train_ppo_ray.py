@@ -79,6 +79,8 @@ def train(args):
             agent_func_path=args.train.agent_func_path,
             remote_rm_url=args.reward.remote_url,
             max_images_per_prompt=getattr(args.data, "max_images_per_prompt", 0),
+            max_num_seqs=args.vllm.max_num_seqs,
+            max_num_batched_tokens=args.vllm.max_num_batched_tokens,
         )
 
     actor_model = RayActorGroup(
@@ -252,6 +254,28 @@ if __name__ == "__main__":
         type=float,
         default=0.95,
         help="vLLM gpu_memory_utilization",
+    )
+    parser.add_argument(
+        "--vllm.max_num_seqs",
+        type=int,
+        default=None,
+        help=(
+            "vLLM scheduler max_num_seqs. Unset does NOT mean 'hardware-tuned default': "
+            "we construct engines via AsyncLLMEngine.from_engine_args, whose usage_context "
+            "is ENGINE_CONTEXT, a key absent from vLLM's tuned default table -- so it falls "
+            "back to SchedulerConfig.DEFAULT_MAX_NUM_SEQS=128 (documented as a testing "
+            "convenience). An 80GB card's tuned value is 1024."
+        ),
+    )
+    parser.add_argument(
+        "--vllm.max_num_batched_tokens",
+        type=int,
+        default=None,
+        help=(
+            "vLLM scheduler max_num_batched_tokens (chunked-prefill budget per step). "
+            "Same fallback story as --vllm.max_num_seqs: unset lands on 2048 instead of the "
+            "16384 an 80GB card is tuned for, which throttles prefill of long VLM prompts."
+        ),
     )
     # Your Efficient RL Framework Secretly Brings You Off-Policy RL Training: https://fengyao.notion.site/off-policy-rl
     parser.add_argument("--algo.advantage.is_correction_enable", action="store_true", default=False)

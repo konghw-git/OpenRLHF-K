@@ -222,6 +222,8 @@ def create_vllm_engines(
     agent_func_path: Optional[str] = None,
     remote_rm_url: Optional[str] = None,
     max_images_per_prompt: int = 0,
+    max_num_seqs: Optional[int] = None,
+    max_num_batched_tokens: Optional[int] = None,
 ):
     """Spin up a set of vLLM Ray actors with consistent placement."""
     # Detect VLM pad token IDs once, shared across all engines.
@@ -289,6 +291,22 @@ def create_vllm_engines(
 
         if max_images_per_prompt > 0:
             actor_kwargs["limit_mm_per_prompt"] = {"image": max_images_per_prompt}
+
+        # Scheduler capacity.  Leaving these unset does NOT give you vLLM's
+        # hardware-tuned defaults: those live in a per-UsageContext table
+        # (engine/arg_utils.py) keyed only by LLM_CLASS / OPENAI_API_SERVER.  We go
+        # through AsyncLLMEngine.from_engine_args, whose usage_context defaults to
+        # ENGINE_CONTEXT -- a key that table does not have -- so the lookup falls
+        # through to SchedulerConfig.DEFAULT_MAX_NUM_SEQS = 128 and
+        # DEFAULT_MAX_NUM_BATCHED_TOKENS = 2048, whose own docstring says they are
+        # "mainly for convenience when testing".  On an 80GB card the tuned values
+        # would have been 1024 / 16384.  Measured on A800-80GB with a 3B VLM: 128
+        # concurrent sequences used ~10% of a 866k-token KV cache, so rollout ran
+        # 8 sequential waves for nothing.
+        if max_num_seqs is not None:
+            actor_kwargs["max_num_seqs"] = max_num_seqs
+        if max_num_batched_tokens is not None:
+            actor_kwargs["max_num_batched_tokens"] = max_num_batched_tokens
 
         if logprobs_mode:
             actor_kwargs["logprobs_mode"] = logprobs_mode
