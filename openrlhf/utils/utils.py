@@ -49,7 +49,14 @@ def is_vlm_model(pretrain: str) -> bool:
 
 
 def get_tokenizer(pretrain, model, padding_side="left", strategy=None, use_fast=True):
-    is_vlm = getattr(model, "is_vlm", False) if model is not None else is_vlm_model(pretrain)
+    # `is_vlm` lives on the Actor wrapper, not on the HF module it wraps. Callers that pass
+    # `actor.model` (e.g. PolicyModelActor) would otherwise fall into the text-only branch and
+    # get a plain tokenizer, whose save_pretrained() omits the processor — the checkpoint then
+    # loads fine for training but breaks any downstream image preprocessing. Treat a missing
+    # attribute as "unknown" and fall back to sniffing the config, not as "not a VLM".
+    is_vlm = getattr(model, "is_vlm", None) if model is not None else None
+    if is_vlm is None:
+        is_vlm = is_vlm_model(pretrain)
 
     if is_vlm:
         from transformers import AutoProcessor
