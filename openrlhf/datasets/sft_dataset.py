@@ -236,10 +236,28 @@ class SFTDataset(Dataset):
             input_key = self.input_key
             apply_chat_template = self.apply_chat_template
             response_ranges = []
+            # The spans below are computed from per-turn prefix re-renderings, while the text
+            # actually trained on is the one-shot rendering of the whole trajectory. A chat
+            # template may render a turn differently in the two passes -- e.g. the
+            # Qwen3-Thinking template drops empty <think> blocks from non-final turns and
+            # strips reasoning from turns before the last user query -- which shifts every
+            # later span and silently supervises the tool observations instead of the
+            # assistant turns, with a normal-looking loss curve. Both prefix properties are
+            # asserted per turn so a mismatched trajectory fails at load time, naming the turn.
+            full_rendered = apply_chat_template(data[input_key], tokenize=False)
             for idx, message in enumerate(data[input_key]):
                 if message["role"] == "assistant":
                     prompt = apply_chat_template(data[input_key][:idx], tokenize=False, add_generation_prompt=True)
-                    response = apply_chat_template(data[input_key][: idx + 1], tokenize=False)[len(prompt) :]
+                    upto = apply_chat_template(data[input_key][: idx + 1], tokenize=False)
+                    if not (upto.startswith(prompt) and full_rendered.startswith(upto)):
+                        raise ValueError(
+                            f"SFTDataset multiturn: the chat template renders assistant turn {idx} "
+                            "differently as a prefix than inside the full conversation, so the "
+                            "loss-mask spans would be misaligned. Known triggers with thinking "
+                            "templates: an assistant turn with an empty or missing <think> block, "
+                            "or more than one real user question in one trajectory."
+                        )
+                    response = upto[len(prompt) :]
 
                     start_idx = (
                         self.text_tokenizer(
@@ -435,8 +453,13 @@ class SFTDataset(Dataset):
             loss_mask[0, prompt_ids_len - 1 : -1] = 1
         else:
             response_ranges = self.response_ranges[idx]
+            seq_len = input_ids.shape[1]
             for start_idx, end_idx in response_ranges:
-                loss_mask[0, start_idx - 1 : end_idx] = 1
+                # Same calibre as the single-turn branch above: the position that would
+                # predict past the end of the sequence (a PAD after collation) carries no
+                # loss. The last turn's end_idx points one past it because __getitem__
+                # rstrips the trailing newline of the final rendering.
+                loss_mask[0, start_idx - 1 : min(end_idx, seq_len - 1)] = 1
         return loss_mask
 
     def collate_fn(self, item_list):
