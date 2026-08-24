@@ -67,7 +67,9 @@ class RewardDataset(Dataset):
     ) -> None:
         super().__init__()
         self.is_dpo = is_dpo
-        self.tokenizer = tokenizer
+        # See SFTDataset: a VLM's AutoProcessor takes images as its first positional argument,
+        # so text-only tokenization has to go through the inner tokenizer.
+        self.tokenizer = tokenizer.tokenizer if hasattr(tokenizer, "image_processor") else tokenizer
         self.strategy = strategy
         self.max_length = max_length
 

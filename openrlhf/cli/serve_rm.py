@@ -36,6 +36,10 @@ class RewardModelProxy:
             None,
             use_fast=not args.data.disable_fast_tokenizer,
         )
+        # A VLM base gives an AutoProcessor, which takes images as its first positional
+        # argument; this server only ever scores text.
+        if hasattr(self.tokenizer, "image_processor"):
+            self.tokenizer = self.tokenizer.tokenizer
         self.max_length = args.data.max_len
         self.batch_size = args.batch_size
 

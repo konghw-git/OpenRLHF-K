@@ -49,7 +49,13 @@ def is_vlm_model(pretrain: str) -> bool:
 
 
 def get_tokenizer(pretrain, model, padding_side="left", strategy=None, use_fast=True):
-    is_vlm = getattr(model, "is_vlm", False) if model is not None else is_vlm_model(pretrain)
+    # `is_vlm` lives on the Actor wrapper, not on the HF module it wraps, so callers that pass
+    # `actor.model` (the RL policy, SFT, DPO) silently took the text-only branch on a VLM run --
+    # and a plain tokenizer's save_pretrained() writes no processor config, so the exported
+    # checkpoint cannot be reloaded with AutoProcessor. A missing attribute means unknown.
+    is_vlm = getattr(model, "is_vlm", None)
+    if is_vlm is None:
+        is_vlm = is_vlm_model(pretrain)
 
     if is_vlm:
         from transformers import AutoProcessor

@@ -54,7 +54,10 @@ class SFTDataset(Dataset):
         multiturn=False,
     ) -> None:
         super().__init__()
-        self.tokenizer = tokenizer
+        # On a VLM, get_tokenizer returns an AutoProcessor whose first positional argument is
+        # `images`, so text tokenized through it is read as an image path. Text-only datasets
+        # want the inner tokenizer.
+        self.tokenizer = tokenizer.tokenizer if hasattr(tokenizer, "image_processor") else tokenizer
         self.strategy = strategy
         self.pretrain_mode = pretrain_mode
         self.max_length = max_length
