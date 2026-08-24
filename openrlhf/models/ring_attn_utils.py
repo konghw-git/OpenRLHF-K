@@ -148,6 +148,16 @@ def unpad_and_slice_tensor(sequences, attention_mask, ring_attn_group):
     return sequences, position_ids, rolled_sequences, ring_attn_pad_len, indices
 
 
+def pack_position_ids(pos4, indices):
+    """Pack precomputed (4, B, L) VLM position ids into (4, 1, total) with the same ``indices``
+    unpad_and_slice_tensor used for the tokens, so positions stay token-aligned. Row 0 is the
+    text position that drives flash-attention varlen segmentation, rows 1-3 are mRoPE t/h/w.
+    ``indices`` index the row-major flattened (b, l) grid, so pos4 is flattened the same way.
+    """
+    flat = rearrange(pos4, "r b l -> (b l) r")
+    return index_first_axis(flat, indices).transpose(0, 1).unsqueeze(1).contiguous()
+
+
 def gather_and_pad_tensor(tensor, ring_attn_group, ring_attn_pad_len, indices, batch, seqlen):
     """
     Gather and pad tensor data (such as logits, log_probs, etc.).

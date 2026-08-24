@@ -8,7 +8,7 @@ from peft.tuners.lora import LoraLayer
 from transformers import AutoModelForCausalLM, AutoModelForImageTextToText, BitsAndBytesConfig
 from transformers.integrations.deepspeed import HfDeepSpeedConfig
 
-from .ring_attn_utils import gather_and_pad_tensor, unpad_and_slice_tensor
+from .ring_attn_utils import gather_and_pad_tensor, pack_position_ids, unpad_and_slice_tensor
 from .utils import compute_entropy, log_probs_from_logits, set_z3_leaf_modules
 
 
@@ -215,8 +215,51 @@ class Actor(nn.Module):
 
             # packing samples using Flash Attention 2
             self.packing_samples = packing_samples
+
+            # Packing collapses the batch dim, so a VLM can no longer self-compute mRoPE
+            # positions: resolve get_rope_index up front. It lives on the inner VL model, so
+            # drill down through the wrappers (PeftModel -> LoraModel -> *ForConditionalGeneration).
+            self._get_rope_index = None
+            if self.is_vlm and self.packing_samples:
+                if any("linear_attn" in name for name, _ in self.model.named_modules()):
+                    # Hybrid linear-attention VLMs expose get_rope_index too, but linear-attn
+                    # layers do not segment on cu_seqlens, so state leaks across packed samples.
+                    raise ValueError(
+                        "--packing_samples is not supported for hybrid linear-attention VLMs; "
+                        "only full-attention mRoPE VLMs (Qwen2/2.5/3-VL) are."
+                    )
+                inner = self.model
+                while inner is not None and not hasattr(inner, "get_rope_index"):
+                    inner = getattr(inner, "model", None)
+                if inner is None:
+                    raise ValueError(
+                        "VLM --packing_samples requires an mRoPE model exposing get_rope_index "
+                        "(e.g. Qwen2/2.5/3-VL); this model does not."
+                    )
+                self._get_rope_index = inner.get_rope_index
         else:
             self.model = pretrain_or_model
+
+    def _build_vlm_position_ids(self, sequences, attention_mask, mm_inputs):
+        """(4, B, L) position ids for a packed VLM batch: row 0 is the text position, rows 1-3
+        are the mRoPE t/h/w positions. Built on the padded batch so it unpads with the same
+        indices as the tokens."""
+        cfg = self._vlm_config
+        token_type_ids = (sequences == cfg.image_token_id).to(torch.int32)
+        if getattr(cfg, "video_token_id", None) is not None:
+            token_type_ids[sequences == cfg.video_token_id] = 2
+        text_pos = torch.clip(attention_mask.long().cumsum(-1) - 1, min=0)
+        if mm_inputs.get("image_grid_thw") is not None or mm_inputs.get("video_grid_thw") is not None:
+            mrope_pos, _ = self._get_rope_index(
+                sequences,
+                token_type_ids,
+                image_grid_thw=mm_inputs.get("image_grid_thw"),
+                video_grid_thw=mm_inputs.get("video_grid_thw"),
+                attention_mask=attention_mask,
+            )  # (3, B, L)
+        else:
+            mrope_pos = text_pos.unsqueeze(0).expand(3, -1, -1)
+        return torch.cat([text_pos.unsqueeze(0), mrope_pos], dim=0)
 
     def forward(
         self,
@@ -234,9 +277,20 @@ class Actor(nn.Module):
         """Returns action log probs"""
         batch, seqlen = sequences.size()
         if self.packing_samples:
+            # mRoPE positions cannot be recovered once packing collapses the batch dim, so build
+            # the 4-row form (text + t/h/w) from the padded batch first. Not gated on mm_inputs:
+            # for a text-only batch the mRoPE rows equal the text row, which is exactly what the
+            # model computes for itself, so one code path covers mixed batches too.
+            vlm_pos4 = None
+            if getattr(self, "is_vlm", False):
+                assert ring_attn_group is None, "VLM packing does not support ring attention"
+                assert bool(attention_mask[:, 0].all()), "VLM packing assumes right padding"
+                vlm_pos4 = self._build_vlm_position_ids(sequences, attention_mask, mm_inputs)
             sequences, position_ids, rolled_sequences, ring_attn_pad_len, indices = unpad_and_slice_tensor(
                 sequences, attention_mask, ring_attn_group
             )
+            if vlm_pos4 is not None:
+                position_ids = pack_position_ids(vlm_pos4, indices)
             foward_attention_mask = None
         else:
             # https://github.com/OpenRLHF/OpenRLHF/issues/217

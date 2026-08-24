@@ -614,16 +614,13 @@ if __name__ == "__main__":
             args.rollout.n_samples_per_prompt > 1
         ), f"{args.algo.advantage.estimator} requires n_samples_per_prompt > 1"
 
-    # VLM constraints: critic and packing_samples are not supported
+    # VLM constraints: critic is not supported. --packing_samples is, for mRoPE VLMs: the actor
+    # precomputes 4-row position_ids and packs them (openrlhf/models/actor.py). Its own
+    # constraints are checked below, after ring_attn / dynamic_batch may force-enable packing.
     if args.data.max_images_per_prompt > 0:
         assert args.critic.model_name_or_path is None, (
             "VLM training does not support critic model. "
             "Use --advantage_estimator other than 'gae' (e.g., reinforce_baseline, rloo, group_norm)."
-        )
-        assert not args.ds.packing_samples, (
-            "VLM training does not support --packing_samples. "
-            "Packing collapses the batch dimension, breaking alignment between image tokens and pixel_values. "
-            "VLM models also require model-computed position_ids (e.g., M-RoPE) which is incompatible with packing."
         )
 
     if args.reward.remote_url:
@@ -651,6 +648,15 @@ if __name__ == "__main__":
         if args.rollout.max_tokens_per_gpu is None:
             print("[Warning] Set --rollout_max_tokens_per_gpu to --train_max_tokens_per_gpu.")
             args.rollout.max_tokens_per_gpu = args.train.max_tokens_per_gpu
+
+    # After the blocks above, which may force-enable packing_samples, so neither path can bypass
+    # this. dynamic_batch stays supported: it only reorders items by token budget, and
+    # make_experience_batch keeps mm inputs in sequence order.
+    if args.data.max_images_per_prompt > 0 and args.ds.packing_samples:
+        assert args.ds.ring_attn_size == 1, (
+            "VLM --packing_samples does not support ring attention: splitting a sequence across "
+            "ranks breaks the alignment between image tokens and pixel_values."
+        )
 
     if args.ds.packing_samples:
         if "flash_attention" not in args.ds.attn_implementation:
