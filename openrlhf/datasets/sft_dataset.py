@@ -78,7 +78,15 @@ class SFTDataset(Dataset):
             remove_columns=dataset.column_names,
             num_proc=num_processors,
         )
+        num_raw = len(processed_dataset)
         processed_dataset = processed_dataset.filter(lambda x: x["prompt"] is not None)
+        if len(processed_dataset) < num_raw:
+            # Dropping is correct, dropping silently is not: this is where a too-small
+            # --data.max_len shows up as missing training data.
+            strategy.print(
+                f"SFTDataset: dropped {num_raw - len(processed_dataset)}/{num_raw} samples "
+                f"(empty, or prompt+response longer than max_len={max_length})"
+            )
 
         # Store the processed data in class attributes
         self.prompts = processed_dataset["prompt"]
@@ -152,8 +160,14 @@ class SFTDataset(Dataset):
                 add_special_tokens=False,
             )
             prompt_ids_len = prompt_token["attention_mask"].int().sum().item()
-            # filter the sample whose length is greater than max_length (2 for answer length)
-            if not prompt or not response or prompt_ids_len >= self.max_length - 2:
+            response_ids_len = self.tokenizer(
+                response, padding=False, truncation=False, return_tensors="pt", add_special_tokens=False
+            )["input_ids"].shape[-1]
+            # Filter on prompt+response, not on the prompt alone: a short prompt with a long
+            # target (long-CoT data) passes a prompt-only check and is then silently truncated
+            # at max_length, i.e. trained to stop mid-derivation. +2 for the appended EOS and
+            # one token of slack at the prompt/response re-tokenization boundary.
+            if not prompt or not response or prompt_ids_len + response_ids_len + 2 > self.max_length:
                 prompt = None
         else:
             prompt_ids_len = 0
@@ -192,10 +206,9 @@ class SFTDataset(Dataset):
         attention_mask = input_token["attention_mask"]
         loss_mask = self.get_loss_mask(input_ids, idx)
 
-        if not self.pretrain_mode:
-            # to avoid EOS_token truncation
-            input_ids[0][-1] = self.tokenizer.eos_token_id
-            attention_mask[0][-1] = True
+        # No EOS is forced here: `text` already ends with EOS, so overwriting the last token
+        # only ever changes something when truncation cut the sample -- and then it teaches
+        # the model to stop mid-derivation. Over-long samples are dropped in process_data.
         return input_ids, attention_mask, loss_mask
 
     def get_loss_mask(self, input_ids, idx):
