@@ -30,6 +30,7 @@ def train(args):
         ds_config=strategy.get_ds_train_config(),
         packing_samples=args.ds.packing_samples,
         use_liger_kernel=args.ds.use_liger_kernel,
+        freeze_visual_encoder=args.model.freeze_visual_encoder,
     )
     # configure tokenizer
     tokenizer = get_tokenizer(
@@ -213,6 +214,13 @@ if __name__ == "__main__":
     parser.add_argument("--model.aux_loss_coef", type=float, default=0, help="MoE balancing loss")
     parser.add_argument("--model.model_name_or_path", type=str, default=None)
     parser.add_argument("--model.pretrain_mode_enable", action="store_true", default=False, help="Use pretrain loss")
+    parser.add_argument(
+        "--model.freeze_visual_encoder",
+        action="store_true",
+        default=False,
+        help="Freeze vision encoder weights (only train language model), mirroring "
+        "--actor.freeze_visual_encoder in the RL stage so both agree on what is trainable.",
+    )
 
     # Optimizer + scheduler + grad clip.  Two sections:
     #   --muon.*  Muon-specific hypers (only used when --optim=muon)
