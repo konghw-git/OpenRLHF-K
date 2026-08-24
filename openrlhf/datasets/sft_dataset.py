@@ -98,10 +98,23 @@ class SFTDataset(Dataset):
             input_key = self.input_key
             apply_chat_template = self.apply_chat_template
             response_ranges = []
+            full_rendered = apply_chat_template(data[input_key], tokenize=False)
             for idx, message in enumerate(data[input_key]):
                 if message["role"] == "assistant":
                     prompt = apply_chat_template(data[input_key][:idx], tokenize=False, add_generation_prompt=True)
-                    response = apply_chat_template(data[input_key][: idx + 1], tokenize=False)[len(prompt) :]
+                    upto = apply_chat_template(data[input_key][: idx + 1], tokenize=False)
+                    # The spans are measured on per-turn prefix renderings while the text trained
+                    # on is the one-shot rendering of the whole trajectory. Thinking templates
+                    # (e.g. Qwen3) strip reasoning from earlier turns, which shifts every later
+                    # span onto the wrong tokens -- with a normal-looking loss curve.
+                    if not (upto.startswith(prompt) and full_rendered.startswith(upto)):
+                        raise ValueError(
+                            f"Multiturn SFT: the chat template renders assistant turn {idx} differently as a "
+                            "prefix than inside the full conversation, so the loss mask would be misaligned. "
+                            "Use a template that renders each turn identically in both passes, or drop "
+                            "--data.multiturn for this dataset."
+                        )
+                    response = upto[len(prompt) :]
 
                     start_idx = (
                         self.tokenizer(
