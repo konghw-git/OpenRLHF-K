@@ -79,6 +79,8 @@ def train(args):
             agent_func_path=args.train.agent_func_path,
             remote_rm_url=args.reward.remote_url,
             max_images_per_prompt=getattr(args.data, "max_images_per_prompt", 0),
+            max_num_seqs=args.vllm.max_num_seqs,
+            max_num_batched_tokens=args.vllm.max_num_batched_tokens,
         )
 
     actor_model = RayActorGroup(
@@ -252,6 +254,20 @@ if __name__ == "__main__":
         type=float,
         default=0.95,
         help="vLLM gpu_memory_utilization",
+    )
+    parser.add_argument(
+        "--vllm.max_num_seqs",
+        type=int,
+        default=None,
+        help="vLLM scheduler max_num_seqs. Unset lands on vLLM's 128 fallback, not on the "
+        "hardware-tuned default (1024 on an 80GB card)",
+    )
+    parser.add_argument(
+        "--vllm.max_num_batched_tokens",
+        type=int,
+        default=None,
+        help="vLLM scheduler max_num_batched_tokens. Unset lands on vLLM's 2048 fallback, not on "
+        "the hardware-tuned default (16384 on an 80GB card)",
     )
     # Your Efficient RL Framework Secretly Brings You Off-Policy RL Training: https://fengyao.notion.site/off-policy-rl
     parser.add_argument("--algo.advantage.is_correction_enable", action="store_true", default=False)
